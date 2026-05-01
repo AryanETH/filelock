@@ -1,0 +1,8 @@
+R_DEF: Internal format may change without notice
+local
+drawable ic_calculator
+drawable ic_vault
+string accessibility_description
+string app_name
+style Theme.GeoVault
+xml accessibility_service_config
