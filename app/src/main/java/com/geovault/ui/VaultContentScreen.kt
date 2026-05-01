@@ -9,6 +9,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -16,6 +17,8 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -482,7 +485,6 @@ fun BackupManagementDialog(
     onClearAll: () -> Unit
 ) {
     val context = LocalContext.current
-    val snackbarHostState = remember { SnackbarHostState() }
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -517,8 +519,9 @@ fun BackupManagementDialog(
                 
                 Text("ACTIVE VAULTS", style = MaterialTheme.typography.labelLarge, color = Color.Gray)
                 
-                LazyColumn(modifier = Modifier.weight(1f)) {
-                    items(state.vaults) { vault ->
+                // NO LAZYCOLUMN HERE - It causes the intrinsic measurement crash when nested in Dialog with sub-lazy components
+                Column(modifier = Modifier.weight(1f).verticalScroll(rememberScrollState())) {
+                    state.vaults.forEach { vault ->
                         ListItem(
                             colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                             headlineContent = { Text("Vault ${vault.id.take(8)}", color = Color.White) },
@@ -546,12 +549,10 @@ fun BackupManagementDialog(
                     }
                     
                     if (state.vaultHistory.isNotEmpty()) {
-                        item {
-                            Spacer(Modifier.height(16.dp))
-                            Text("HISTORY", style = MaterialTheme.typography.labelLarge, color = Color.Gray)
-                        }
+                        Spacer(Modifier.height(16.dp))
+                        Text("HISTORY", style = MaterialTheme.typography.labelLarge, color = Color.Gray)
                         
-                        items(state.vaultHistory) { hist ->
+                        state.vaultHistory.forEach { hist ->
                             ListItem(
                                 colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                                 headlineContent = { 
@@ -570,8 +571,12 @@ fun BackupManagementDialog(
                                     Column {
                                         Text("${hist.appsCount} apps hidden:", color = Color.Gray, fontSize = 11.sp)
                                         Spacer(Modifier.height(4.dp))
-                                        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                            items(hist.hiddenAppPackages.toList()) { pkg ->
+                                        // Standard Row with horizontalScroll instead of LazyRow to avoid measuring conflicts
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                            hist.hiddenAppPackages.forEach { pkg ->
                                                 AppMiniIcon(pkg)
                                             }
                                         }

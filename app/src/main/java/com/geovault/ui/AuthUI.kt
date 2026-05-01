@@ -93,6 +93,7 @@ fun PinLockScreen(savedPin: String, onSuccess: () -> Unit, onBiometricClick: () 
         if (input.length == 5) {
             // Short delay so user can actually see the 5th box fill up
             delay(300)
+            android.util.Log.d("PinLockScreen", "Input: $input, Saved: $savedPin")
             if (input == savedPin) {
                 onSuccess()
             } else {
