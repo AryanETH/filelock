@@ -45,6 +45,7 @@ import com.google.android.gms.location.Priority
 import org.maplibre.android.MapLibre
 
 import android.content.Intent
+import android.os.Build
 import android.view.WindowManager
 class MainActivity : ComponentActivity() {
     private val viewModel: VaultViewModel by viewModels()
@@ -63,14 +64,20 @@ class MainActivity : ComponentActivity() {
                 ) { /* handle results */ }
 
                 LaunchedEffect(Unit) {
-                    permissionLauncher.launch(
-                        arrayOf(
-                            Manifest.permission.ACCESS_FINE_LOCATION,
-                            Manifest.permission.ACCESS_COARSE_LOCATION,
-                            Manifest.permission.READ_EXTERNAL_STORAGE,
-                            Manifest.permission.WRITE_EXTERNAL_STORAGE
-                        )
+                    val permissions = mutableListOf(
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION,
+                        Manifest.permission.CAMERA
                     )
+                    
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        permissions.add(Manifest.permission.READ_MEDIA_IMAGES)
+                    } else {
+                        permissions.add(Manifest.permission.READ_EXTERNAL_STORAGE)
+                        permissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    }
+                    
+                    permissionLauncher.launch(permissions.toTypedArray())
                 }
 
                 // Tracking location
@@ -106,11 +113,14 @@ class MainActivity : ComponentActivity() {
                         uiState.isFirstRun -> {
                             OnboardingScreen(onFinished = { viewModel.completeOnboarding() })
                         }
-                        !uiState.hasUsageStatsPermission || !uiState.hasOverlayPermission -> {
+                        !uiState.hasUsageStatsPermission || !uiState.hasOverlayPermission || !uiState.hasCameraPermission || !uiState.hasLocationPermission || !uiState.hasStoragePermission -> {
                             PermissionScreen(
                                 state = uiState,
                                 onGrantUsage = { viewModel.openUsageStatsSettings() },
                                 onGrantOverlay = { viewModel.openOverlaySettings() },
+                                onGrantCamera = {
+                                    permissionLauncher.launch(arrayOf(Manifest.permission.CAMERA))
+                                },
                                 onGrantLocation = {
                                     permissionLauncher.launch(
                                         arrayOf(
@@ -118,6 +128,13 @@ class MainActivity : ComponentActivity() {
                                             Manifest.permission.ACCESS_COARSE_LOCATION
                                         )
                                     )
+                                },
+                                onGrantStorage = {
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                        permissionLauncher.launch(arrayOf(Manifest.permission.READ_MEDIA_IMAGES))
+                                    } else {
+                                        permissionLauncher.launch(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE))
+                                    }
                                 }
                             )
                         }
@@ -145,7 +162,17 @@ class MainActivity : ComponentActivity() {
                                 onAddFile = { uri, category -> viewModel.addFileToVault(uri, category) },
                                 onToggleAppLock = { packageName -> viewModel.toggleAppLock(packageName) },
                                 onRemoveVault = { id -> viewModel.removeVault(id) },
-                                onClearAllVaults = { viewModel.clearAllVaults() }
+                                onClearAllVaults = { viewModel.clearAllVaults() },
+                                onGrantCamera = {
+                                    permissionLauncher.launch(arrayOf(Manifest.permission.CAMERA))
+                                },
+                                onGrantStorage = {
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                        permissionLauncher.launch(arrayOf(Manifest.permission.READ_MEDIA_IMAGES))
+                                    } else {
+                                        permissionLauncher.launch(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE))
+                                    }
+                                }
                             )
                         }
                     }

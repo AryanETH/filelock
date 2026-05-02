@@ -47,6 +47,9 @@ data class VaultState(
     val hasUsageStatsPermission: Boolean = false,
     val hasOverlayPermission: Boolean = false,
     val hasAccessibilityPermission: Boolean = false,
+    val hasCameraPermission: Boolean = false,
+    val hasLocationPermission: Boolean = false,
+    val hasStoragePermission: Boolean = false,
 
     // Files
     val files: List<VaultFile> = emptyList(),
@@ -56,6 +59,7 @@ data class VaultState(
     val videoCount: Int = 0,
     val audioCount: Int = 0,
     val documentCount: Int = 0,
+    val intruderCount: Int = 0,
     val recycleBinCount: Int = 0,
     val isMasterStealthEnabled: Boolean = false
 )

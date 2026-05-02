@@ -59,6 +59,15 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
         startMapDownload()
     }
 
+    fun addIntruderFile(uri: Uri) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val fileId = UUID.randomUUID().toString()
+            val fileName = "Intruder_${System.currentTimeMillis()}.jpg"
+            saveFileInfo(fileId, fileName, uri.path ?: "", FileCategory.INTRUDER, 0L)
+            updateFileCounts()
+        }
+    }
+
     private fun checkFirstRun() {
         val isFirstRun = prefs.getBoolean("is_first_run", true)
         _uiState.update { it.copy(isFirstRun = isFirstRun) }
@@ -209,6 +218,7 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
         var videos = 0
         var audio = 0
         var docs = 0
+        var intruders = 0
         
         fileIds.forEach { id ->
             val name = prefs.getString("file_${id}_name", "") ?: ""
@@ -226,6 +236,7 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
                 FileCategory.VIDEO -> videos++
                 FileCategory.AUDIO -> audio++
                 FileCategory.DOCUMENT -> docs++
+                FileCategory.INTRUDER -> intruders++
                 else -> {}
             }
         }
@@ -236,7 +247,8 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
                 photoCount = photos,
                 videoCount = videos,
                 audioCount = audio,
-                documentCount = docs
+                documentCount = docs,
+                intruderCount = intruders
             )
         }
     }
@@ -258,12 +270,23 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
         val hasUsage = hasUsageStatsPermission(context)
         val hasOverlay = Settings.canDrawOverlays(context)
         val hasAccessibility = isAccessibilityServiceEnabled(context)
+        val hasCamera = androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
+        val hasLocation = androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
         
+        val hasStorage = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_MEDIA_IMAGES) == PackageManager.PERMISSION_GRANTED
+        } else {
+            androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+        }
+
         _uiState.update { 
             it.copy(
                 hasUsageStatsPermission = hasUsage,
                 hasOverlayPermission = hasOverlay,
-                hasAccessibilityPermission = hasAccessibility
+                hasAccessibilityPermission = hasAccessibility,
+                hasCameraPermission = hasCamera,
+                hasLocationPermission = hasLocation,
+                hasStoragePermission = hasStorage
             )
         }
     }
@@ -462,6 +485,12 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
         
         ensureOffline(point)
         loadPersistedVaults()
+        
+        // Notify service to refresh its package list
+        val context = getApplication<Application>()
+        val serviceIntent = Intent(context, com.geovault.service.AppLockerService::class.java)
+        serviceIntent.putExtra("refresh_locked_apps", true)
+        context.startService(serviceIntent)
     }
 
     fun clearAllVaults() {
@@ -480,6 +509,12 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
             apply()
         }
         loadPersistedVaults()
+
+        // Notify service
+        val context = getApplication<Application>()
+        val serviceIntent = Intent(context, com.geovault.service.AppLockerService::class.java)
+        serviceIntent.putExtra("refresh_locked_apps", true)
+        context.startService(serviceIntent)
     }
 
     fun onLocationChanged(latitude: Double, longitude: Double) {
@@ -556,6 +591,12 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
         vaultIds.remove(id)
         prefs.edit().putStringSet("vault_ids", vaultIds).apply()
         loadPersistedVaults()
+
+        // Notify service
+        val context = getApplication<Application>()
+        val serviceIntent = Intent(context, com.geovault.service.AppLockerService::class.java)
+        serviceIntent.putExtra("refresh_locked_apps", true)
+        context.startService(serviceIntent)
     }
 
     fun removeAppFromVault(packageName: String) {

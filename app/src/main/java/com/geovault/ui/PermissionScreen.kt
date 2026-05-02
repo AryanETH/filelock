@@ -24,15 +24,24 @@ import com.geovault.ui.theme.CyberBlack
 import com.geovault.ui.theme.CyberBlue
 import com.geovault.ui.theme.CyberDarkBlue
 
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+
 @Composable
 fun PermissionScreen(
     state: VaultState,
     onGrantUsage: () -> Unit,
     onGrantOverlay: () -> Unit,
-    onGrantLocation: () -> Unit
+    onGrantCamera: () -> Unit,
+    onGrantLocation: () -> Unit,
+    onGrantStorage: () -> Unit
 ) {
+    // Accessibility removed from mandatory intro list
     val allGranted = state.hasUsageStatsPermission && 
-                     state.hasOverlayPermission
+                     state.hasOverlayPermission &&
+                     state.hasCameraPermission &&
+                     state.hasLocationPermission &&
+                     state.hasStoragePermission
 
     Column(
         modifier = Modifier.fillMaxSize().background(CyberBlack).padding(32.dp),
@@ -65,34 +74,15 @@ fun PermissionScreen(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier.weight(1f)
+        Column(
+            modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            item {
-                PermissionRow(
-                    "Usage Access",
-                    "Monitor app launches for stealth mode.",
-                    state.hasUsageStatsPermission,
-                    onGrantUsage
-                )
-            }
-            item {
-                PermissionRow(
-                    "Overlay Access",
-                    "Required to show the security interface.",
-                    state.hasOverlayPermission,
-                    onGrantOverlay
-                )
-            }
-            item {
-                PermissionRow(
-                    "Location Access",
-                    "Coordinate-based vault reveal system.",
-                    true, // Simplified as we check runtime in MainActivity
-                    onGrantLocation
-                )
-            }
+            PermissionRow("Usage Access", "Monitor app launches for stealth mode.", state.hasUsageStatsPermission, onGrantUsage)
+            PermissionRow("Overlay Access", "Required to show the security interface.", state.hasOverlayPermission, onGrantOverlay)
+            PermissionRow("Location Access", "Coordinate-based vault reveal system.", state.hasLocationPermission, onGrantLocation)
+            PermissionRow("Camera Access", "Capture images of intruders on failed attempts.", state.hasCameraPermission, onGrantCamera)
+            PermissionRow("Storage Access", "Securely store and retrieve encrypted files.", state.hasStoragePermission, onGrantStorage)
         }
 
         if (allGranted) {

@@ -6,10 +6,13 @@ import androidx.compose.material.icons.filled.Explore
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -23,8 +26,10 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -40,8 +45,7 @@ import com.geovault.model.AppInfo
 import com.geovault.model.GeoPoint
 import com.geovault.model.LockType
 import com.geovault.model.VaultState
-import com.geovault.ui.theme.CyberBlue
-import com.geovault.ui.theme.CyberDarkBlue
+import com.geovault.ui.theme.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -56,6 +60,7 @@ import java.util.Locale
 import org.json.JSONArray
 import com.google.android.gms.location.LocationServices
 import org.maplibre.android.location.LocationComponentActivationOptions
+import androidx.compose.foundation.gestures.detectDragGestures
 
 @Composable
 fun VaultScreen(
@@ -74,13 +79,11 @@ fun VaultScreen(
     onAddFile: (android.net.Uri, com.geovault.model.FileCategory) -> Unit,
     onToggleAppLock: (String) -> Unit,
     onRemoveVault: (String) -> Unit,
-    onClearAllVaults: () -> Unit
+    onClearAllVaults: () -> Unit,
+    onGrantCamera: () -> Unit,
+    onGrantStorage: () -> Unit
 ) {
     var mapLibreMap by remember { mutableStateOf<MapLibreMap?>(null) }
-    var pin by remember { mutableStateOf("") }
-    var showPinPrompt by remember { mutableStateOf(false) }
-    var lastTapLocation by remember { mutableStateOf<LatLng?>(null) }
-    var lastTapTime by remember { mutableLongStateOf(0L) }
     
     var showSetupDialog by remember { mutableStateOf(false) }
     var setupLatLng by remember { mutableStateOf<LatLng?>(null) }
@@ -96,6 +99,10 @@ fun VaultScreen(
     
     var searchQuery by remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
+    
+    var selectedVaultForUnlock by remember { mutableStateOf<com.geovault.model.VaultConfig?>(null) }
+    var showUnlockPrompt by remember { mutableStateOf(false) }
+    var lastTapTime by remember { mutableLongStateOf(0L) }
 
     BackHandler(enabled = !state.isLocked) {
         onLockClick()
@@ -157,11 +164,15 @@ fun VaultScreen(
                             }
                             
                             map.addOnMapClickListener { point ->
-                                // The image mentions "double taps or tap on the location where he earlier tap to hide"
                                 val currentTime = System.currentTimeMillis()
                                 if (currentTime - lastTapTime < 500) { 
-                                    lastTapLocation = point
-                                    showPinPrompt = true
+                                    val vault = state.vaults.find { v ->
+                                        LocationHelper.isWithinRadius(point.latitude, point.longitude, v.location.latitude, v.location.longitude, 500f)
+                                    }
+                                    if (vault != null) {
+                                        selectedVaultForUnlock = vault
+                                        showUnlockPrompt = true
+                                    }
                                 }
                                 lastTapTime = currentTime
                                 true
@@ -234,13 +245,13 @@ fun VaultScreen(
                 }
             }
 
-            if (showPinPrompt) {
-                PinEntryDialog(
-                    title = "ENTER PIN",
-                    onDismiss = { showPinPrompt = false },
-                    onConfirm = { enteredPin ->
-                        lastTapLocation?.let { onUnlockAttempt(it.latitude, it.longitude, enteredPin) }
-                        showPinPrompt = false
+            if (showUnlockPrompt && selectedVaultForUnlock != null) {
+                VaultUnlockDialog(
+                    vault = selectedVaultForUnlock!!,
+                    onDismiss = { showUnlockPrompt = false },
+                    onConfirm = { secret ->
+                        onUnlockAttempt(selectedVaultForUnlock!!.location.latitude, selectedVaultForUnlock!!.location.longitude, secret)
+                        showUnlockPrompt = false
                     }
                 )
             }
@@ -249,8 +260,8 @@ fun VaultScreen(
                 VaultSetupDialog(
                     apps = state.installedApps,
                     onDismiss = { showSetupDialog = false },
-                    onConfirm = { pinSecret, selectedApps, lockType ->
-                        onSaveConfig(GeoPoint(setupLatLng!!.latitude, setupLatLng!!.longitude), pinSecret, selectedApps, lockType)
+                    onConfirm = { secret, selectedApps, lockType ->
+                        onSaveConfig(GeoPoint(setupLatLng!!.latitude, setupLatLng!!.longitude), secret, selectedApps, lockType)
                         showSetupDialog = false
                     }
                 )
@@ -269,8 +280,183 @@ fun VaultScreen(
                 onAddFile = onAddFile,
                 onToggleAppLock = onToggleAppLock,
                 onRemoveVault = onRemoveVault,
-                onClearAllVaults = onClearAllVaults
+                onClearAllVaults = onClearAllVaults,
+                onGrantCamera = onGrantCamera,
+                onGrantStorage = onGrantStorage
             )
+        }
+    }
+}
+
+@Composable
+fun VaultUnlockDialog(
+    vault: com.geovault.model.VaultConfig,
+    onDismiss: () -> Unit,
+    onConfirm: (String) -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = RoundedCornerShape(28.dp),
+            color = CyberDarkBlue,
+            border = androidx.compose.foundation.BorderStroke(1.dp, CyberBlue.copy(alpha = 0.4f)),
+            modifier = Modifier.width(320.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    if (vault.lockType == LockType.PIN) "VERIFY PIN" else "VERIFY PATTERN",
+                    color = CyberBlue,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 2.sp,
+                    style = MaterialTheme.typography.titleMedium
+                )
+                
+                Spacer(Modifier.height(24.dp))
+
+                if (vault.lockType == LockType.PIN) {
+                    CompactPinPad(correctPin = vault.secret, onPinComplete = onConfirm)
+                } else {
+                    CompactPatternGrid(correctPattern = vault.secret, onPatternComplete = onConfirm)
+                }
+                
+                Spacer(Modifier.height(16.dp))
+                
+                TextButton(onClick = onDismiss) {
+                    Text("ABORT", color = Color.Gray, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun VaultSetupDialog(apps: List<AppInfo>, onDismiss: () -> Unit, onConfirm: (String, Set<String>, LockType) -> Unit) {
+    var secret by remember { mutableStateOf("") }
+    var lockType by remember { mutableStateOf(LockType.PIN) }
+    val selectedApps = remember { mutableStateOf(setOf<String>()) }
+    var showApps by remember { mutableStateOf(false) }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            modifier = Modifier.fillMaxWidth().wrapContentHeight(),
+            shape = RoundedCornerShape(28.dp),
+            color = CyberDarkBlue,
+            border = androidx.compose.foundation.BorderStroke(1.dp, CyberBlue.copy(alpha = 0.4f))
+        ) {
+            Column(modifier = Modifier.padding(24.dp)) {
+                Text(
+                    if (!showApps) "SECURE VAULT" else "STEALTH APPS",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = CyberBlue,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 1.sp
+                )
+                Spacer(Modifier.height(20.dp))
+                
+                if (!showApps) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        VaultLockTypeButton("PIN", lockType == LockType.PIN) { 
+                            lockType = LockType.PIN 
+                            secret = ""
+                        }
+                        VaultLockTypeButton("PATTERN", lockType == LockType.PATTERN) { 
+                            lockType = LockType.PATTERN 
+                            secret = ""
+                        }
+                    }
+                    
+                    Spacer(Modifier.height(24.dp))
+
+                    if (lockType == LockType.PIN) {
+                        CompactPinPad(onPinComplete = {
+                            secret = it
+                            showApps = true
+                        })
+                    } else {
+                        Box(modifier = Modifier.align(Alignment.CenterHorizontally)) {
+                            CompactPatternGrid(onPatternComplete = {
+                                secret = it
+                                showApps = true
+                            })
+                        }
+                    }
+                } else {
+                    LazyColumn(modifier = Modifier.heightIn(max = 300.dp)) {
+                        items(apps) { app ->
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .clickable {
+                                        if (selectedApps.value.contains(app.packageName)) selectedApps.value -= app.packageName
+                                        else selectedApps.value += app.packageName
+                                    }
+                                    .padding(vertical = 10.dp, horizontal = 8.dp)
+                            ) {
+                                app.icon?.let { Image(it.toBitmap().asImageBitmap(), contentDescription = null, modifier = Modifier.size(32.dp).clip(CircleShape)) }
+                                Spacer(Modifier.width(12.dp))
+                                Text(app.appName, color = Color.White, modifier = Modifier.weight(1f), fontSize = 15.sp)
+                                Checkbox(
+                                    checked = selectedApps.value.contains(app.packageName),
+                                    onCheckedChange = null,
+                                    colors = CheckboxDefaults.colors(checkedColor = CyberBlue)
+                                )
+                            }
+                        }
+                    }
+                    
+                    Spacer(Modifier.height(20.dp))
+                    
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                        TextButton(onClick = { showApps = false }) { Text("BACK", color = Color.Gray) }
+                        Button(
+                            onClick = { onConfirm(secret, selectedApps.value, lockType) },
+                            colors = ButtonDefaults.buttonColors(containerColor = CyberBlue),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text("INITIALIZE", color = Color.Black, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun RowScope.VaultLockTypeButton(text: String, selected: Boolean, onClick: () -> Unit) {
+    Button(
+        onClick = onClick,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = if (selected) CyberBlue.copy(alpha = 0.15f) else Color.Transparent,
+            contentColor = if (selected) CyberBlue else Color.Gray
+        ),
+        border = androidx.compose.foundation.BorderStroke(1.dp, if (selected) CyberBlue else Color.White.copy(alpha = 0.1f)),
+        modifier = Modifier.height(40.dp).weight(1f),
+        shape = RoundedCornerShape(12.dp),
+        contentPadding = PaddingValues(horizontal = 12.dp)
+    ) {
+        Text(text, fontSize = 12.sp, fontWeight = FontWeight.ExtraBold)
+    }
+}
+
+@Composable
+fun SmallMapFab(icon: ImageVector, active: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    Surface(
+        modifier = modifier.size(40.dp).clickable { onClick() },
+        shape = CircleShape,
+        color = if (active) CyberBlue else CyberDarkBlue.copy(alpha = 0.7f),
+        contentColor = if (active) Color.Black else Color.White,
+        shadowElevation = 8.dp
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Icon(icon, contentDescription = null, modifier = Modifier.size(20.dp))
         }
     }
 }
@@ -330,174 +516,6 @@ fun MapSearchBar(query: String, onQueryChange: (String) -> Unit, onSearch: (Stri
                     Icon(Icons.Default.Close, contentDescription = null, tint = Color.Gray)
                 }
             }
-        }
-    }
-}
-
-@Composable
-fun PinEntryDialog(title: String, onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
-    var pin by remember { mutableStateOf("") }
-    
-    // Auto-confirm when 5 digits are reached
-    LaunchedEffect(pin) {
-        if (pin.length == 5) {
-            // Give user time to see the 5th digit box filled
-            delay(300)
-            onConfirm(pin)
-            // Reset for next time if it fails or returns
-            pin = ""
-        }
-    }
-
-    Dialog(onDismissRequest = onDismiss) {
-        Surface(
-            shape = RoundedCornerShape(24.dp),
-            color = CyberDarkBlue,
-            border = androidx.compose.foundation.BorderStroke(1.dp, CyberBlue.copy(alpha = 0.3f))
-        ) {
-            Column(modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(title, color = CyberBlue, fontWeight = FontWeight.Black, letterSpacing = 2.sp)
-                Spacer(Modifier.height(24.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    repeat(5) { index ->
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(if (index < pin.length) CyberBlue else Color.Gray.copy(alpha = 0.2f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            if (index < pin.length) {
-                                Text(pin[index].toString(), color = Color.Black, fontWeight = FontWeight.Bold)
-                            }
-                        }
-                    }
-                }
-                Spacer(Modifier.height(24.dp))
-                // Simple numeric keypad
-                val keys = listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "C", "0", "OK")
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    keys.chunked(3).forEach { row ->
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            row.forEach { key ->
-                                TextButton(
-                                    onClick = {
-                                        when (key) {
-                                            "C" -> if (pin.isNotEmpty()) pin = pin.dropLast(1)
-                                            "OK" -> {
-                                                // Keep manual OK just in case, but LaunchedEffect handles auto
-                                                if (pin.length == 5) onConfirm(pin)
-                                            }
-                                            else -> if (pin.length < 5) pin += key
-                                        }
-                                    },
-                                    modifier = Modifier.size(56.dp),
-                                    colors = ButtonDefaults.textButtonColors(containerColor = Color.White.copy(alpha = 0.05f))
-                                ) {
-                                    Text(key, color = Color.White, fontSize = 18.sp)
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun VaultSetupDialog(apps: List<AppInfo>, onDismiss: () -> Unit, onConfirm: (String, Set<String>, LockType) -> Unit) {
-    var pin by remember { mutableStateOf("") }
-    val selectedApps = remember { mutableStateOf(setOf<String>()) }
-    var showApps by remember { mutableStateOf(false) }
-
-    // Auto-advance when 5 digits are reached in setup
-    LaunchedEffect(pin) {
-        if (pin.length == 5 && !showApps) {
-            delay(300)
-            showApps = true
-        }
-    }
-
-    Dialog(onDismissRequest = onDismiss) {
-        Surface(
-            modifier = Modifier.fillMaxWidth().fillMaxHeight(0.85f),
-            shape = RoundedCornerShape(24.dp),
-            color = CyberDarkBlue,
-            border = androidx.compose.foundation.BorderStroke(1.dp, CyberBlue.copy(alpha = 0.3f))
-        ) {
-            Column(modifier = Modifier.padding(20.dp)) {
-                Text("VAULT INITIALIZATION", style = MaterialTheme.typography.titleLarge, color = CyberBlue, fontWeight = FontWeight.Black)
-                Spacer(Modifier.height(16.dp))
-                
-                if (!showApps) {
-                    Text("SET 5-DIGIT PIN", color = Color.Gray, fontSize = 12.sp)
-                    Spacer(Modifier.height(8.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                        repeat(5) { index ->
-                            Box(
-                                modifier = Modifier.size(44.dp).clip(RoundedCornerShape(8.dp)).background(if (index < pin.length) CyberBlue else Color.Gray.copy(alpha = 0.1f)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                if (index < pin.length) Text(pin[index].toString(), color = Color.Black, fontWeight = FontWeight.Bold)
-                            }
-                        }
-                    }
-                    Spacer(Modifier.height(16.dp))
-                    val keys = listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "C", "0", "->")
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        keys.chunked(3).forEach { row ->
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                row.forEach { key ->
-                                    TextButton(onClick = {
-                                        when(key) {
-                                            "C" -> if (pin.isNotEmpty()) pin = pin.dropLast(1)
-                                            "->" -> if (pin.length == 5) showApps = true
-                                            else -> if (pin.length < 5) pin += key
-                                        }
-                                    }, modifier = Modifier.weight(1f).height(48.dp), colors = ButtonDefaults.textButtonColors(containerColor = Color.White.copy(alpha = 0.05f))) {
-                                        Text(key, color = Color.White)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                } else {
-                    Text("SELECT STEALTH APPS", style = MaterialTheme.typography.labelMedium, color = Color.Gray)
-                    LazyColumn(modifier = Modifier.weight(1f)) {
-                        items(apps) { app ->
-                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().clickable {
-                                if (selectedApps.value.contains(app.packageName)) selectedApps.value -= app.packageName
-                                else selectedApps.value += app.packageName
-                            }.padding(vertical = 8.dp)) {
-                                app.icon?.let { Image(it.toBitmap().asImageBitmap(), contentDescription = null, modifier = Modifier.size(32.dp).clip(CircleShape)) }
-                                Spacer(Modifier.width(12.dp))
-                                Text(app.appName, color = Color.White, modifier = Modifier.weight(1f))
-                                Checkbox(checked = selectedApps.value.contains(app.packageName), onCheckedChange = null)
-                            }
-                        }
-                    }
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                        TextButton(onClick = { showApps = false }) { Text("BACK") }
-                        Button(onClick = { onConfirm(pin, selectedApps.value, LockType.PIN) }) { Text("CREATE VAULT") }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun SmallMapFab(icon: ImageVector, active: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
-    Surface(
-        modifier = modifier.size(40.dp).clickable { onClick() },
-        shape = CircleShape,
-        color = if (active) CyberBlue else CyberDarkBlue.copy(alpha = 0.7f),
-        contentColor = if (active) Color.Black else Color.White,
-        shadowElevation = 8.dp
-    ) {
-        Box(contentAlignment = Alignment.Center) {
-            Icon(icon, contentDescription = null, modifier = Modifier.size(20.dp))
         }
     }
 }

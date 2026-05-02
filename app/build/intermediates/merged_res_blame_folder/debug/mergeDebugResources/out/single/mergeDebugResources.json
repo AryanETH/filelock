@@ -1,18 +1,14 @@
 [
     {
-        "merged": "C:\\Users\\anilp\\.gradle\\daemon\\9.4.1\\com.geovault.app-debug-52:\\drawable_ic_calculator.xml.flat",
-        "source": "C:\\Users\\anilp\\.gradle\\daemon\\9.4.1\\com.geovault.app-main-54:\\drawable\\ic_calculator.xml"
+        "merged": "com.geovault.app-debug-58:/drawable_ic_calculator.xml.flat",
+        "source": "com.geovault.app-main-60:/drawable/ic_calculator.xml"
     },
     {
-        "merged": "C:\\Users\\anilp\\.gradle\\daemon\\9.4.1\\com.geovault.app-debug-52:\\xml_accessibility_service_config.xml.flat",
-        "source": "C:\\Users\\anilp\\.gradle\\daemon\\9.4.1\\com.geovault.app-main-54:\\xml\\accessibility_service_config.xml"
+        "merged": "com.geovault.app-debug-58:/xml_accessibility_service_config.xml.flat",
+        "source": "com.geovault.app-main-60:/xml/accessibility_service_config.xml"
     },
     {
-        "merged": "com.geovault.app-debug-52:/xml_accessibility_service_config.xml.flat",
-        "source": "com.geovault.app-main-54:/xml/accessibility_service_config.xml"
-    },
-    {
-        "merged": "C:\\Users\\anilp\\.gradle\\daemon\\9.4.1\\com.geovault.app-debug-52:\\drawable_ic_vault.xml.flat",
-        "source": "C:\\Users\\anilp\\.gradle\\daemon\\9.4.1\\com.geovault.app-main-54:\\drawable\\ic_vault.xml"
+        "merged": "com.geovault.app-debug-58:/drawable_ic_vault.xml.flat",
+        "source": "com.geovault.app-main-60:/drawable/ic_vault.xml"
     }
 ]

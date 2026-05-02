@@ -56,6 +56,13 @@ class AppLockerService : AccessibilityService(), LifecycleOwner, ViewModelStoreO
         refreshLockedPackages()
     }
 
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (intent?.getBooleanExtra("refresh_locked_apps", false) == true) {
+            refreshLockedPackages()
+        }
+        return super.onStartCommand(intent, flags, startId)
+    }
+
     private fun prepareOverlay() {
         overlayView = ComposeView(this).apply {
             setContent {
@@ -111,8 +118,9 @@ class AppLockerService : AccessibilityService(), LifecycleOwner, ViewModelStoreO
         if (lockedPackages.contains(currentPackage)) {
             if (currentPackage != bypassPackage) {
                 targetPackageState.value = currentPackage
+                // ONLY use Overlay for primary lock to avoid "Double Auth" issue.
+                // LockActivity is only used fallback for Biometrics.
                 showOverlayImmediate()
-                startLockActivity(currentPackage)
             } else {
                 hideOverlayImmediate()
             }
@@ -194,7 +202,7 @@ class AppLockerService : AccessibilityService(), LifecycleOwner, ViewModelStoreO
             targetPackage = targetPackage,
             onAuthenticated = {
                 val prefs = com.geovault.security.SecureManager.getInstance(context).prefs
-                prefs.edit().putString("bypass_package", targetPackage).apply()
+                prefs.edit().putString("bypass_package", targetPackage).commit()
                 hideOverlayImmediate()
             },
             onBiometricRequested = {

@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.geovault.app-mergeDebugResources-50:/values-is/values-is.xml",
+            "outputFile": "com.geovault.app-mergeDebugResources-56:/values-is/values-is.xml",
             "map": [
                 {
                     "source": "C:\\Users\\anilp\\.gradle\\caches\\9.4.1\\transforms\\39a145a43d3ab8841af39bb0dff9766c\\transformed\\media3-exoplayer-1.10.0\\res\\values-is\\values-is.xml",

@@ -1,7 +1,7 @@
 package com.geovault.model
 
 enum class FileCategory {
-    PHOTO, VIDEO, AUDIO, DOCUMENT, OTHER
+    PHOTO, VIDEO, AUDIO, DOCUMENT, INTRUDER, OTHER
 }
 
 data class VaultFile(

@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.geovault.app-mergeDebugResources-50:/values-pt-rBR/values-pt-rBR.xml",
+            "outputFile": "com.geovault.app-mergeDebugResources-56:/values-pt-rBR/values-pt-rBR.xml",
             "map": [
                 {
                     "source": "C:\\Users\\anilp\\.gradle\\caches\\9.4.1\\transforms\\bd4e2a0a19a192632eb345619b30cefa\\transformed\\core-1.18.0\\res\\values-pt-rBR\\values-pt-rBR.xml",

@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.geovault.app-mergeDebugResources-50:/values-or/values-or.xml",
+            "outputFile": "com.geovault.app-mergeDebugResources-56:/values-or/values-or.xml",
             "map": [
                 {
                     "source": "C:\\Users\\anilp\\.gradle\\caches\\9.4.1\\transforms\\43396c7ce9aec6fd3c4dab10321978b0\\transformed\\ui\\res\\values-or\\values-or.xml",

@@ -90,7 +90,7 @@ fun MediaViewerScreen(
                 CircularProgressIndicator(color = Color.Cyan)
             } else {
                 when (file.category) {
-                    FileCategory.PHOTO -> PhotoViewer(decryptedFile!!)
+                    FileCategory.PHOTO, FileCategory.INTRUDER -> PhotoViewer(decryptedFile!!)
                     FileCategory.VIDEO -> VideoViewer(decryptedFile!!)
                     FileCategory.AUDIO -> AudioViewer(decryptedFile!!)
                     FileCategory.DOCUMENT -> PdfViewer(decryptedFile!!)

@@ -22,6 +22,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -37,12 +38,22 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.core.graphics.drawable.toBitmap
+import androidx.media3.common.util.UnstableApi
 import com.geovault.model.FileCategory
 import com.geovault.model.VaultState
 import com.geovault.ui.theme.CyberBlue
 import com.geovault.ui.theme.CyberDarkBlue
 import com.geovault.ui.theme.TextSecondary
 
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
+import com.geovault.security.CryptoManager
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.io.File
+import java.io.FileOutputStream
+
+@UnstableApi
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VaultContentScreen(
@@ -58,7 +69,9 @@ fun VaultContentScreen(
     onAddFile: (android.net.Uri, FileCategory) -> Unit,
     onToggleAppLock: (String) -> Unit,
     onRemoveVault: (String) -> Unit,
-    onClearAllVaults: () -> Unit
+    onClearAllVaults: () -> Unit,
+    onGrantCamera: () -> Unit,
+    onGrantStorage: () -> Unit
 ) {
     var currentScreen by remember { mutableStateOf<ContentScreen>(ContentScreen.Dashboard) }
     var selectedCategoryForAdd by remember { mutableStateOf<FileCategory?>(null) }
@@ -97,7 +110,7 @@ fun VaultContentScreen(
                 navigationIcon = {
                     if (currentScreen != ContentScreen.Dashboard) {
                         IconButton(onClick = { currentScreen = ContentScreen.Dashboard }) {
-                            Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                         }
                     }
                 },
@@ -151,7 +164,9 @@ fun VaultContentScreen(
                     onOpenOverlaySettings = onOpenOverlaySettings,
                     onOpenAccessibilitySettings = onOpenAccessibilitySettings,
                     onOpenProtectedApps = onOpenProtectedApps,
-                    onToggleMasterStealth = onToggleMasterStealth
+                    onToggleMasterStealth = onToggleMasterStealth,
+                    onGrantCamera = onGrantCamera,
+                    onGrantStorage = onGrantStorage
                 )
                 is ContentScreen.CategoryView -> FileCategoryList(
                     category = screen.category,
@@ -223,7 +238,7 @@ fun DashboardContent(
             ) {
                 Text("CATEGORIES", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = TextSecondary)
                 Spacer(modifier = Modifier.weight(1f))
-                Icon(Icons.Default.Sort, contentDescription = "Sort", tint = TextSecondary, modifier = Modifier.size(16.dp))
+                Icon(Icons.AutoMirrored.Filled.Sort, contentDescription = "Sort", tint = TextSecondary, modifier = Modifier.size(16.dp))
             }
         }
 
@@ -231,6 +246,7 @@ fun DashboardContent(
         item { CategoryItem("Videos", state.videoCount, Icons.Default.PlayCircle, Color(0xFFFFC107)) { onCategoryClick(FileCategory.VIDEO) } }
         item { CategoryItem("Audio", state.audioCount, Icons.Default.MusicNote, Color(0xFFFF5252)) { onCategoryClick(FileCategory.AUDIO) } }
         item { CategoryItem("Documents", state.documentCount, Icons.Default.Description, Color(0xFF00E676)) { onCategoryClick(FileCategory.DOCUMENT) } }
+        item { CategoryItem("Intruders", state.intruderCount, Icons.Default.PersonSearch, Color(0xFFFF9800)) { onCategoryClick(FileCategory.INTRUDER) } }
         item { CategoryItem("Recycle bin", state.recycleBinCount, Icons.Default.Delete, Color(0xFF90A4AE)) {} }
         
         item { Spacer(modifier = Modifier.height(80.dp)) }
@@ -282,14 +298,17 @@ fun FileItem(file: com.geovault.model.VaultFile, onClick: () -> Unit) {
                 .background(Color.White.copy(alpha = 0.05f)),
             contentAlignment = Alignment.Center
         ) {
-            val icon = when (file.category) {
-                FileCategory.PHOTO -> Icons.Default.Image
-                FileCategory.VIDEO -> Icons.Default.PlayCircle
-                FileCategory.AUDIO -> Icons.Default.MusicNote
-                FileCategory.DOCUMENT -> Icons.Default.Description
-                else -> Icons.Default.InsertDriveFile
+            if (file.category == FileCategory.PHOTO || file.category == FileCategory.INTRUDER) {
+                FileThumbnail(file)
+            } else {
+                val icon = when (file.category) {
+                    FileCategory.VIDEO -> Icons.Default.PlayCircle
+                    FileCategory.AUDIO -> Icons.Default.MusicNote
+                    FileCategory.DOCUMENT -> Icons.Default.Description
+                    else -> Icons.AutoMirrored.Filled.InsertDriveFile
+                }
+                Icon(icon, contentDescription = null, tint = CyberBlue, modifier = Modifier.size(32.dp))
             }
-            Icon(icon, contentDescription = null, tint = CyberBlue, modifier = Modifier.size(32.dp))
         }
         Spacer(Modifier.height(4.dp))
         Text(
@@ -298,6 +317,46 @@ fun FileItem(file: com.geovault.model.VaultFile, onClick: () -> Unit) {
             fontSize = 10.sp,
             maxLines = 1,
             fontWeight = FontWeight.Medium
+        )
+    }
+}
+
+@Composable
+fun FileThumbnail(file: com.geovault.model.VaultFile) {
+    val context = LocalContext.current
+    var thumbnailPath by remember { mutableStateOf<File?>(null) }
+    val cryptoManager = remember { CryptoManager() }
+
+    LaunchedEffect(file) {
+        withContext(Dispatchers.IO) {
+            try {
+                val encryptedFile = File(file.encryptedPath)
+                if (encryptedFile.exists()) {
+                    val tempFile = File(context.cacheDir, "thumb_${file.id}.jpg")
+                    if (!tempFile.exists()) {
+                        cryptoManager.decryptToStream(encryptedFile.inputStream(), FileOutputStream(tempFile))
+                    }
+                    thumbnailPath = tempFile
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    if (thumbnailPath != null) {
+        AsyncImage(
+            model = thumbnailPath,
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
+    } else {
+        Icon(
+            if (file.category == FileCategory.INTRUDER) Icons.Default.Face else Icons.Default.Image,
+            contentDescription = null, 
+            tint = CyberBlue.copy(alpha = 0.4f), 
+            modifier = Modifier.size(32.dp)
         )
     }
 }
@@ -323,8 +382,7 @@ fun AppLockManagement(state: VaultState, onToggleAppLock: (String) -> Unit) {
                         .fillMaxWidth()
                         .clickable { onToggleAppLock(app.packageName) }
                         .padding(vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                    verticalAlignment = Alignment.CenterVertically) {
                     app.icon?.let {
                         Image(
                             it.toBitmap().asImageBitmap(),
@@ -414,7 +472,9 @@ fun SettingsSection(
     onOpenOverlaySettings: () -> Unit,
     onOpenAccessibilitySettings: () -> Unit,
     onOpenProtectedApps: () -> Unit,
-    onToggleMasterStealth: () -> Unit
+    onToggleMasterStealth: () -> Unit,
+    onGrantCamera: () -> Unit,
+    onGrantStorage: () -> Unit
 ) {
     Column(modifier = Modifier.fillMaxWidth().padding(top = 16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Text("SYSTEM PERMISSIONS", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = CyberBlue)
@@ -422,6 +482,8 @@ fun SettingsSection(
         PermissionItem("Usage Access", "Required to detect app launches for Stealth Mode.", state.hasUsageStatsPermission, onOpenUsageSettings)
         PermissionItem("Overlay Access", "Required to block access with a lock screen.", state.hasOverlayPermission, onOpenOverlaySettings)
         PermissionItem("Accessibility", "The most reliable way to monitor security.", state.hasAccessibilityPermission, onOpenAccessibilitySettings)
+        PermissionItem("Camera", "Required for Intruder Selfie feature.", state.hasCameraPermission, onGrantCamera)
+        PermissionItem("Storage", "Required to encrypt and store your files.", state.hasStoragePermission, onGrantStorage)
 
         HorizontalDivider(color = Color.White.copy(alpha = 0.1f))
 
@@ -522,12 +584,11 @@ fun BackupManagementDialog(
                 // NO LAZYCOLUMN HERE - It causes the intrinsic measurement crash when nested in Dialog with sub-lazy components
                 Column(modifier = Modifier.weight(1f).verticalScroll(rememberScrollState())) {
                     state.vaults.forEach { vault ->
-                        ListItem(
-                            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                            headlineContent = { Text("Vault ${vault.id.take(8)}", color = Color.White) },
-                            supportingContent = { 
-                                Column {
-                                    Text("${vault.hiddenApps.size} apps locked", color = Color.Gray, fontSize = 10.sp)
+                        Box(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text("Vault ${vault.id.take(8)}", color = Color.White, fontWeight = FontWeight.Bold)
+                                    Text("${vault.hiddenApps.size} apps locked", color = Color.Gray, fontSize = 11.sp)
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Text("(${String.format("%.4f", vault.location.latitude)}, ${String.format("%.4f", vault.location.longitude)})", color = CyberBlue, fontSize = 10.sp)
                                         Spacer(Modifier.width(8.dp))
@@ -539,13 +600,12 @@ fun BackupManagementDialog(
                                         }
                                     }
                                 }
-                            },
-                            trailingContent = {
                                 IconButton(onClick = { onRemoveVault(vault.id) }) {
                                     Icon(Icons.Default.Delete, null, tint = Color(0xFFFF5252))
                                 }
                             }
-                        )
+                        }
+                        HorizontalDivider(color = Color.White.copy(alpha = 0.1f))
                     }
                     
                     if (state.vaultHistory.isNotEmpty()) {
@@ -553,12 +613,17 @@ fun BackupManagementDialog(
                         Text("HISTORY", style = MaterialTheme.typography.labelLarge, color = Color.Gray)
                         
                         state.vaultHistory.forEach { hist ->
-                            ListItem(
-                                colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                                headlineContent = { 
+                            Box(modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp)) {
+                                Column {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Text("Vault Established", color = Color.White.copy(alpha = 0.7f))
+                                        Text("Vault Established", color = Color.White.copy(alpha = 0.7f), fontWeight = FontWeight.SemiBold)
                                         Spacer(Modifier.weight(1f))
+                                        Text(
+                                            java.text.SimpleDateFormat("MMM dd, HH:mm", java.util.Locale.getDefault()).format(hist.timestamp),
+                                            color = Color.Gray,
+                                            fontSize = 10.sp
+                                        )
+                                        Spacer(Modifier.width(8.dp))
                                         IconButton(
                                             onClick = { copyToClipboard(context, hist.location.latitude, hist.location.longitude) },
                                             modifier = Modifier.size(28.dp)
@@ -566,32 +631,22 @@ fun BackupManagementDialog(
                                             Icon(Icons.Default.Map, null, tint = CyberBlue, modifier = Modifier.size(16.dp))
                                         }
                                     }
-                                },
-                                supportingContent = { 
-                                    Column {
-                                        Text("${hist.appsCount} apps hidden:", color = Color.Gray, fontSize = 11.sp)
-                                        Spacer(Modifier.height(4.dp))
-                                        // Standard Row with horizontalScroll instead of LazyRow to avoid measuring conflicts
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                        ) {
-                                            hist.hiddenAppPackages.forEach { pkg ->
-                                                AppMiniIcon(pkg)
-                                            }
+                                    Spacer(Modifier.height(4.dp))
+                                    Text("${hist.appsCount} apps hidden:", color = Color.Gray, fontSize = 11.sp)
+                                    Spacer(Modifier.height(4.dp))
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        hist.hiddenAppPackages.forEach { pkg ->
+                                            AppMiniIcon(pkg)
                                         }
-                                        Spacer(Modifier.height(4.dp))
-                                        Text("Lat: ${hist.location.latitude}, Lon: ${hist.location.longitude}", color = CyberBlue, fontSize = 9.sp)
                                     }
-                                },
-                                trailingContent = {
-                                    Text(
-                                        java.text.SimpleDateFormat("MMM dd, HH:mm", java.util.Locale.getDefault()).format(hist.timestamp),
-                                        color = Color.Gray,
-                                        fontSize = 10.sp
-                                    )
+                                    Spacer(Modifier.height(4.dp))
+                                    Text("Lat: ${hist.location.latitude}, Lon: ${hist.location.longitude}", color = CyberBlue, fontSize = 9.sp)
                                 }
-                            )
+                            }
+                            HorizontalDivider(color = Color.White.copy(alpha = 0.05f))
                         }
                     }
                 }

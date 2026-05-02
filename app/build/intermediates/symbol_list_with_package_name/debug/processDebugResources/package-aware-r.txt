@@ -229,6 +229,7 @@ attr imageAspectRatio
 attr imageAspectRatioAdjust
 attr imageButtonStyle
 attr image_display_mode
+attr implementationMode
 attr indeterminateProgressStyle
 attr initialActivityCount
 attr isDraggingToFullscreenAllowed
@@ -399,6 +400,7 @@ attr repeat_toggle_modes
 attr resize_mode
 attr reverseLayout
 attr rewind_icon
+attr scaleType
 attr scopeUris
 attr scrubber_color
 attr scrubber_disabled_size
@@ -1147,6 +1149,7 @@ id clip_horizontal
 id clip_vertical
 id coil_request_manager
 id collapseActionView
+id compatible
 id compose_prefetch_scheduler
 id compose_view_saveable_id_tag
 id consume_window_insets_tag
@@ -1218,6 +1221,9 @@ id exo_vr
 id expand_activities_button
 id expanded_menu
 id fill
+id fillCenter
+id fillEnd
+id fillStart
 id fill_horizontal
 id fill_vertical
 id fingerprint_description
@@ -1225,6 +1231,9 @@ id fingerprint_error
 id fingerprint_icon
 id fingerprint_subtitle
 id fit
+id fitCenter
+id fitEnd
+id fitStart
 id fixed
 id fixed_height
 id fixed_width
@@ -1273,6 +1282,7 @@ id on
 id one
 id parentPanel
 id parent_matrix
+id performance
 id pooling_container_listener_holder_tag
 id progress_circular
 id progress_horizontal
@@ -2109,6 +2119,7 @@ styleable PlayerControlView ad_marker_color ad_marker_width animation_enabled ba
 styleable PlayerView ad_marker_color ad_marker_width animation_enabled artwork_display_mode auto_show bar_gravity bar_height buffered_color controller_layout_id default_artwork fastforward_icon fullscreen_enter_icon fullscreen_exit_icon hide_during_ads hide_on_touch image_display_mode keep_content_on_player_reset next_icon pause_icon play_icon played_ad_marker_color played_color player_layout_id previous_icon repeat_all_icon repeat_off_icon repeat_one_icon repeat_toggle_modes resize_mode rewind_icon scrubber_color scrubber_disabled_size scrubber_dragged_size scrubber_drawable scrubber_enabled_size show_buffering show_shuffle_button show_subtitle_button show_timeout show_vr_button shuffle_off_icon shuffle_on_icon shutter_background_color subtitle_off_icon subtitle_on_icon surface_type time_bar_min_update_interval time_bar_scrubbing_enabled touch_target_height unplayed_color use_artwork use_controller vr_icon
 styleable PopupWindow android_popupBackground android_popupAnimationStyle overlapAnchor
 styleable PopupWindowBackgroundState state_above_anchor
+styleable PreviewView implementationMode scaleType
 styleable RecycleListView paddingBottomNoButtons paddingTopNoTitle
 styleable RecyclerView android_orientation android_clipToPadding android_descendantFocusability fastScrollEnabled fastScrollHorizontalThumbDrawable fastScrollHorizontalTrackDrawable fastScrollVerticalThumbDrawable fastScrollVerticalTrackDrawable layoutManager reverseLayout spanCount stackFromEnd
 styleable SearchView android_focusable android_maxWidth android_inputType android_imeOptions closeIcon commitIcon defaultQueryHint goIcon iconifiedByDefault layout queryBackground queryHint searchHintIcon searchIcon submitBackground suggestionRowLayout voiceIcon

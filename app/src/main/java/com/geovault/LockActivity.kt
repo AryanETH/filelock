@@ -29,9 +29,6 @@ import androidx.compose.ui.unit.sp
 import com.geovault.ui.theme.GeoVaultTheme
 import com.geovault.ui.theme.CyberBlack
 import com.geovault.ui.AuthSelectionScreen
-import com.geovault.ui.PinLockScreen
-import com.geovault.ui.PatternLockScreen
-import com.geovault.ui.KeypadButton
 import android.content.Context
 import android.content.Intent
 
@@ -62,7 +59,7 @@ class LockActivity : FragmentActivity() {
                         targetPackage = targetPackage,
                         onAuthenticated = {
                             val prefs = com.geovault.security.SecureManager.getInstance(this).prefs
-                            prefs.edit().putString("bypass_package", targetPackage).apply()
+                            prefs.edit().putString("bypass_package", targetPackage).commit()
                             unlock(targetPackage)
                         },
                         onBiometricRequested = {
@@ -81,7 +78,7 @@ class LockActivity : FragmentActivity() {
                 override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
                     super.onAuthenticationSucceeded(result)
                     val prefs = com.geovault.security.SecureManager.getInstance(this@LockActivity).prefs
-                    prefs.edit().putString("bypass_package", targetPackage).apply()
+                    prefs.edit().putString("bypass_package", targetPackage).commit()
                     unlock(targetPackage)
                 }
             })

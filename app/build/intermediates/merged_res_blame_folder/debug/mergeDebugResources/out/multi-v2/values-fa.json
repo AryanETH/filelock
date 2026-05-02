@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.geovault.app-mergeDebugResources-50:/values-fa/values-fa.xml",
+            "outputFile": "com.geovault.app-mergeDebugResources-56:/values-fa/values-fa.xml",
             "map": [
                 {
                     "source": "C:\\Users\\anilp\\.gradle\\caches\\9.4.1\\transforms\\311273f712e72cb6009a9cc0ad301eb6\\transformed\\biometric-1.2.0-alpha05\\res\\values-fa\\values-fa.xml",
