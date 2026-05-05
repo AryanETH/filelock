@@ -1,5 +1,8 @@
 package com.geovault.ui
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -15,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
@@ -32,7 +36,7 @@ fun CompactPinPad(correctPin: String? = null, onPinComplete: (String) -> Unit, o
     var isError by remember { mutableStateOf(false) }
     
     LaunchedEffect(pin) {
-        if (pin.length == 5) {
+        if (pin.length == 4) {
             delay(300)
             if (correctPin != null) {
                 if (pin == correctPin) {
@@ -52,32 +56,47 @@ fun CompactPinPad(correctPin: String? = null, onPinComplete: (String) -> Unit, o
         }
     }
 
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            repeat(5) { index ->
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxWidth().animateContentSize()
+        ) {
+            repeat(4) { index ->
                 val filled = index < pin.length
+                
+                val scale by animateFloatAsState(
+                    targetValue = if (filled) 1f else 0.8f,
+                    animationSpec = spring(dampingRatio = 0.6f, stiffness = 400f),
+                    label = "PinScale"
+                )
+
                 Box(
                     modifier = Modifier
+                        .padding(horizontal = 5.dp)
                         .size(44.dp)
-                        .clip(RoundedCornerShape(10.dp))
+                        .scale(scale)
+                        .clip(RoundedCornerShape(12.dp))
                         .background(
                             when {
                                 isError -> CyberNeonRed.copy(alpha = 0.2f)
-                                filled -> CyberBlue
-                                else -> Color.White.copy(alpha = 0.05f)
+                                filled -> MaterialTheme.colorScheme.primary
+                                else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)
                             }
                         )
                         .border(
                             1.dp, 
-                            if (isError) CyberNeonRed else if (filled) CyberBlue else Color.White.copy(alpha = 0.1f), 
-                            RoundedCornerShape(10.dp)
+                            if (isError) CyberNeonRed else if (filled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.1f), 
+                            RoundedCornerShape(12.dp)
                         ),
                     contentAlignment = Alignment.Center
                 ) {
                     if (filled) {
                         Text(
                             pin[index].toString(), 
-                            color = if (isError) CyberNeonRed else Color.Black, 
+                            color = if (isError) CyberNeonRed else MaterialTheme.colorScheme.onPrimary, 
                             fontWeight = FontWeight.Black, 
                             fontSize = 18.sp
                         )
@@ -90,13 +109,19 @@ fun CompactPinPad(correctPin: String? = null, onPinComplete: (String) -> Unit, o
         
         val keys = listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "C", "0", "OK")
         keys.chunked(3).forEach { row ->
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.padding(vertical = 6.dp)) {
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp)
+            ) {
                 row.forEach { key ->
                     Surface(
-                        modifier = Modifier.size(60.dp).clickable(enabled = !isError) {
+                        modifier = Modifier
+                            .padding(horizontal = 6.dp)
+                            .size(60.dp)
+                            .clickable(enabled = !isError) {
                             when (key) {
                                 "C" -> if (pin.isNotEmpty()) pin = pin.dropLast(1)
-                                "OK" -> if (pin.length == 5) {
+                                "OK" -> if (pin.length == 4) {
                                     if (correctPin != null && pin != correctPin) {
                                         isError = true
                                         onError?.invoke()
@@ -104,15 +129,15 @@ fun CompactPinPad(correctPin: String? = null, onPinComplete: (String) -> Unit, o
                                         onPinComplete(pin)
                                     }
                                 }
-                                else -> if (pin.length < 5) pin += key
+                                else -> if (pin.length < 4) pin += key
                             }
                         },
                         shape = CircleShape,
-                        color = Color.White.copy(alpha = 0.05f),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, if (isError) CyberNeonRed.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.1f))
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, if (isError) CyberNeonRed.copy(alpha = 0.5f) else MaterialTheme.colorScheme.outline.copy(alpha = 0.1f))
                     ) {
                         Box(contentAlignment = Alignment.Center) {
-                            Text(key, color = if (isError) CyberNeonRed else Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                            Text(key, color = if (isError) CyberNeonRed else MaterialTheme.colorScheme.onSurface, fontSize = 20.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -126,6 +151,9 @@ fun CompactPatternGrid(correctPattern: String? = null, onPatternComplete: (Strin
     var secret by remember { mutableStateOf("") }
     var isError by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+    
+    val inactiveDotColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
+    val activeDotColor = MaterialTheme.colorScheme.primary
     
     Box(
         modifier = Modifier
@@ -176,8 +204,8 @@ fun CompactPatternGrid(correctPattern: String? = null, onPatternComplete: (Strin
                     drawCircle(
                         color = when {
                             isError && isActive -> CyberNeonRed
-                            isActive -> CyberBlue
-                            else -> Color.White.copy(alpha = 0.1f)
+                            isActive -> activeDotColor
+                            else -> inactiveDotColor
                         },
                         radius = dotRadius,
                         center = Offset(startOffset + j * spacing, startOffset + i * spacing)
@@ -190,7 +218,7 @@ fun CompactPatternGrid(correctPattern: String? = null, onPatternComplete: (Strin
                     val p1 = getCenterForIndex(secret[i].toString().toInt(), spacing, startOffset)
                     val p2 = getCenterForIndex(secret[i+1].toString().toInt(), spacing, startOffset)
                     drawLine(
-                        if (isError) CyberNeonRed else CyberBlue, 
+                        if (isError) CyberNeonRed else activeDotColor, 
                         p1, p2, 
                         strokeWidth = 4.dp.toPx(), 
                         cap = StrokeCap.Round
@@ -203,7 +231,7 @@ fun CompactPatternGrid(correctPattern: String? = null, onPatternComplete: (Strin
     Spacer(Modifier.height(8.dp))
     Text(
         if (isError) "INVALID PATTERN" else "CONNECT DOTS TO VERIFY", 
-        color = if (isError) CyberNeonRed else Color.Gray, 
+        color = if (isError) CyberNeonRed else MaterialTheme.colorScheme.onSurfaceVariant,
         fontSize = 10.sp, 
         letterSpacing = 1.sp
     )

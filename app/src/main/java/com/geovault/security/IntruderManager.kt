@@ -11,18 +11,66 @@ import kotlinx.coroutines.*
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
 
-import java.io.ByteArrayOutputStream
 import java.io.FileOutputStream
 
 class IntruderManager private constructor(context: Context) {
     private val appContext = context.applicationContext
     private val cryptoManager = CryptoManager()
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    private var imageCapture: ImageCapture? = null
 
-    fun captureIntruder(lifecycleOwner: LifecycleOwner, onCaptured: (Uri) -> Unit) {
+    fun captureIntruder(onCaptured: (Uri) -> Unit) {
+        val imageCapture = this.imageCapture
+        if (imageCapture == null) {
+            Log.e("IntruderManager", "Cannot capture: imageCapture is null. Session might not be started.")
+            return
+        }
+        
+        Log.d("IntruderManager", "Attempting to capture intruder...")
+        val name = SimpleDateFormat("yyyy-MM-dd-HH-mm-ss-SSS", Locale.US).format(System.currentTimeMillis())
+        val intruderDir = File(appContext.filesDir, "intruder_files")
+        if (!intruderDir.exists()) intruderDir.mkdirs()
+        
+        val photoFile = File(intruderDir, "$name.bin")
+
+        imageCapture.takePicture(
+            ContextCompat.getMainExecutor(appContext),
+            object : ImageCapture.OnImageCapturedCallback() {
+                override fun onCaptureSuccess(image: ImageProxy) {
+                    Log.d("IntruderManager", "Image captured successfully, processing...")
+                    serviceScope.launch(Dispatchers.IO) {
+                        try {
+                            val buffer = image.planes[0].buffer
+                            val bytes = ByteArray(buffer.remaining())
+                            buffer.get(bytes)
+                            image.close()
+
+                            val fos = FileOutputStream(photoFile)
+                            cryptoManager.encrypt(bytes, fos)
+                            fos.close()
+
+                            val savedUri = Uri.fromFile(photoFile)
+                            Log.d("IntruderManager", "Encrypted intruder photo saved: $savedUri")
+                            
+                            withContext(Dispatchers.Main) {
+                                onCaptured(savedUri)
+                            }
+                        } catch (e: Exception) {
+                            Log.e("IntruderManager", "Failed to process intruder photo", e)
+                            image.close()
+                        }
+                    }
+                }
+
+                override fun onError(exc: ImageCaptureException) {
+                    Log.e("IntruderManager", "Photo capture failed: ${exc.message}", exc)
+                }
+            }
+        )
+    }
+
+    fun startSession(lifecycleOwner: LifecycleOwner) {
         if (ContextCompat.checkSelfPermission(appContext, android.Manifest.permission.CAMERA) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
             Log.e("IntruderManager", "Camera permission not granted")
             return
@@ -33,7 +81,7 @@ class IntruderManager private constructor(context: Context) {
         cameraProviderFuture.addListener({
             val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
 
-            val imageCapture = ImageCapture.Builder()
+            imageCapture = ImageCapture.Builder()
                 .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
                 .build()
 
@@ -42,48 +90,20 @@ class IntruderManager private constructor(context: Context) {
             try {
                 cameraProvider.unbindAll()
                 cameraProvider.bindToLifecycle(lifecycleOwner, cameraSelector, imageCapture)
-
-                val name = SimpleDateFormat("yyyy-MM-dd-HH-mm-ss-SSS", Locale.US).format(System.currentTimeMillis())
-                val intruderDir = File(appContext.filesDir, "intruder_files")
-                if (!intruderDir.exists()) intruderDir.mkdirs()
-                
-                val photoFile = File(intruderDir, "$name.bin") // Save as .bin for encrypted
-
-                imageCapture.takePicture(
-                    ContextCompat.getMainExecutor(appContext),
-                    object : ImageCapture.OnImageCapturedCallback() {
-                        override fun onCaptureSuccess(image: ImageProxy) {
-                            serviceScope.launch(Dispatchers.IO) {
-                                try {
-                                    val buffer = image.planes[0].buffer
-                                    val bytes = ByteArray(buffer.remaining())
-                                    buffer.get(bytes)
-                                    image.close()
-
-                                    val fos = FileOutputStream(photoFile)
-                                    cryptoManager.encrypt(bytes, fos)
-                                    fos.close()
-
-                                    val savedUri = Uri.fromFile(photoFile)
-                                    Log.d("IntruderManager", "Encrypted intruder photo captured: $savedUri")
-                                    
-                                    withContext(Dispatchers.Main) {
-                                        onCaptured(savedUri)
-                                    }
-                                } catch (e: Exception) {
-                                    Log.e("IntruderManager", "Failed to process intruder photo", e)
-                                    image.close()
-                                }
-                            }
-                        }
-
-                        override fun onError(exc: ImageCaptureException) {
-                            Log.e("IntruderManager", "Photo capture failed: ${exc.message}", exc)
-                        }
-                    }
-                )
             } catch (exc: Exception) {
                 Log.e("IntruderManager", "Use case binding failed", exc)
+            }
+        }, ContextCompat.getMainExecutor(appContext))
+    }
+
+    fun stopSession() {
+        val cameraProviderFuture = ProcessCameraProvider.getInstance(appContext)
+        cameraProviderFuture.addListener({
+            try {
+                cameraProviderFuture.get().unbindAll()
+                imageCapture = null
+            } catch (e: Exception) {
+                Log.e("IntruderManager", "Error stopping session", e)
             }
         }, ContextCompat.getMainExecutor(appContext))
     }

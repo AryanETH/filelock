@@ -22,7 +22,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.Job
 
 import com.geovault.map.OfflineMapHelper
 import com.geovault.model.*
@@ -32,7 +31,11 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
 import java.util.UUID
-import android.app.usage.UsageStatsManager
+import android.app.admin.DevicePolicyManager
+import android.content.ContentValues
+import android.os.Environment
+import android.provider.MediaStore
+import kotlinx.coroutines.withContext
 
 class VaultViewModel(application: Application) : AndroidViewModel(application) {
     private val _uiState = MutableStateFlow(VaultState())
@@ -42,7 +45,14 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
     private val offlineHelper = OfflineMapHelper(application)
     private val cryptoManager = com.geovault.security.CryptoManager()
 
+    private val preferenceListener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+        if (key == "vault_file_ids" || key?.startsWith("file_") == true) {
+            updateFileCounts()
+        }
+    }
+
     init {
+        prefs.registerOnSharedPreferenceChangeListener(preferenceListener)
         ensureMainActivityEnabled()
         loadInstalledApps()
         loadPersistedVaults()
@@ -50,13 +60,24 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
         checkPermissions()
         updateFileCounts()
     }
+
+    override fun onCleared() {
+        super.onCleared()
+        prefs.unregisterOnSharedPreferenceChangeListener(preferenceListener)
+    }
     
     // Polling based locker removed in favor of AccessibilityService
 
     fun completeOnboarding() {
         prefs.edit().putBoolean("is_first_run", false).apply()
-        _uiState.update { it.copy(isFirstRun = false, isMapDownloading = true) }
+        val tourCompleted = prefs.getBoolean("tour_completed", false)
+        _uiState.update { it.copy(isFirstRun = false, isMapDownloading = true, showTour = !tourCompleted) }
         startMapDownload()
+    }
+
+    fun completeTour() {
+        prefs.edit().putBoolean("tour_completed", true).apply()
+        _uiState.update { it.copy(showTour = false) }
     }
 
     fun addIntruderFile(uri: Uri) {
@@ -70,6 +91,19 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun checkFirstRun() {
         val isFirstRun = prefs.getBoolean("is_first_run", true)
+        if (isFirstRun) {
+            // Ensure clean state on first run by clearing potentially stale or default data
+            prefs.edit().apply {
+                remove("vault_ids")
+                remove("vault_file_ids")
+                remove("vault_history_ids")
+                remove("bypass_package")
+                remove("active_vault_id")
+                putBoolean("is_locked", true)
+                putBoolean("master_stealth_enabled", false)
+                apply()
+            }
+        }
         _uiState.update { it.copy(isFirstRun = isFirstRun) }
     }
 
@@ -101,43 +135,42 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
             val contentResolver = context.contentResolver
             
             try {
+                // 1. Get original file data
                 val inputStream: InputStream? = contentResolver.openInputStream(uri) ?: return@launch
-                
-                // Determine original file name
                 val fileName = getFileName(context, uri) ?: "file_${System.currentTimeMillis()}"
                 
-                // 1. Actually move to App Private Storage (Hidden from phone/gallery)
-                val vaultDir = File(context.filesDir, "vault_files")
+                // 2. Prepare isolated app-private storage (not accessible by other apps/galleries)
+                val vaultDir = File(context.filesDir, ".secure_vault_data")
                 if (!vaultDir.exists()) vaultDir.mkdirs()
 
-                val encryptedFile = File(vaultDir, UUID.randomUUID().toString() + ".bin")
+                // 3. Encrypt and Move to private folder
+                val encryptedFile = File(vaultDir, UUID.randomUUID().toString() + ".dat")
                 val outputStream = FileOutputStream(encryptedFile)
                 
                 val bytes = inputStream!!.readBytes()
                 cryptoManager.encrypt(bytes, outputStream)
                 inputStream.close()
 
-                // 2. Persist metadata
+                // 4. Persist metadata
                 val fileId = UUID.randomUUID().toString()
                 saveFileInfo(fileId, fileName, encryptedFile.absolutePath, category, bytes.size.toLong())
                 
-                // 3. REMOVE FROM PHONE (Delete original)
-                // Use ContentResolver for MediaStore files
+                // 5. CRITICAL: Completely remove from public storage
                 try {
+                    // This will remove the file from MediaStore and the physical storage
                     val deleted = contentResolver.delete(uri, null, null)
                     if (deleted <= 0) {
-                        // Fallback for file-based URIs
-                        val path = getFilePathFromUri(context, uri)
-                        if (path != null) {
+                        // Fallback: try direct file deletion if URI was a file path
+                        getFilePathFromUri(context, uri)?.let { path ->
                             File(path).delete()
                         }
                     }
                 } catch (e: Exception) {
-                    e.printStackTrace()
+                    android.util.Log.e("VaultViewModel", "Deletion failed", e)
                 }
 
-                // 4. Trigger Media Scanner to refresh Gallery
-                refreshGallery(context, uri)
+                // 6. Force media scan to clear from Gallery IMMEDIATELY
+                context.sendBroadcast(Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, uri))
 
                 updateFileCounts()
             } catch (e: Exception) {
@@ -269,7 +302,6 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
         val context = getApplication<Application>()
         val hasUsage = hasUsageStatsPermission(context)
         val hasOverlay = Settings.canDrawOverlays(context)
-        val hasAccessibility = isAccessibilityServiceEnabled(context)
         val hasCamera = androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
         val hasLocation = androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
         
@@ -283,7 +315,6 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
             it.copy(
                 hasUsageStatsPermission = hasUsage,
                 hasOverlayPermission = hasOverlay,
-                hasAccessibilityPermission = hasAccessibility,
                 hasCameraPermission = hasCamera,
                 hasLocationPermission = hasLocation,
                 hasStoragePermission = hasStorage
@@ -448,7 +479,16 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
 
         val isLocked = prefs.getBoolean("is_locked", true)
         val isMasterStealth = prefs.getBoolean("master_stealth_enabled", false)
-        _uiState.update { it.copy(vaults = vaults, vaultHistory = history, isLocked = isLocked, isMasterStealthEnabled = isMasterStealth) }
+        val isDarkMode = prefs.getBoolean("is_dark_mode", false)
+        val isFirstRunLocal = prefs.getBoolean("is_first_run", true)
+        val isSatelliteMode = prefs.getBoolean("is_satellite_mode", false)
+        val isUninstallProtectionEnabled = isDeviceAdminActive()
+        val tourCompleted = prefs.getBoolean("tour_completed", false)
+        val showTour = !tourCompleted
+        val language = prefs.getString("language", "en") ?: "en"
+        _uiState.update { it.copy(vaults = vaults, vaultHistory = history, isLocked = isLocked, isMasterStealthEnabled = isMasterStealth, isDarkMode = isDarkMode, isSatelliteMode = isSatelliteMode, isUninstallProtectionEnabled = isUninstallProtectionEnabled, showTour = showTour, currentLanguage = language, isFirstRun = isFirstRunLocal) }
+        
+        setLocale(language)
         
         // Refresh apps list to reflect new lock state
         loadInstalledApps()
@@ -557,7 +597,7 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
             LocationHelper.isWithinRadius(
                 tapLat, tapLon,
                 vault.location.latitude, vault.location.longitude,
-                500f // 500m radius as requested
+                100f // Back to 100m radius for precision
             )
         } ?: return false
 
@@ -575,7 +615,7 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
             LocationHelper.isWithinRadius(
                 tapLat, tapLon,
                 vault.location.latitude, vault.location.longitude,
-                500f
+                100f
             )
         }
     }
@@ -641,5 +681,152 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
         val newValue = !_uiState.value.isMasterStealthEnabled
         prefs.edit().putBoolean("master_stealth_enabled", newValue).apply()
         _uiState.update { it.copy(isMasterStealthEnabled = newValue) }
+    }
+
+    fun toggleDarkMode() {
+        val newValue = !_uiState.value.isDarkMode
+        prefs.edit().putBoolean("is_dark_mode", newValue).apply()
+        _uiState.update { it.copy(isDarkMode = newValue) }
+    }
+
+    fun toggleSatelliteMode() {
+        val newValue = !_uiState.value.isSatelliteMode
+        prefs.edit().putBoolean("is_satellite_mode", newValue).apply()
+        _uiState.update { it.copy(isSatelliteMode = newValue) }
+    }
+
+    fun setLanguage(langCode: String) {
+        prefs.edit().putString("language", langCode).apply()
+        _uiState.update { it.copy(currentLanguage = langCode) }
+        setLocale(langCode)
+    }
+
+    private fun setLocale(langCode: String) {
+        val context = getApplication<Application>()
+        val locale = java.util.Locale(langCode)
+        java.util.Locale.setDefault(locale)
+        val config = context.resources.configuration
+        config.setLocale(locale)
+        context.resources.updateConfiguration(config, context.resources.displayMetrics)
+        
+        // Also update context for the activity if possible, 
+        // though typically a recreation is better for system-wide changes.
+    }
+
+    private fun isDeviceAdminActive(): Boolean {
+        val context = getApplication<Application>()
+        val dpm = context.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
+        val adminComponent = ComponentName(context, com.geovault.security.UninstallProtectionReceiver::class.java)
+        return dpm.isAdminActive(adminComponent)
+    }
+
+    fun toggleUninstallProtection(onBiometricPrompt: () -> Unit) {
+        val context = getApplication<Application>()
+        val dpm = context.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
+        val adminComponent = ComponentName(context, com.geovault.security.UninstallProtectionReceiver::class.java)
+
+        if (!isDeviceAdminActive()) {
+            // Enable: Launch system intent
+            val intent = Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN)
+            intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, adminComponent)
+            intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, "Protects Mapp Lock from unauthorized uninstallation.")
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            context.startActivity(intent)
+        } else {
+            // Disable: Require biometric first
+            onBiometricPrompt()
+        }
+    }
+
+    fun deactivateUninstallProtection() {
+        val context = getApplication<Application>()
+        val dpm = context.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
+        val adminComponent = ComponentName(context, com.geovault.security.UninstallProtectionReceiver::class.java)
+        dpm.removeActiveAdmin(adminComponent)
+        _uiState.update { it.copy(isUninstallProtectionEnabled = false) }
+    }
+
+    fun removeFileFromVault(fileId: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            com.geovault.security.SecureManager.getInstance(getApplication()).removeFileInfo(fileId)
+            updateFileCounts()
+        }
+    }
+
+    fun restoreFileToGallery(fileId: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val context = getApplication<Application>()
+            val secureManager = com.geovault.security.SecureManager.getInstance(context)
+            val prefs = secureManager.prefs
+
+            val fileName = prefs.getString("file_${fileId}_name", null) ?: return@launch
+            val encryptedPath = prefs.getString("file_${fileId}_path", null) ?: return@launch
+            val categoryStr = prefs.getString("file_${fileId}_category", null) ?: return@launch
+            val category = try { FileCategory.valueOf(categoryStr) } catch (e: Exception) { FileCategory.OTHER }
+
+            try {
+                val encryptedFile = File(encryptedPath)
+                if (!encryptedFile.exists()) return@launch
+
+                val contentResolver = context.contentResolver
+                val contentValues = ContentValues().apply {
+                    put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
+                    put(MediaStore.MediaColumns.MIME_TYPE, getMimeType(fileName))
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        val relativePath = when (category) {
+                            FileCategory.PHOTO, FileCategory.INTRUDER -> Environment.DIRECTORY_PICTURES
+                            FileCategory.VIDEO -> Environment.DIRECTORY_MOVIES
+                            FileCategory.AUDIO -> Environment.DIRECTORY_MUSIC
+                            else -> Environment.DIRECTORY_DOWNLOADS
+                        }
+                        put(MediaStore.MediaColumns.RELATIVE_PATH, "$relativePath/MappLockRestored")
+                        put(MediaStore.MediaColumns.IS_PENDING, 1)
+                    }
+                }
+
+                val collection = when (category) {
+                    FileCategory.PHOTO, FileCategory.INTRUDER -> MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+                    FileCategory.VIDEO -> MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+                    FileCategory.AUDIO -> MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+                    else -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        MediaStore.Downloads.EXTERNAL_CONTENT_URI
+                    } else {
+                        MediaStore.Files.getContentUri("external")
+                    }
+                }
+
+                val uri = contentResolver.insert(collection, contentValues)
+                if (uri != null) {
+                    contentResolver.openOutputStream(uri)?.use { outputStream ->
+                        cryptoManager.decryptToStream(encryptedFile.inputStream(), outputStream)
+                    }
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        contentValues.clear()
+                        contentValues.put(MediaStore.MediaColumns.IS_PENDING, 0)
+                        contentResolver.update(uri, contentValues, null, null)
+                    }
+
+                    // Success: Remove from vault
+                    secureManager.removeFileInfo(fileId)
+                    updateFileCounts()
+                    
+                    withContext(Dispatchers.Main) {
+                        android.widget.Toast.makeText(context, "File restored to gallery", android.widget.Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                withContext(Dispatchers.Main) {
+                    android.widget.Toast.makeText(context, "Restoration failed", android.widget.Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    private fun getMimeType(fileName: String): String {
+        return android.webkit.MimeTypeMap.getSingleton().getMimeTypeFromExtension(
+            fileName.substringAfterLast('.', "").lowercase()
+        ) ?: "*/*"
     }
 }

@@ -19,6 +19,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
+import com.geovault.R
 import com.geovault.ui.theme.CyberBlack
 import com.geovault.ui.theme.CyberBlue
 import com.geovault.ui.theme.CyberDarkBlue
@@ -28,23 +30,23 @@ import kotlinx.coroutines.launch
 fun OnboardingScreen(onFinished: () -> Unit) {
     val slides = listOf(
         OnboardingSlide(
-            "GEO-VAULT",
-            "Next-gen stealth security hidden behind a functional map interface.",
+            stringResource(R.string.onboarding_1_title),
+            stringResource(R.string.onboarding_1_desc),
             CyberBlue
         ),
         OnboardingSlide(
-            "STEALTH ENTRY",
-            "No icons, no passwords. Long-press your secret map coordinates to reveal your vault.",
+            stringResource(R.string.onboarding_2_title),
+            stringResource(R.string.onboarding_2_desc),
             Color(0xFF00E676)
         ),
         OnboardingSlide(
-            "APP CLOAKING",
-            "Block sensitive apps instantly. They disappear from view until you authorize access.",
+            stringResource(R.string.onboarding_3_title),
+            stringResource(R.string.onboarding_3_desc),
             Color(0xFFFFC107)
         ),
         OnboardingSlide(
-            "FILE ENCRYPTION",
-            "Photos, Videos, and Documents are encrypted and scrubbed from your gallery automatically.",
+            stringResource(R.string.onboarding_4_title),
+            stringResource(R.string.onboarding_4_desc),
             Color(0xFFFF5252)
         )
     )
@@ -97,7 +99,7 @@ fun OnboardingScreen(onFinished: () -> Unit) {
                 shape = CircleShape
             ) {
                 Text(
-                    if (pagerState.currentPage == slides.size - 1) "INITIALIZE SYSTEM" else "NEXT",
+                    if (pagerState.currentPage == slides.size - 1) stringResource(R.string.initialize_system) else stringResource(R.string.next),
                     color = Color.Black,
                     fontWeight = FontWeight.Bold
                 )

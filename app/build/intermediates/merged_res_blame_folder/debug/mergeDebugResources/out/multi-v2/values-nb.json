@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.geovault.app-mergeDebugResources-56:/values-nb/values-nb.xml",
+            "outputFile": "com.geovault.app-mergeDebugResources-57:/values-nb/values-nb.xml",
             "map": [
                 {
                     "source": "C:\\Users\\anilp\\.gradle\\caches\\9.4.1\\transforms\\eaa881a20a50c4c7ae2148e14b991d01\\transformed\\foundation\\res\\values-nb\\values-nb.xml",

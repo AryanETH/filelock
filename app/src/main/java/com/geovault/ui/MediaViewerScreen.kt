@@ -1,17 +1,23 @@
 package com.geovault.ui
 
+import androidx.compose.foundation.pager.*
+import android.content.Intent
 import android.graphics.Bitmap
 import androidx.core.graphics.createBitmap
 import android.graphics.pdf.PdfRenderer
 import android.net.Uri
 import android.os.ParcelFileDescriptor
-import kotlin.OptIn
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.*
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.sp
+import com.geovault.ui.theme.CyberBlue
 import androidx.compose.material.icons.filled.MusicNote
+import androidx.core.content.FileProvider
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -34,46 +40,77 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.ui.window.Dialog
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.shape.RoundedCornerShape
 
 @UnstableApi
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MediaViewerScreen(
     file: VaultFile,
-    onBack: () -> Unit
+    allFiles: List<VaultFile> = emptyList(),
+    onBack: () -> Unit,
+    onDelete: (String) -> Unit,
+    onRestore: (String) -> Unit
 ) {
     val context = LocalContext.current
-    var decryptedFile by remember { mutableStateOf<File?>(null) }
     val cryptoManager = remember { CryptoManager() }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var showRestoreDialog by remember { mutableStateOf(false) }
 
-    LaunchedEffect(file) {
-        withContext(Dispatchers.IO) {
-            try {
-                val encryptedFile = File(file.encryptedPath)
-                if (encryptedFile.exists()) {
-                    val tempFile = File(context.cacheDir, "temp_${file.id}_${file.originalName}")
-                    cryptoManager.decryptToStream(encryptedFile.inputStream(), FileOutputStream(tempFile))
-                    decryptedFile = tempFile
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
+    // Filter files of same category for paging
+    val pagerFiles = remember(file, allFiles) {
+        if (allFiles.isEmpty()) listOf(file)
+        else allFiles.filter { it.category == file.category }
+    }
+    
+    val initialPage = remember(file, pagerFiles) {
+        val index = pagerFiles.indexOfFirst { it.id == file.id }
+        if (index != -1) index else 0
     }
 
-    DisposableEffect(Unit) {
-        onDispose {
-            decryptedFile?.delete()
-        }
-    }
+    val pagerState = rememberPagerState(initialPage = initialPage) { pagerFiles.size }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(file.originalName, style = MaterialTheme.typography.titleMedium) },
+                title = { 
+                    val currentFile = pagerFiles.getOrNull(pagerState.currentPage) ?: file
+                    Text(currentFile.originalName, style = MaterialTheme.typography.titleMedium) 
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    val currentFile = pagerFiles.getOrNull(pagerState.currentPage)
+                    IconButton(onClick = { 
+                        currentFile?.let { cf ->
+                            // Decrypt current file to a temporary location for sharing
+                            val tempFile = File(context.cacheDir, "share_${cf.id}_${cf.originalName}")
+                            if (!tempFile.exists()) {
+                                try {
+                                    val encryptedFile = File(cf.encryptedPath)
+                                    cryptoManager.decryptToStream(encryptedFile.inputStream(), FileOutputStream(tempFile))
+                                } catch (e: Exception) {
+                                    e.printStackTrace()
+                                }
+                            }
+                            if (tempFile.exists()) {
+                                shareFile(context, tempFile)
+                            }
+                        }
+                    }) {
+                        Icon(Icons.AutoMirrored.Filled.OpenInNew, contentDescription = "Open In...", tint = Color.White)
+                    }
+                    IconButton(onClick = { showRestoreDialog = true }) {
+                        Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = "Restore", tint = Color.White)
+                    }
+                    IconButton(onClick = { showDeleteDialog = true }) {
+                        Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color.White)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -85,19 +122,146 @@ fun MediaViewerScreen(
         },
         containerColor = Color.Black
     ) { padding ->
-        Box(modifier = Modifier.padding(padding).fillMaxSize(), contentAlignment = Alignment.Center) {
-            if (decryptedFile == null) {
-                CircularProgressIndicator(color = Color.Cyan)
-            } else {
-                when (file.category) {
-                    FileCategory.PHOTO, FileCategory.INTRUDER -> PhotoViewer(decryptedFile!!)
-                    FileCategory.VIDEO -> VideoViewer(decryptedFile!!)
-                    FileCategory.AUDIO -> AudioViewer(decryptedFile!!)
-                    FileCategory.DOCUMENT -> PdfViewer(decryptedFile!!)
-                    else -> Text("Unsupported file type", color = Color.White)
+        Box(modifier = Modifier.fillMaxSize()) {
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.padding(padding).fillMaxSize(),
+                pageSpacing = 16.dp,
+                beyondViewportPageCount = 1
+            ) { pageIndex ->
+                val currentFile = pagerFiles[pageIndex]
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    var decryptedFile by remember { mutableStateOf<File?>(null) }
+                    
+                    LaunchedEffect(currentFile) {
+                        withContext(Dispatchers.IO) {
+                            try {
+                                val encryptedFile = File(currentFile.encryptedPath)
+                                if (encryptedFile.exists()) {
+                                    val tempFile = File(context.cacheDir, "temp_${currentFile.id}_${currentFile.originalName}")
+                                    if (!tempFile.exists()) {
+                                        cryptoManager.decryptToStream(encryptedFile.inputStream(), FileOutputStream(tempFile))
+                                    }
+                                    decryptedFile = tempFile
+                                }
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                            }
+                        }
+                    }
+
+                    if (decryptedFile == null) {
+                        CircularProgressIndicator(color = Color.Cyan)
+                    } else {
+                        when (currentFile.category) {
+                            FileCategory.PHOTO, FileCategory.INTRUDER -> PhotoViewer(decryptedFile!!)
+                            FileCategory.VIDEO -> VideoViewer(decryptedFile!!)
+                            FileCategory.AUDIO -> AudioViewer(decryptedFile!!)
+                            FileCategory.DOCUMENT -> {
+                                if (currentFile.originalName.lowercase().endsWith(".pdf")) {
+                                    PdfViewer(decryptedFile!!)
+                                } else {
+                                    ExternalViewer(currentFile.originalName)
+                                }
+                            }
+                            else -> ExternalViewer(currentFile.originalName)
+                        }
+                    }
+                }
+            }
+
+            if (showRestoreDialog) {
+                MediaActionDialog(
+                    title = "RESTORE FILE?",
+                    message = "This will move the file back to your phone's gallery and make it visible to other apps.",
+                    confirmText = "RESTORE",
+                    onDismiss = { showRestoreDialog = false },
+                    onConfirm = {
+                        pagerFiles.getOrNull(pagerState.currentPage)?.let { onRestore(it.id) }
+                        showRestoreDialog = false
+                    }
+                )
+            }
+
+            if (showDeleteDialog) {
+                MediaActionDialog(
+                    title = "DELETE FILE?",
+                    message = "This action cannot be undone. The file will be permanently removed from the vault.",
+                    confirmText = "DELETE",
+                    confirmColor = Color.Red.copy(alpha = 0.8f),
+                    onDismiss = { showDeleteDialog = false },
+                    onConfirm = {
+                        pagerFiles.getOrNull(pagerState.currentPage)?.let { onDelete(it.id) }
+                        showDeleteDialog = false
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun MediaActionDialog(
+    title: String,
+    message: String,
+    confirmText: String,
+    confirmColor: Color = CyberBlue,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = RoundedCornerShape(24.dp),
+            color = Color(0xFF1A1A1A),
+            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
+        ) {
+            Column(modifier = Modifier.padding(24.dp)) {
+                Text(title, color = Color.White, fontWeight = FontWeight.Black, fontSize = 18.sp)
+                Spacer(Modifier.height(16.dp))
+                Text(message, color = Color.Gray, fontSize = 14.sp)
+                Spacer(Modifier.height(24.dp))
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                    TextButton(onClick = onDismiss) {
+                        Text("CANCEL", color = Color.Gray)
+                    }
+                    Button(
+                        onClick = onConfirm,
+                        colors = ButtonDefaults.buttonColors(containerColor = confirmColor)
+                    ) {
+                        Text(confirmText, color = Color.White, fontWeight = FontWeight.Bold)
+                    }
                 }
             }
         }
+    }
+}
+
+@Composable
+fun ExternalViewer(fileName: String) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+        modifier = Modifier.padding(32.dp)
+    ) {
+        Icon(Icons.AutoMirrored.Filled.InsertDriveFile, null, tint = Color.Gray, modifier = Modifier.size(80.dp))
+        Spacer(Modifier.height(24.dp))
+        Text("Internal preview unavailable for:", color = Color.White, fontWeight = FontWeight.Bold)
+        Text(fileName, color = Color.Gray, textAlign = TextAlign.Center)
+        Spacer(Modifier.height(32.dp))
+        Text("Use the 'Open In' button at the top to view with another app.", color = CyberBlue, textAlign = TextAlign.Center, fontSize = 12.sp)
+    }
+}
+
+private fun shareFile(context: android.content.Context, file: File) {
+    try {
+        val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+        val intent = Intent(Intent.ACTION_VIEW).apply {
+            setDataAndType(uri, context.contentResolver.getType(uri) ?: "*/*")
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        context.startActivity(Intent.createChooser(intent, "Open with..."))
+    } catch (e: Exception) {
+        e.printStackTrace()
     }
 }
 

@@ -18,32 +18,52 @@ private val DarkColorScheme = darkColorScheme(
     tertiary = CyberNeonGreen,
     background = CyberBlack,
     surface = CyberDarkBlue,
+    surfaceVariant = Color(0xFF1E252E),
     onPrimary = Color.White,
     onSecondary = Color.White,
     onTertiary = Color.Black,
     onBackground = TextPrimary,
     onSurface = TextPrimary,
+    onSurfaceVariant = TextSecondary,
+    outline = Color.White.copy(alpha = 0.1f),
     error = CyberNeonRed
 )
 
-// We focus on the Dark "Cyber" theme as per user requirement
-private val LightColorScheme = DarkColorScheme 
+private val LightColorScheme = lightColorScheme(
+    primary = CyberBlue,
+    secondary = CyberPurple,
+    tertiary = CyberNeonGreen,
+    background = Color(0xFFF8F9FA),
+    surface = Color.White,
+    surfaceVariant = LightSurfaceVariant,
+    onPrimary = Color.White,
+    onSecondary = Color.White,
+    onTertiary = Color.Black,
+    onBackground = LightTextPrimary,
+    onSurface = LightTextPrimary,
+    onSurfaceVariant = LightTextSecondary,
+    outline = LightOutline.copy(alpha = 0.5f)
+)
 
 @Composable
 fun GeoVaultTheme(
-    darkTheme: Boolean = true, // Force dark theme for security aesthetic
+    darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {
-    val colorScheme = DarkColorScheme
+    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
             val context = view.context
             if (context is Activity) {
                 val window = context.window
-                window.statusBarColor = CyberBlack.toArgb()
-                window.navigationBarColor = CyberBlack.toArgb()
-                WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
+                val statusBarColor = if (darkTheme) CyberBlack else Color.White
+                window.statusBarColor = statusBarColor.toArgb()
+                window.navigationBarColor = statusBarColor.toArgb()
+                
+                val controller = WindowCompat.getInsetsController(window, view)
+                controller.isAppearanceLightStatusBars = !darkTheme
+                controller.isAppearanceLightNavigationBars = !darkTheme
             }
         }
     }

@@ -44,8 +44,15 @@
     <string msgid="8875138169939072951" name="abc_shareactionprovider_share_with">"इससे शेयर करें:"</string>
     <string msgid="9055268688411532828" name="abc_shareactionprovider_share_with_application">"<ns1:g id="APPLICATION_NAME">%s</ns1:g> से शेयर करें"</string>
     <string msgid="1656852541809559762" name="abc_toolbar_collapse_description">"छोटा करें"</string>
+    <string name="accessibility_description">सुरक्षा ओवरले प्रदान करने के लिए लॉक किए गए ऐप्स कब खोले जाते हैं, इसका पता लगाने के लिए उपयोग किया जाता है।</string>
+    <string name="advanced_security">उन्नत सुरक्षा</string>
     <string msgid="8719607706653693137" name="androidx_compose_foundation_autofill">"ऑटोमैटिक तरीके से जानकारी भरने की सुविधा"</string>
     <string msgid="1150566100598813236" name="androidx_compose_ui_autofill">"ऑटोमैटिक तरीके से जानकारी भरने की सुविधा"</string>
+    <string name="app_lock_subtitle">दूसरों से ऐप्स छिपाएं</string>
+    <string name="app_lock_title">ऐप्स छिपाएं</string>
+    <string name="app_name">मैप लॉक</string>
+    <string name="audio">ऑडियो</string>
+    <string name="back">पीछे</string>
     <string msgid="2102429900219199821" name="biometric_or_screen_lock_prompt_message">"जारी रखने के लिए, बायोमेट्रिक या स्क्रीन लॉक क्रेडेंशियल का इस्तेमाल करें"</string>
     <string msgid="1160635338192065472" name="biometric_prompt_message">"जारी रखने के लिए, बायोमेट्रिक का इस्तेमाल करें"</string>
     <string msgid="881409763997275156" name="call_notification_answer_action">"जवाब दें"</string>
@@ -55,6 +62,8 @@
     <string msgid="6107532579223922871" name="call_notification_incoming_text">"आने वाला (इनकमिंग) कॉल"</string>
     <string msgid="8623827134497363134" name="call_notification_ongoing_text">"पहले से जारी कॉल"</string>
     <string msgid="59049573811482460" name="call_notification_screening_text">"इनकमिंग कॉल को स्क्रीन किया जा रहा है"</string>
+    <string name="cancel">रद्द करें</string>
+    <string name="categories">श्रेणियां</string>
     <string msgid="406453423630273620" name="close_drawer">"नेविगेशन मेन्यू बंद करें"</string>
     <string msgid="7573152094250666567" name="close_sheet">"शीट बंद करें"</string>
     <string msgid="2523291102206661146" name="common_google_play_services_enable_button">चालू करें</string>
@@ -76,9 +85,12 @@
     <string name="common_signin_button_text">साइन इन करें</string>
     <string name="common_signin_button_text_long">Google के ज़रिए साइन इन करें</string>
     <string msgid="5912733858573823945" name="confirm_device_credential_password">"पासवर्ड का इस्तेमाल करें"</string>
+    <string name="dark_mode">डार्क मोड</string>
+    <string name="dark_mode_desc">लाइट और डार्क थीम के बीच स्विच करें।</string>
     <string msgid="8038256446254964252" name="default_error_message">"अमान्य इनपुट"</string>
     <string msgid="4776854077120974966" name="default_error_msg">"अनजान गड़बड़ी"</string>
     <string msgid="6312721426453364202" name="default_popup_window_title">"पॉप-अप विंडो"</string>
+    <string name="documents">दस्तावेज़</string>
     <string msgid="1890207353314751437" name="dropdown_menu">"ड्रॉपडाउन मेन्यू"</string>
     <string name="exo_controls_cc_disabled_description">सबटाइटल चालू करें</string>
     <string name="exo_controls_cc_enabled_description">सबटाइटल बंद करें</string>
@@ -145,8 +157,19 @@
     <string msgid="3791785319221634505" name="generic_error_no_device_credential">"पिन, पैटर्न या पासवर्ड सेट नहीं है."</string>
     <string msgid="1807436368654974044" name="generic_error_no_keyguard">"इस डिवाइस को पिन, पैटर्न या पासवर्ड की मदद से लॉक/अनलॉक नहीं किया जा सकता."</string>
     <string msgid="7309881387583143581" name="generic_error_user_canceled">"उपयोगकर्ता ने पुष्टि करने की प्रक्रिया रद्द की."</string>
+    <string name="global_lock">ग्लोबल लॉक</string>
+    <string name="global_lock_desc">सभी चयनित ऐप्स को एक साथ लॉक करें।</string>
+    <string name="global_lock_title">ग्लोबल लॉक</string>
+    <string name="hidden_files">छिपी हुई फाइलें</string>
+    <string name="hide_app">ऐप छिपाएं</string>
+    <string name="history_subtitle">छिपे हुए ऐप्स देखें</string>
+    <string name="history_title">इतिहास</string>
     <string msgid="6827826412747255547" name="in_progress">"जारी है"</string>
     <string msgid="7933458017204019916" name="indeterminate">"कुछ विकल्पों को चुना गया"</string>
+    <string name="initialize_system">सिस्टम शुरू करें</string>
+    <string name="items_count">%1$d आइटम</string>
+    <string name="language">भाषा</string>
+    <string name="lock_options">लॉक विकल्प</string>
     <string msgid="2988463736136100848" name="m3c_bottom_sheet_collapse_description">"बॉटम शीट को छोटा करें"</string>
     <string msgid="1555567894577437024" name="m3c_bottom_sheet_dismiss_description">"बॉटम शीट को खारिज करें"</string>
     <string msgid="8403354765404029791" name="m3c_bottom_sheet_drag_handle_description">"खींचकर छोड़ने वाला हैंडल"</string>
@@ -214,22 +237,54 @@
     <string msgid="6564222473543418073" name="m3c_wide_navigation_rail_close_rail">"मॉडल रेल को बंद करें"</string>
     <string msgid="8350283435461615411" name="m3c_wide_navigation_rail_pane_title">"नेविगेशन रेल"</string>
     <string msgid="542007171693138492" name="navigation_menu">"नेविगेशन मेन्यू"</string>
+    <string name="next">अगला</string>
     <string msgid="6610465462668679431" name="not_selected">"नहीं चुना गया"</string>
+    <string name="onboarding_1_desc">असली मैप इंटरफेस के पीछे छिपी अगली पीढ़ी की सुरक्षा।</string>
+    <string name="onboarding_1_title">मैप लॉक</string>
+    <string name="onboarding_2_desc">कोई आइकन नहीं, कोई पासवर्ड नहीं। अपनी फ़ाइलें दिखाने के लिए अपने गुप्त मैप निर्देशांक पर देर तक दबाएं।</string>
+    <string name="onboarding_2_title">निजी प्रवेश</string>
+    <string name="onboarding_3_desc">संवेदनशील ऐप्स को तुरंत ब्लॉक करें। अनलॉक करने तक वे नजरों से ओझल हो जाएंगे।</string>
+    <string name="onboarding_3_title">ऐप्स छिपाएं</string>
+    <string name="onboarding_4_desc">फ़ोटो और वीडियो एन्क्रिप्ट किए गए हैं और आपकी गैलरी से अपने आप हटा दिए जाते हैं।</string>
+    <string name="onboarding_4_title">फ़ाइल सुरक्षा</string>
+    <string name="permission_app_detection">ऐप पहचान</string>
+    <string name="permission_app_detection_desc">यह देखने के लिए आवश्यक है कि आप लॉक किए गए ऐप्स कब खोलते हैं।</string>
+    <string name="permission_camera">कैमरा</string>
+    <string name="permission_camera_desc">गलत अनलॉक अलर्ट सुविधा के लिए आवश्यक है।</string>
+    <string name="permission_lock_window">लॉक विंडो</string>
+    <string name="permission_lock_window_desc">लॉक स्क्रीन दिखाने के लिए आवश्यक है।</string>
+    <string name="permission_storage">स्टोरेज</string>
+    <string name="permission_storage_desc">आपकी फ़ाइलों को एन्क्रिप्ट और स्टोर करने के लिए आवश्यक है।</string>
+    <string name="photos">तस्वीरें</string>
     <string msgid="5941395253238309765" name="range_end">"रेंज की सीमा"</string>
     <string msgid="7097486360902471446" name="range_start">"रेंज की शुरुआत"</string>
+    <string name="recycle_bin">रीसायकल बिन</string>
+    <string name="save_lock">लॉक सहेजें</string>
     <string msgid="5659570757430909869" name="screen_lock_prompt_message">"जारी रखने के लिए, अपना स्क्रीन लॉक क्रेडेंशियल डालें"</string>
     <string msgid="6264217191555673260" name="search_menu_title">"खोजें"</string>
+    <string name="search_places">जगहें खोजें…</string>
+    <string name="select_apps">ऐप्स चुनें</string>
     <string msgid="6043586758067023" name="selected">"चुना गया"</string>
+    <string name="setup_lock">लॉक सेट करें</string>
     <string msgid="2792228137354697160" name="snackbar_pane_title">"चेतावनी"</string>
     <string msgid="4139871816613051306" name="state_empty">"कोई भी तार नहीं लगा है"</string>
     <string msgid="5834637030682409883" name="state_off">"बंद है"</string>
     <string msgid="1490883874751719580" name="state_on">"चालू है"</string>
     <string msgid="6277540029070332960" name="status_bar_notification_info_overflow">"999+"</string>
+    <string name="stealth_entry">निजी प्रवेश</string>
     <string msgid="2561197295334830845" name="switch_role">"स्विच करें"</string>
+    <string name="system_permissions">सिस्टम अनुमतियां</string>
     <string msgid="1672349317127674378" name="tab">"टैब"</string>
     <string msgid="5946805113151406391" name="template_percent">"<ns1:g id="PERCENTAGE">%1$d</ns1:g> प्रतिशत."</string>
     <string msgid="3765533235322692011" name="tooltip_description">"टूलटिप"</string>
     <string msgid="3124740595719787496" name="tooltip_label">"टूलटिप दिखाएं"</string>
+    <string name="tour_next">अगला</string>
+    <string name="tour_skip">छोड़ें</string>
+    <string name="tour_step1">अपना गुप्त प्रवेश बिंदु सेट करने के लिए मानचित्र पर कहीं भी देर तक दबाएं।</string>
+    <string name="tour_step2">अपनी छिपी हुई फ़ाइलों को अनलॉक करने के लिए अपने गुप्त बिंदु पर दो बार टैप करें।</string>
+    <string name="tour_step3">अपना स्थान खोजने या मानचित्र शैली बदलने के लिए इन बटनों का उपयोग करें।</string>
+    <string name="uninstall_protection">अनइंस्टॉल सुरक्षा</string>
+    <string name="uninstall_protection_desc">ऐप को हटाने के लिए पहचान सत्यापन की आवश्यकता होती है।</string>
     <string msgid="6524145989441579428" name="use_biometric_label">"बायोमेट्रिक्स का इस्तेमाल करें"</string>
     <string msgid="5385448280139639016" name="use_biometric_or_screen_lock_label">"बायोमेट्रिक्स या स्क्रीन लॉक क्रेडेंशियल का इस्तेमाल करें"</string>
     <string msgid="6533512708069459542" name="use_face_label">"चेहरा दिखाएं"</string>
@@ -237,4 +292,12 @@
     <string msgid="6961788485681412417" name="use_fingerprint_label">"फ़िंगरप्रिंट का इस्तेमाल करें"</string>
     <string msgid="7577690399303139443" name="use_fingerprint_or_screen_lock_label">"फ़िंगरप्रिंट या स्क्रीन लॉक क्रेडेंशियल का इस्तेमाल करें"</string>
     <string msgid="5459869335976243512" name="use_screen_lock_label">"स्क्रीन लॉक क्रेडेंशियल का इस्तेमाल करें"</string>
+    <string name="vault">छिपा हुआ क्षेत्र</string>
+    <string name="vault_plural">छिपे हुए क्षेत्र</string>
+    <string name="verify_pattern">पैटर्न सत्यापित करें</string>
+    <string name="verify_pin">पिन सत्यापित करें</string>
+    <string name="videos">वीडियो</string>
+    <string name="wrong_unlock">गलत अनलॉक</string>
+    <string name="wrong_unlock_alert">गलत अनलॉक अलर्ट</string>
+    <string name="wrong_unlocks">गलत अनलॉक</string>
 </resources>

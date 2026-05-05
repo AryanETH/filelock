@@ -34,6 +34,31 @@ class SecureManager(context: Context) {
         }
     }
 
+    fun removeFileInfo(id: String) {
+        val fileIds = (prefs.getStringSet("vault_file_ids", emptySet()) ?: emptySet()).toMutableSet()
+        if (fileIds.remove(id)) {
+            val path = prefs.getString("file_${id}_path", null)
+            if (path != null) {
+                try {
+                    val file = java.io.File(path)
+                    if (file.exists()) file.delete()
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+
+            prefs.edit().apply {
+                putStringSet("vault_file_ids", fileIds)
+                remove("file_${id}_name")
+                remove("file_${id}_path")
+                remove("file_${id}_category")
+                remove("file_${id}_size")
+                remove("file_${id}_timestamp")
+                apply()
+            }
+        }
+    }
+
     companion object {
         @Volatile
         private var INSTANCE: SecureManager? = null

@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.geovault.app-mergeDebugResources-56:/values-ko/values-ko.xml",
+            "outputFile": "com.geovault.app-mergeDebugResources-57:/values-ko/values-ko.xml",
             "map": [
                 {
                     "source": "C:\\Users\\anilp\\.gradle\\caches\\9.4.1\\transforms\\3c6cbea130b78354b107f86b4cd4fb5d\\transformed\\play-services-base-18.5.0\\res\\values-ko\\values.xml",

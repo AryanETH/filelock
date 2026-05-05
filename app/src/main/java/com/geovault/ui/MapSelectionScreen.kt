@@ -48,6 +48,7 @@ import com.geovault.ui.getCenterForIndex
 import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import com.geovault.map.MapStyleHelper
 import com.geovault.model.AppInfo
 import com.geovault.model.GeoPoint
 import com.geovault.model.LockType
@@ -77,33 +78,17 @@ fun MapSelectionScreen(
     var showSetupDialog by remember { mutableStateOf(false) }
     var selectedVaultId by remember { mutableStateOf<String?>(null) }
     var selectedLatLng by remember { mutableStateOf<LatLng?>(null) }
-    var currentStyleUrl by remember { mutableStateOf("https://tiles.openfreemap.org/styles/dark") }
-
-    val infiniteTransition = rememberInfiniteTransition(label = "RadarPulse")
-    val pulseScale by infiniteTransition.animateFloat(
-        initialValue = 1f,
-        targetValue = 1.2f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1500, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ), label = "pulse"
-    )
     
-    val radarAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.6f,
-        targetValue = 0f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(2000, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Restart
-        ), label = "radar"
-    )
-
-    // Dark, Light, and Satellite Styles
-    val darkMapStyle = "https://tiles.openfreemap.org/styles/dark"
-    val lightMapStyle = "https://tiles.openfreemap.org/styles/bright"
-    val satelliteStyle = "https://tiles.openfreemap.org/styles/liberty" // Closest to satellite in OpenFreeMap or similar provider
+    val isDarkTheme = state.isDarkMode
+    var isSatelliteMode by remember { mutableStateOf(state.isSatelliteMode) }
     
-    val isDarkTheme = androidx.compose.foundation.isSystemInDarkTheme()
+    val currentStyleUrl = remember(isSatelliteMode, isDarkTheme) {
+        if (isSatelliteMode) {
+            MapStyleHelper.getSatelliteStyle(isHybrid = true)
+        } else {
+            if (isDarkTheme) MapStyleHelper.DARK else MapStyleHelper.BRIGHT
+        }
+    }
     
     LaunchedEffect(currentStyleUrl) {
         mapLibreMap?.setStyle(currentStyleUrl)
@@ -146,6 +131,10 @@ fun MapSelectionScreen(
                             map.setStyle(currentStyleUrl)
                             
                             map.addOnMapLongClickListener { point ->
+                                if (map.cameraPosition.zoom < 16.0) {
+                                    android.widget.Toast.makeText(context, "Zoom in closer to set vault (100m scale)", android.widget.Toast.LENGTH_SHORT).show()
+                                    return@addOnMapLongClickListener true
+                                }
                                 selectedLatLng = point
                                 map.clear()
                                 // Removed: markers are no longer shown for stealth
@@ -175,7 +164,7 @@ fun MapSelectionScreen(
             )
 
             // Radar/Grid Overlay (Subtle)
-            Canvas(modifier = Modifier.fillMaxSize().alpha(0.05f)) {
+            androidx.compose.foundation.Canvas(modifier = Modifier.fillMaxSize().alpha(0.05f)) {
                 val step = 100.dp.toPx()
                 for (x in 0..size.width.toInt() step step.toInt()) {
                     drawLine(Color.Cyan, start = androidx.compose.ui.geometry.Offset(x.toFloat(), 0f), end = androidx.compose.ui.geometry.Offset(x.toFloat(), size.height))
@@ -190,9 +179,7 @@ fun MapSelectionScreen(
                 modifier = Modifier.align(Alignment.TopEnd).padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                StyleFab(icon = Icons.Default.DarkMode, active = currentStyleUrl == darkMapStyle) { currentStyleUrl = darkMapStyle }
-                StyleFab(icon = Icons.Default.LightMode, active = currentStyleUrl == lightMapStyle) { currentStyleUrl = lightMapStyle }
-                StyleFab(icon = Icons.Default.Public, active = currentStyleUrl == satelliteStyle) { currentStyleUrl = satelliteStyle }
+                StyleFab(icon = Icons.Default.Public, active = isSatelliteMode) { isSatelliteMode = !isSatelliteMode }
             }
 
             // Controls
@@ -363,72 +350,37 @@ fun CyberSetupDialog(apps: List<AppInfo>, onDismiss: () -> Unit, onConfirm: (Str
                 Spacer(Modifier.height(16.dp))
                 
                 Row(modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    LockTypeButton("PIN", lockType == LockType.PIN) { lockType = LockType.PIN }
-                    LockTypeButton("PATTERN", lockType == LockType.PATTERN) { lockType = LockType.PATTERN }
+                    LockTypeButton("PIN", lockType == LockType.PIN) { 
+                        lockType = LockType.PIN 
+                        pin = "" 
+                    }
+                    LockTypeButton("PATTERN", lockType == LockType.PATTERN) { 
+                        lockType = LockType.PATTERN 
+                        pin = ""
+                    }
                     LockTypeButton("BIO", lockType == LockType.FINGERPRINT) { lockType = LockType.FINGERPRINT }
                     LockTypeButton("MAP", lockType == LockType.MAP) { lockType = LockType.MAP }
                 }
 
                 Spacer(Modifier.height(16.dp))
                 
-                if (lockType == LockType.PIN) {
-                    OutlinedTextField(
-                        value = pin,
-                        onValueChange = { if (it.length <= 4 && it.all { c -> c.isDigit() }) pin = it },
-                        label = { Text("4-DIGIT PIN") },
-                        modifier = Modifier.fillMaxWidth(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        visualTransformation = PasswordVisualTransformation()
-                    )
-                } else if (lockType == LockType.PATTERN) {
-                    Text("TRACE PATTERN SEQUENCE", color = CyberBlue, style = MaterialTheme.typography.labelSmall)
-                    Spacer(Modifier.height(8.dp))
-                    Box(
-                        modifier = Modifier
-                            .size(200.dp)
-                            .align(Alignment.CenterHorizontally)
-                            .pointerInput(Unit) {
-                                detectDragGestures(
-                                    onDragStart = { offset ->
-                                        pin = ""
-                                    },
-                                    onDrag = { change, _ ->
-                                        val dotIndex = getDotIndexAt(change.position, size.width.toFloat())
-                                        if (dotIndex != -1 && !pin.contains(dotIndex.toString())) {
-                                            pin += dotIndex.toString()
-                                        }
-                                    }
-                                )
-                            }
-                    ) {
-                        Canvas(modifier = Modifier.fillMaxSize()) {
-                            val spacing = size.width / 3
-                            val startOffset = spacing / 2
-                            val dotRadius = 8.dp.toPx()
-
-                            for (i in 0..2) {
-                                for (j in 0..2) {
-                                    val index = i * 3 + j
-                                    drawCircle(
-                                        color = if (pin.contains(index.toString())) CyberBlue else CyberBlue.copy(alpha = 0.2f),
-                                        radius = dotRadius,
-                                        center = Offset(startOffset + j * spacing, startOffset + i * spacing)
-                                    )
-                                }
-                            }
-
-                            if (pin.length >= 2) {
-                                for (i in 0 until pin.length - 1) {
-                                    val p1 = getCenterForIndex(pin[i].toString().toInt(), spacing, startOffset)
-                                    val p2 = getCenterForIndex(pin[i+1].toString().toInt(), spacing, startOffset)
-                                    drawLine(CyberBlue, p1, p2, strokeWidth = 4.dp.toPx(), cap = StrokeCap.Round)
-                                }
-                            }
+                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    when (lockType) {
+                        LockType.PIN -> {
+                            CompactPinPad(onPinComplete = { pin = it })
+                        }
+                        LockType.PATTERN -> {
+                            CompactPatternGrid(onPatternComplete = { pin = it })
+                        }
+                        LockType.FINGERPRINT -> {
+                            Text("Biometric required on unlock", color = CyberBlue)
+                            pin = "BIO"
+                        }
+                        LockType.MAP -> {
+                            Text("Map location set by long-press", color = CyberBlue)
+                            pin = "MAP"
                         }
                     }
-                } else {
-                    Text("Biometric required on unlock", color = CyberBlue)
-                    pin = "BIO" // Placeholder secret
                 }
                 
                 Spacer(Modifier.height(16.dp))
@@ -486,7 +438,6 @@ fun LockTypeButton(text: String, selected: Boolean, onClick: () -> Unit) {
 @Composable
 fun CyberUnlockDialog(lockType: LockType, onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
     var secret by remember { mutableStateOf("") }
-    val context = LocalContext.current
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -495,49 +446,39 @@ fun CyberUnlockDialog(lockType: LockType, onDismiss: () -> Unit, onConfirm: (Str
             color = CyberDarkBlue
         ) {
             Column(modifier = Modifier.padding(32.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("BYPASS SECURITY", style = MaterialTheme.typography.titleMedium)
+                Text("BYPASS SECURITY", style = MaterialTheme.typography.titleMedium, color = Color.White)
                 Spacer(Modifier.height(24.dp))
                 
                 when (lockType) {
                     LockType.PIN -> {
-                        OutlinedTextField(
-                            value = secret,
-                            onValueChange = { if (it.length <= 4) secret = it },
-                            visualTransformation = PasswordVisualTransformation(),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                        )
+                        CompactPinPad(onPinComplete = { onConfirm(it) })
                     }
                     LockType.PATTERN -> {
-                        Text("Draw Pattern (Simulated)", color = Color.Gray)
-                        OutlinedTextField(
-                            value = secret,
-                            onValueChange = { secret = it }
-                        )
+                        CompactPatternGrid(onPatternComplete = { onConfirm(it) })
                     }
                     LockType.FINGERPRINT -> {
-                        Button(onClick = { /* Biometric Prompt logic would go here */ onConfirm("BIO") }) {
-                            Text("USE FINGERPRINT")
+                        IconButton(
+                            onClick = { onConfirm("BIO") },
+                            modifier = Modifier.size(64.dp).background(CyberBlue.copy(alpha = 0.1f), CircleShape)
+                        ) {
+                            Icon(Icons.Default.Fingerprint, null, tint = CyberBlue, modifier = Modifier.size(32.dp))
                         }
+                        Text("Use Fingerprint", color = CyberBlue, style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(top = 8.dp))
                     }
                     LockType.MAP -> {
-                        Text("Tap target on map to unlock", color = Color.Gray)
+                        Text("Tap target on map to unlock", color = Color.Gray, textAlign = TextAlign.Center)
+                        Spacer(Modifier.height(16.dp))
                         Button(onClick = { onConfirm("MAP") }) {
                             Text("OPEN MAP INTERFACE")
                         }
                     }
                 }
                 
-                if (lockType != LockType.FINGERPRINT) {
-                    Spacer(Modifier.height(16.dp))
-                    Button(onClick = { onConfirm(secret) }) { Text("AUTHORIZE") }
-                }
-                TextButton(onClick = onDismiss) { Text("CANCEL") }
+                Spacer(Modifier.height(24.dp))
+                TextButton(onClick = onDismiss) { Text("CANCEL", color = Color.Gray) }
             }
         }
     }
 }
 
-@Composable
-fun Canvas(modifier: Modifier, onDraw: androidx.compose.ui.graphics.drawscope.DrawScope.() -> Unit) {
-    androidx.compose.foundation.Canvas(modifier = modifier, onDraw = onDraw)
-}
+

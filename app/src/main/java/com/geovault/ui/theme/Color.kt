@@ -15,3 +15,9 @@ val GlassBlue = Color(0x3300A3FF)
 
 val TextPrimary = Color(0xFFE0E0E0)
 val TextSecondary = Color(0xFF9E9E9E)
+
+// Light Theme Specifics
+val LightTextPrimary = Color(0xFF1A1C1E)
+val LightTextSecondary = Color(0xFF44474E)
+val LightSurfaceVariant = Color(0xFFE1E2EC)
+val LightOutline = Color(0xFF74777F)
