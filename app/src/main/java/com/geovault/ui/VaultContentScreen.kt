@@ -54,9 +54,14 @@ import androidx.compose.ui.layout.ContentScale
 import coil.compose.AsyncImage
 import com.geovault.security.CryptoManager
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
+
+import com.geovault.core.AppCloner
+import com.geovault.core.VirtualAppManager
+import android.widget.Toast
 
 @UnstableApi
 @OptIn(ExperimentalMaterial3Api::class)
@@ -82,10 +87,22 @@ fun VaultContentScreen(
     onToggleUninstallProtection: () -> Unit,
     onSetLanguage: (String) -> Unit
 ) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val virtualAppManager = remember { VirtualAppManager(context) }
+    val appCloner = remember { AppCloner(context) }
+    
     var currentScreen by remember { mutableStateOf<ContentScreen>(ContentScreen.Dashboard) }
     var selectedCategoryForAdd by remember { mutableStateOf<FileCategory?>(null) }
     var viewingFile by remember { mutableStateOf<com.geovault.model.VaultFile?>(null) }
     var showBackupDialog by remember { mutableStateOf(false) }
+
+    var appToHide by remember { mutableStateOf<String?>(null) }
+    var isCloning by remember { mutableStateOf(false) }
+
+    val mediaPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { _ -> }
 
     val filePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -165,14 +182,41 @@ fun VaultContentScreen(
                 FloatingActionButton(
                     onClick = { 
                         selectedCategoryForAdd = if (currentScreen is ContentScreen.CategoryView) (currentScreen as ContentScreen.CategoryView).category else FileCategory.OTHER
-                        val mime = when(selectedCategoryForAdd) {
-                            FileCategory.PHOTO -> "image/*"
-                            FileCategory.VIDEO -> "video/*"
-                            FileCategory.AUDIO -> "audio/*"
-                            FileCategory.DOCUMENT -> "*/*" // Allow all for documents (PDF, DOC, PPT, etc.)
-                            else -> "*/*"
+                        
+                        // Contextual Permission Check
+                        val hasPermission = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                            when (selectedCategoryForAdd) {
+                                FileCategory.PHOTO -> androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_MEDIA_IMAGES) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                                FileCategory.VIDEO -> androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_MEDIA_VIDEO) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                                FileCategory.AUDIO -> androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_MEDIA_AUDIO) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                                else -> state.hasStoragePermission
+                            }
+                        } else {
+                            state.hasStoragePermission
                         }
-                        filePickerLauncher.launch(mime)
+
+                        if (hasPermission) {
+                            val mime = when(selectedCategoryForAdd) {
+                                FileCategory.PHOTO -> "image/*"
+                                FileCategory.VIDEO -> "video/*"
+                                FileCategory.AUDIO -> "audio/*"
+                                FileCategory.DOCUMENT -> "*/*" 
+                                else -> "*/*"
+                            }
+                            filePickerLauncher.launch(mime)
+                        } else {
+                            val perms = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                                when (selectedCategoryForAdd) {
+                                    FileCategory.PHOTO -> arrayOf(android.Manifest.permission.READ_MEDIA_IMAGES)
+                                    FileCategory.VIDEO -> arrayOf(android.Manifest.permission.READ_MEDIA_VIDEO)
+                                    FileCategory.AUDIO -> arrayOf(android.Manifest.permission.READ_MEDIA_AUDIO)
+                                    else -> arrayOf(android.Manifest.permission.READ_MEDIA_IMAGES, android.Manifest.permission.READ_MEDIA_VIDEO)
+                                }
+                            } else {
+                                arrayOf(android.Manifest.permission.READ_EXTERNAL_STORAGE, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                            }
+                            mediaPermissionLauncher.launch(perms)
+                        }
                     },
                     containerColor = CyberBlue,
                     shape = CircleShape
@@ -204,7 +248,13 @@ fun VaultContentScreen(
                         onCategoryClick = { currentScreen = ContentScreen.CategoryView(it) },
                         onBackupClick = { showBackupDialog = true }
                     )
-                    is ContentScreen.AppLock -> AppLockManagement(state, onToggleAppLock = onToggleAppLock)
+                    is ContentScreen.AppLock -> AppLockManagement(
+                        state = state, 
+                        onToggleAppLock = onToggleAppLock,
+                        onHideApp = { pkg ->
+                            appToHide = pkg
+                        }
+                    )
                     is ContentScreen.Settings -> SettingsSection(
                         state = state,
                         onOpenUsageSettings = onOpenUsageSettings,
@@ -233,6 +283,52 @@ fun VaultContentScreen(
             onDismiss = { showBackupDialog = false },
             onRemoveVault = onRemoveVault,
             onClearAll = onClearAllVaults
+        )
+    }
+
+    if (appToHide != null) {
+        AlertDialog(
+            onDismissRequest = { if (!isCloning) appToHide = null },
+            title = { Text("Hide App (Clone & Uninstall)") },
+            text = { 
+                if (isCloning) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+                        CircularProgressIndicator(color = CyberBlue)
+                        Spacer(Modifier.height(16.dp))
+                        Text("Cloning app to secure sandbox...")
+                    }
+                } else {
+                    Text("This will create a secure clone of the app inside GeoVault and then prompt you to uninstall the original app. You will only be able to access the app via GeoVault's map-gate.")
+                }
+            },
+            confirmButton = {
+                if (!isCloning) {
+                    Button(onClick = {
+                        scope.launch {
+                            isCloning = true
+                            val success = withContext(Dispatchers.IO) { appCloner.cloneApp(appToHide!!) }
+                            isCloning = false
+                            if (success) {
+                                virtualAppManager.setAppHidden(appToHide!!, true)
+                                virtualAppManager.uninstallOriginalApp(appToHide!!)
+                                appToHide = null
+                                Toast.makeText(context, "App cloned successfully!", Toast.LENGTH_SHORT).show()
+                            } else {
+                                Toast.makeText(context, "Cloning failed. Please try again.", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    }, colors = ButtonDefaults.buttonColors(containerColor = CyberBlue)) {
+                        Text("PROCEED")
+                    }
+                }
+            },
+            dismissButton = {
+                if (!isCloning) {
+                    TextButton(onClick = { appToHide = null }) {
+                        Text("CANCEL")
+                    }
+                }
+            }
         )
     }
 }
@@ -423,6 +519,16 @@ fun FileThumbnail(file: com.geovault.model.VaultFile) {
     val cryptoManager = remember { CryptoManager() }
 
     LaunchedEffect(file.id) {
+        // 1. Check for pre-generated instant thumbnail
+        if (file.thumbnailPath != null) {
+            val thumbFile = File(file.thumbnailPath)
+            if (thumbFile.exists()) {
+                thumbnailPath = thumbFile
+                return@LaunchedEffect
+            }
+        }
+
+        // 2. Fallback to slow decryption (legacy or non-media)
         val tempFile = File(context.cacheDir, "thumb_${file.id}.jpg")
         if (tempFile.exists()) {
             thumbnailPath = tempFile
@@ -463,25 +569,32 @@ fun FileThumbnail(file: com.geovault.model.VaultFile) {
 }
 
 @Composable
-fun AppLockManagement(state: VaultState, onToggleAppLock: (String) -> Unit) {
+fun AppLockManagement(
+    state: VaultState, 
+    onToggleAppLock: (String) -> Unit,
+    onHideApp: (String) -> Unit
+) {
+    val context = LocalContext.current
+    val virtualAppManager = remember { VirtualAppManager(context) }
     val activeVault = state.vaults.find { it.id == state.activeVaultId }
-    val hiddenApps = activeVault?.hiddenApps ?: emptySet()
+    val lockedApps = activeVault?.hiddenApps ?: emptySet()
 
     Column(modifier = Modifier.fillMaxSize()) {
         Text(
-            "Select apps to lock. These apps will be hidden until you unlock them.",
+            "Locked apps require Map-Gate to open. Hidden apps are cloned inside GeoVault and uninstalled from your system.",
             style = MaterialTheme.typography.bodySmall,
             color = TextSecondary,
             modifier = Modifier.padding(bottom = 16.dp)
         )
         
         LazyColumn(modifier = Modifier.weight(1f)) {
-            items(state.installedApps) { app ->
-                val isLocked = hiddenApps.contains(app.packageName)
+            val unhiddenApps = state.installedApps.filter { !virtualAppManager.isAppHidden(it.packageName) }
+            items(unhiddenApps) { app ->
+                val isLocked = lockedApps.contains(app.packageName)
+                
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { onToggleAppLock(app.packageName) }
                         .padding(vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically) {
                     app.icon?.let {
@@ -492,13 +605,19 @@ fun AppLockManagement(state: VaultState, onToggleAppLock: (String) -> Unit) {
                         )
                     }
                     Spacer(Modifier.width(16.dp))
-                    Text(
-                        app.appName, 
-                        modifier = Modifier.weight(1f), 
-                        fontWeight = FontWeight.SemiBold, 
-                        fontSize = 16.sp,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            app.appName, 
+                            fontWeight = FontWeight.SemiBold, 
+                            fontSize = 16.sp,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                    
+                    IconButton(onClick = { onHideApp(app.packageName) }) {
+                        Icon(Icons.Default.VisibilityOff, contentDescription = "Hide", tint = TextSecondary.copy(alpha = 0.5f))
+                    }
+                    Spacer(Modifier.width(8.dp))
                     Switch(
                         checked = isLocked,
                         onCheckedChange = { onToggleAppLock(app.packageName) },
@@ -612,7 +731,13 @@ fun SettingsSection(
     onToggleUninstallProtection: () -> Unit,
     onSetLanguage: (String) -> Unit
 ) {
-    Column(modifier = Modifier.fillMaxWidth().padding(top = 16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
+            .padding(top = 16.dp, bottom = 100.dp), 
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
         Text(
             stringResource(R.string.system_permissions), 
             style = MaterialTheme.typography.titleSmall, 

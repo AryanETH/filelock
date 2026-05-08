@@ -20,7 +20,7 @@ class IntruderManager private constructor(context: Context) {
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var imageCapture: ImageCapture? = null
 
-    fun captureIntruder(onCaptured: (Uri) -> Unit) {
+    fun captureIntruder(onCaptured: (Uri, String?) -> Unit) {
         val imageCapture = this.imageCapture
         if (imageCapture == null) {
             Log.e("IntruderManager", "Cannot capture: imageCapture is null. Session might not be started.")
@@ -50,11 +50,23 @@ class IntruderManager private constructor(context: Context) {
                             cryptoManager.encrypt(bytes, fos)
                             fos.close()
 
+                            // Generate Thumbnail for instant loading
+                            val thumbFile = File(intruderDir, "thumb_${photoFile.nameWithoutExtension}.jpg")
+                            try {
+                                val bitmap = android.graphics.BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                                val thumbBitmap = android.media.ThumbnailUtils.extractThumbnail(bitmap, 300, 300)
+                                val thumbOut = FileOutputStream(thumbFile)
+                                thumbBitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 70, thumbOut)
+                                thumbOut.close()
+                            } catch (e: Exception) {
+                                Log.e("IntruderManager", "Failed to generate thumbnail", e)
+                            }
+
                             val savedUri = Uri.fromFile(photoFile)
                             Log.d("IntruderManager", "Encrypted intruder photo saved: $savedUri")
                             
                             withContext(Dispatchers.Main) {
-                                onCaptured(savedUri)
+                                onCaptured(savedUri, thumbFile.absolutePath)
                             }
                         } catch (e: Exception) {
                             Log.e("IntruderManager", "Failed to process intruder photo", e)

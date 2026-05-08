@@ -8,16 +8,34 @@ import com.geovault.model.AppInfo
 import dalvik.system.DexClassLoader
 import java.io.File
 
+import android.net.Uri
+
 /**
  * Core engine to manage "virtualized" apps.
- * It uses a custom ClassLoader to load APKs dynamically and maps them to Proxy Activities.
  */
 class VirtualAppManager(private val context: Context) {
 
     private val sandboxDir = File(context.filesDir, "sandbox")
+    private val prefs = context.getSharedPreferences("virtual_apps", Context.MODE_PRIVATE)
 
     init {
         if (!sandboxDir.exists()) sandboxDir.mkdirs()
+    }
+
+    fun isAppHidden(packageName: String): Boolean {
+        return prefs.getBoolean("hidden_$packageName", false)
+    }
+
+    fun setAppHidden(packageName: String, hidden: Boolean) {
+        prefs.edit().putBoolean("hidden_$packageName", hidden).apply()
+    }
+
+    fun uninstallOriginalApp(packageName: String) {
+        val intent = Intent(Intent.ACTION_DELETE).apply {
+            data = Uri.parse("package:$packageName")
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        context.startActivity(intent)
     }
 
     /**

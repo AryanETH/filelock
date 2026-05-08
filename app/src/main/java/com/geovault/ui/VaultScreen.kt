@@ -2,6 +2,8 @@ package com.geovault.ui
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.compose.BackHandler
 import androidx.compose.ui.draw.rotate
 import androidx.compose.material.icons.filled.Explore
@@ -122,6 +124,7 @@ fun VaultScreen(
     }
 
     var mapBearing by remember { mutableFloatStateOf(0f) }
+    var hideNetworkWarning by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
@@ -141,6 +144,14 @@ fun VaultScreen(
     var fabColumnRect by remember { mutableStateOf(Rect.Zero) }
     
     val lifecycleOwner = LocalLifecycleOwner.current
+
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        if (permissions[android.Manifest.permission.ACCESS_FINE_LOCATION] == true) {
+            // Permission granted, will be reflected in state
+        }
+    }
 
     DisposableEffect(showUnlockPrompt) {
         if (showUnlockPrompt) {
@@ -274,11 +285,25 @@ fun VaultScreen(
                                             )
                                             locationComponent.isLocationComponentEnabled = true
                                             
-                                            // Randomize initial view for maximum stealth
-                                            val randomLat = (Math.random() * 130) - 60 
-                                            val randomLon = (Math.random() * 360) - 180 
-                                            val randomZoom = (Math.random() * 2) + 2 
-                                            map.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(randomLat, randomLon), randomZoom))
+                                            // Randomize initial view for maximum stealth - Start at a random city
+                                            val cities = listOf(
+                                                LatLng(48.8566, 2.3522),   // Paris
+                                                LatLng(40.7128, -74.0060), // New York
+                                                LatLng(35.6895, 139.6917), // Tokyo
+                                                LatLng(51.5074, -0.1278),  // London
+                                                LatLng(-33.8688, 151.2093),// Sydney
+                                                LatLng(25.2048, 55.2708),  // Dubai
+                                                LatLng(19.0760, 72.8777),  // Mumbai
+                                                LatLng(30.0444, 31.2357),  // Cairo
+                                                LatLng(-23.5505, -46.6333),// Sao Paulo
+                                                LatLng(1.3521, 103.8198),  // Singapore
+                                                LatLng(52.5200, 13.4050),  // Berlin
+                                                LatLng(41.9028, 12.4964),  // Rome
+                                                LatLng(34.0522, -118.2437) // Los Angeles
+                                            )
+                                            val randomCity = cities.random()
+                                            val randomZoom = (Math.random() * 2) + 10 
+                                            map.moveCamera(CameraUpdateFactory.newLatLngZoom(randomCity, randomZoom))
 
                                         } catch (e: Exception) {
                                             e.printStackTrace()
@@ -341,17 +366,61 @@ fun VaultScreen(
                             }
 
                             SmallMapFab(icon = Icons.Default.MyLocation, active = false) {
-                                try {
-                                    fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-                                        location?.let {
-                                            mapLibreMap?.animateCamera(
-                                                CameraUpdateFactory.newLatLngZoom(LatLng(it.latitude, it.longitude), 15.0)
-                                            )
+                                if (state.hasLocationPermission) {
+                                    try {
+                                        fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                                            location?.let {
+                                                mapLibreMap?.animateCamera(
+                                                    CameraUpdateFactory.newLatLngZoom(LatLng(it.latitude, it.longitude), 15.0)
+                                                )
+                                            }
                                         }
-                                    }
-                                } catch (e: SecurityException) {
-                                    // Handle permission not granted
+                                    } catch (e: SecurityException) {}
+                                } else {
+                                    locationPermissionLauncher.launch(
+                                        arrayOf(
+                                            android.Manifest.permission.ACCESS_FINE_LOCATION,
+                                            android.Manifest.permission.ACCESS_COARSE_LOCATION
+                                        )
+                                    )
                                 }
+                            }
+                        }
+                    }
+
+                    if (!state.isNetworkAvailable && !state.isMapLoaded && !hideNetworkWarning) {
+                        Surface(
+                            modifier = Modifier
+                                .align(Alignment.TopCenter)
+                                .padding(top = 80.dp)
+                                .padding(horizontal = 32.dp),
+                            color = Color.Black.copy(alpha = 0.7f),
+                            shape = RoundedCornerShape(12.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.2f))
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(Icons.Default.WifiOff, null, tint = Color.Gray, modifier = Modifier.size(16.dp))
+                                Spacer(Modifier.width(12.dp))
+                                Text(
+                                    "Turn on the data to load the map",
+                                    color = Color.White,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
+                                Spacer(Modifier.width(12.dp))
+                                Icon(
+                                    Icons.Default.Close,
+                                    null,
+                                    tint = Color.White.copy(alpha = 0.5f),
+                                    modifier = Modifier
+                                        .size(16.dp)
+                                        .clickable {
+                                            hideNetworkWarning = true
+                                        }
+                                )
                             }
                         }
                     }
@@ -464,7 +533,7 @@ fun VaultUnlockDialog(
                         correctPin = vault.secret, 
                         onPinComplete = onConfirm,
                         onError = {
-                            IntruderManager.getInstance(context).captureIntruder { 
+                            IntruderManager.getInstance(context).captureIntruder { _, _ ->
                                 // Image captured
                             }
                         }
@@ -474,7 +543,7 @@ fun VaultUnlockDialog(
                         correctPattern = vault.secret, 
                         onPatternComplete = onConfirm,
                         onError = {
-                            IntruderManager.getInstance(context).captureIntruder {
+                            IntruderManager.getInstance(context).captureIntruder { _, _ ->
                                 // Image captured
                             }
                         }

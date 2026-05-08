@@ -6,8 +6,11 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 
+import java.util.zip.ZipFile
+import java.io.InputStream
+
 /**
- * Handles the "importing" of apps by copying their APKs to the sandbox internal storage.
+ * Handles the "importing" of apps by copying their APKs and extracting native libraries.
  */
 class AppCloner(private val context: Context) {
 
@@ -28,13 +31,28 @@ class AppCloner(private val context: Context) {
                 }
             }
             
-            // In a production app, we would also copy /data/data/ contents
-            // and extract native libraries (.so) to the lib/ folder
+            extractNativeLibs(targetApk, File(targetDir, "lib"))
             
             return true
         } catch (e: Exception) {
             e.printStackTrace()
             return false
+        }
+    }
+
+    private fun extractNativeLibs(apkFile: File, libDir: File) {
+        if (!libDir.exists()) libDir.mkdirs()
+        ZipFile(apkFile).use { zip ->
+            zip.entries().asSequence()
+                .filter { it.name.startsWith("lib/") && !it.isDirectory }
+                .forEach { entry ->
+                    val destFile = File(libDir, entry.name.substringAfterLast("/"))
+                    zip.getInputStream(entry).use { input ->
+                        FileOutputStream(destFile).use { output ->
+                            input.copyTo(output)
+                        }
+                    }
+                }
         }
     }
 }

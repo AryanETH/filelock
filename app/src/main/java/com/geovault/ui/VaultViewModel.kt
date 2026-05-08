@@ -1,5 +1,9 @@
 package com.geovault.ui
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.media.MediaMetadataRetriever
+import android.media.ThumbnailUtils
 import android.app.Application
 import android.content.Context
 import android.content.Intent
@@ -59,6 +63,10 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
         checkFirstRun()
         checkPermissions()
         updateFileCounts()
+        
+        if (!prefs.getBoolean("is_first_run", true)) {
+            startMapDownload()
+        }
     }
 
     override fun onCleared() {
@@ -71,7 +79,7 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
     fun completeOnboarding() {
         prefs.edit().putBoolean("is_first_run", false).apply()
         val tourCompleted = prefs.getBoolean("tour_completed", false)
-        _uiState.update { it.copy(isFirstRun = false, isMapDownloading = true, showTour = !tourCompleted) }
+        _uiState.update { it.copy(isFirstRun = false, isMapDownloading = false, showTour = !tourCompleted) }
         startMapDownload()
     }
 
@@ -108,6 +116,13 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun startMapDownload() {
+        if (!isNetworkAvailable(getApplication())) {
+            _uiState.update { it.copy(isNetworkAvailable = false) }
+            return
+        }
+
+        _uiState.update { it.copy(isMapDownloading = true, isNetworkAvailable = true) }
+        
         val bounds = LatLngBounds.Builder()
             .include(LatLng(85.0, 180.0))
             .include(LatLng(-85.0, -180.0))
@@ -121,12 +136,19 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
             regionName = "GlobalOffline",
             onProgress = { /* progress could be shown */ },
             onComplete = {
-                _uiState.update { it.copy(isMapDownloading = false) }
+                _uiState.update { it.copy(isMapDownloading = false, isMapLoaded = true) }
             },
             onError = {
                 _uiState.update { it.copy(isMapDownloading = false) }
             }
         )
+    }
+
+    private fun isNetworkAvailable(context: Context): Boolean {
+        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as android.net.ConnectivityManager
+        val network = connectivityManager.activeNetwork ?: return false
+        val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
+        return capabilities.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET)
     }
 
     fun addFileToVault(uri: Uri, category: FileCategory) {
@@ -143,19 +165,24 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
                 val vaultDir = File(context.filesDir, ".secure_vault_data")
                 if (!vaultDir.exists()) vaultDir.mkdirs()
 
-                // 3. Encrypt and Move to private folder
+                // 3. Encrypt and Move to private folder - USE STREAMING for instant handling of large files
                 val encryptedFile = File(vaultDir, UUID.randomUUID().toString() + ".dat")
                 val outputStream = FileOutputStream(encryptedFile)
                 
-                val bytes = inputStream!!.readBytes()
-                cryptoManager.encrypt(bytes, outputStream)
+                // Use buffered encryption to handle large videos without memory issues
+                val fileSize = cryptoManager.encryptStream(inputStream!!, outputStream)
                 inputStream.close()
+                outputStream.close()
 
-                // 4. Persist metadata
+                // 4. Generate and save small thumbnail for INSTANT LOADING
+                val thumbFile = File(vaultDir, "thumb_${encryptedFile.nameWithoutExtension}.jpg")
+                generateThumbnail(context, uri, category, thumbFile)
+
+                // 5. Persist metadata
                 val fileId = UUID.randomUUID().toString()
-                saveFileInfo(fileId, fileName, encryptedFile.absolutePath, category, bytes.size.toLong())
+                saveFileInfo(fileId, fileName, encryptedFile.absolutePath, category, fileSize, thumbFile.absolutePath)
                 
-                // 5. CRITICAL: Completely remove from public storage
+                // 6. CRITICAL: Completely remove from public storage
                 try {
                     // This will remove the file from MediaStore and the physical storage
                     val deleted = contentResolver.delete(uri, null, null)
@@ -230,7 +257,37 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
         return result
     }
 
-    private fun saveFileInfo(id: String, name: String, path: String, category: FileCategory, size: Long) {
+    private fun generateThumbnail(context: Context, uri: Uri, category: FileCategory, outputFile: File) {
+        try {
+            val bitmap = when (category) {
+                FileCategory.PHOTO, FileCategory.INTRUDER -> {
+                    val input = context.contentResolver.openInputStream(uri)
+                    val options = BitmapFactory.Options().apply { inSampleSize = 4 }
+                    BitmapFactory.decodeStream(input, null, options)
+                }
+                FileCategory.VIDEO -> {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        context.contentResolver.loadThumbnail(uri, android.util.Size(300, 300), null)
+                    } else {
+                        val retriever = MediaMetadataRetriever()
+                        retriever.setDataSource(context, uri)
+                        retriever.getFrameAtTime(1000000) // 1 second in
+                    }
+                }
+                else -> null
+            }
+            
+            bitmap?.let {
+                val out = FileOutputStream(outputFile)
+                it.compress(Bitmap.CompressFormat.JPEG, 70, out)
+                out.close()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun saveFileInfo(id: String, name: String, path: String, category: FileCategory, size: Long, thumbPath: String? = null) {
         val fileIds = (prefs.getStringSet("vault_file_ids", emptySet()) ?: emptySet()).toMutableSet()
         fileIds.add(id)
         prefs.edit().apply {
@@ -240,6 +297,7 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
             putString("file_${id}_category", category.name)
             putLong("file_${id}_size", size)
             putLong("file_${id}_timestamp", System.currentTimeMillis())
+            thumbPath?.let { putString("file_${id}_thumb", it) }
             apply()
         }
     }
@@ -261,8 +319,9 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
             val timestamp = prefs.getLong("file_${id}_timestamp", 0L)
             
             val category = try { FileCategory.valueOf(catStr) } catch (e: Exception) { FileCategory.OTHER }
+            val thumbPath = prefs.getString("file_${id}_thumb", null)
             
-            files.add(VaultFile(id, name, path, category, size, timestamp))
+            files.add(VaultFile(id, name, path, category, size, timestamp, thumbPath))
 
             when (category) {
                 FileCategory.PHOTO -> photos++
@@ -304,6 +363,7 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
         val hasOverlay = Settings.canDrawOverlays(context)
         val hasCamera = androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
         val hasLocation = androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        val hasBattery = hasBatteryOptimizationPermission(context)
         
         val hasStorage = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_MEDIA_IMAGES) == PackageManager.PERMISSION_GRANTED
@@ -317,9 +377,15 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
                 hasOverlayPermission = hasOverlay,
                 hasCameraPermission = hasCamera,
                 hasLocationPermission = hasLocation,
-                hasStoragePermission = hasStorage
+                hasStoragePermission = hasStorage,
+                hasBatteryOptimizationPermission = hasBattery
             )
         }
+    }
+
+    private fun hasBatteryOptimizationPermission(context: Context): Boolean {
+        val powerManager = context.getSystemService(Context.POWER_SERVICE) as android.os.PowerManager
+        return powerManager.isIgnoringBatteryOptimizations(context.packageName)
     }
 
     private fun hasUsageStatsPermission(context: Context): Boolean {
@@ -333,7 +399,7 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun isAccessibilityServiceEnabled(context: Context): Boolean {
-        val expectedComponentName = ComponentName(context, com.geovault.service.AppLockerService::class.java).flattenToShortString()
+        val expectedComponentName = ComponentName(context, com.geovault.service.WindowChangeDetector::class.java).flattenToShortString()
         val enabledServices = Settings.Secure.getString(context.contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES)
         
         if (enabledServices == null) return false
@@ -369,6 +435,19 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
 
     fun openProtectedAppsSettings() {
         val context = getApplication<Application>()
+        
+        if (!hasBatteryOptimizationPermission(context)) {
+            val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
+            intent.data = Uri.parse("package:${context.packageName}")
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            try {
+                context.startActivity(intent)
+                return
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+
         val intent = Intent()
         val manufacturer = Build.MANUFACTURER.lowercase()
         
@@ -681,6 +760,12 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
         val newValue = !_uiState.value.isMasterStealthEnabled
         prefs.edit().putBoolean("master_stealth_enabled", newValue).apply()
         _uiState.update { it.copy(isMasterStealthEnabled = newValue) }
+        
+        // Notify service to update monitoring logic
+        val intent = android.content.Intent(getApplication(), com.geovault.service.AppLockerService::class.java).apply {
+            putExtra("refresh_locked_apps", true)
+        }
+        getApplication<android.app.Application>().startService(intent)
     }
 
     fun toggleDarkMode() {

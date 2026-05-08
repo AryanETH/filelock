@@ -2,37 +2,36 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- 📷 1. Camera -->
+    <!-- 📷 Camera - Required for Intruder Selfie -->
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
     <uses-feature android:name="android.hardware.camera.front" android:required="false" />
 
-    <!-- 📁 3. Storage -->
+    <!-- 📁 Storage - Required for File Vault (Scoped Storage used where possible) -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
 
-    <!-- 🌐 4. Network & Internet -->
+    <!-- 🌐 Network - Required for Map Tiles (OpenFreeMap) -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
 
-    <!-- 📍 5. Location -->
+    <!-- 📍 Location - Required for Coordinate-Based Locking -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
 
-    <!-- 🔑 6. Biometric / Fingerprint -->
+    <!-- 🔑 Biometric - Required for Secure Unlock -->
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
     <uses-permission android:name="android.permission.USE_FINGERPRINT" />
 
-    <!-- 🔔 7. Notifications & Feedback -->
+    <!-- 🔔 Notifications & Feedback -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.VIBRATE" />
 
-    <!-- 🔋 8. Power & Background Control -->
+    <!-- 🔋 Background Control - Required for Active Monitoring -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
@@ -40,41 +39,16 @@
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
-    <!-- 🪟 9. System Overlay & UI Control -->
+    <!-- 🪟 System Overlay - Required for App Locking UI -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
-    <!-- 📦 10. App/System Management -->
-    <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
-    <uses-permission android:name="com.android.launcher.permission.INSTALL_SHORTCUT" />
-    <uses-permission android:name="com.android.launcher.permission.UNINSTALL_SHORTCUT" />
+    <!-- 📦 App Management - Required to Detect Launched Apps -->
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" tools:ignore="QueryAllPackagesPermission" />
     <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" tools:ignore="ProtectedPermissions" />
-
-    <!-- 📸 11. Hardware / Device Features -->
-    <uses-permission android:name="android.permission.FLASHLIGHT" />
-
-    <!-- 🧾 12. Advertising & Tracking APIs -->
-    <uses-permission android:name="com.google.android.gms.permission.AD_ID" />
-    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_TOPICS" />
-    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_ATTRIBUTION" />
-    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_AD_ID" />
-
-    <!-- 💳 13. Billing / Monetization -->
-    <uses-permission android:name="com.android.vending.BILLING" />
-
-    <!-- 🎨 14. System Customization -->
-    <uses-permission android:name="android.permission.SET_WALLPAPER" />
-
-    <!-- 🔗 15. Install Tracking / Referrer -->
-    <uses-permission android:name="com.google.android.finsky.permission.BIND_GET_INSTALL_REFERRER_SERVICE" />
-
-    <!-- ⚙️ 16. Misc / Other -->
-    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
 
     <application
         android:name=".GeoVaultApp"
         android:allowBackup="true"
-        android:extractNativeLibs="false"
         android:icon="@drawable/ic_calculator"
         android:label="@string/app_name"
         android:roundIcon="@drawable/ic_calculator"
@@ -83,18 +57,12 @@
 
         <activity
             android:name=".MainActivity"
-            android:exported="true"
-            android:theme="@style/Theme.GeoVault">
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <activity android:name=".core.ProxyActivity" android:exported="false" android:theme="@style/Theme.GeoVault" />
-        <activity android:name=".core.ProxyActivity$Stub1" android:exported="false" android:theme="@style/Theme.GeoVault" />
-        <activity android:name=".core.ProxyActivity$Stub2" android:exported="false" android:theme="@style/Theme.GeoVault" />
-        <activity android:name=".core.ProxyActivity$Stub3" android:exported="false" android:theme="@style/Theme.GeoVault" />
 
         <activity
             android:name=".LockActivity"
@@ -102,15 +70,29 @@
             android:theme="@style/Theme.GeoVault"
             android:excludeFromRecents="true"
             android:noHistory="true"
-            android:taskAffinity=""
-            android:launchMode="singleTop">
+            android:taskAffinity="com.geovault.lockstack"
+            android:launchMode="singleTask"
+            android:configChanges="orientation|screenSize|keyboardHidden">
         </activity>
+
+        <service
+            android:name=".service.WindowChangeDetector"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility_service_config" />
+        </service>
 
         <service
             android:name=".service.AppLockerService"
             android:exported="false"
-            android:foregroundServiceType="location|specialUse">
-            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value="Security monitoring for app locking" />
+            android:foregroundServiceType="specialUse">
+            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value="App usage monitoring for security and privacy protection" />
+            <property android:name="android.app.PROPERTY_SPECIAL_USE_FQS_REASON" android:value="This service monitors app launches to provide real-time security overlays for user-selected applications." />
         </service>
 
         <receiver android:name=".service.BootReceiver" android:exported="true">
@@ -133,6 +115,26 @@
                 <action android:name="android.app.action.DEVICE_ADMIN_DISABLE_REQUESTED" />
             </intent-filter>
         </receiver>
+
+        <service
+            android:name=".service.NotificationInterceptorService"
+            android:exported="false"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
+
+        <activity
+            android:name=".core.ProxyActivity"
+            android:exported="false"
+            android:theme="@style/Theme.GeoVault"
+            android:configChanges="orientation|screenSize|keyboardHidden">
+        </activity>
+
+        <activity android:name=".core.ProxyActivity$Stub1" android:theme="@style/Theme.GeoVault" android:exported="false" />
+        <activity android:name=".core.ProxyActivity$Stub2" android:theme="@style/Theme.GeoVault" android:exported="false" />
+        <activity android:name=".core.ProxyActivity$Stub3" android:theme="@style/Theme.GeoVault" android:exported="false" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

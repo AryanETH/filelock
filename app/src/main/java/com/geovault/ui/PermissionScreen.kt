@@ -34,14 +34,16 @@ fun PermissionScreen(
     onGrantOverlay: () -> Unit,
     onGrantCamera: () -> Unit,
     onGrantLocation: () -> Unit,
-    onGrantStorage: () -> Unit
+    onGrantStorage: () -> Unit,
+    onGrantBattery: () -> Unit,
 ) {
     // Accessibility removed from mandatory intro list
     val allGranted = state.hasUsageStatsPermission && 
                      state.hasOverlayPermission &&
                      state.hasCameraPermission &&
                      state.hasLocationPermission &&
-                     state.hasStoragePermission
+                     state.hasStoragePermission &&
+                     state.hasBatteryOptimizationPermission
 
     Column(
         modifier = Modifier.fillMaxSize().background(CyberBlack).padding(32.dp),
@@ -80,9 +82,10 @@ fun PermissionScreen(
         ) {
             PermissionRow("Usage Access", "Monitor app launches for stealth mode.", state.hasUsageStatsPermission, onGrantUsage)
             PermissionRow("Overlay Access", "Required to show the security interface.", state.hasOverlayPermission, onGrantOverlay)
-            PermissionRow("Location Access", "Coordinate-based vault reveal system.", state.hasLocationPermission, onGrantLocation)
             PermissionRow("Camera Access", "Capture images of intruders on failed attempts.", state.hasCameraPermission, onGrantCamera)
+            PermissionRow("Location Access", "Detect vault proximity for auto-locking.", state.hasLocationPermission, onGrantLocation)
             PermissionRow("Storage Access", "Securely store and retrieve encrypted files.", state.hasStoragePermission, onGrantStorage)
+            PermissionRow("Background Activity", "Essential for 24/7 background security monitoring.", state.hasBatteryOptimizationPermission, onGrantBattery)
         }
 
         if (allGranted) {

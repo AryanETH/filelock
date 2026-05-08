@@ -59,6 +59,26 @@ class CryptoManager {
         outputStream.close()
     }
 
+    fun encryptStream(inputStream: InputStream, outputStream: OutputStream): Long {
+        val cipher = encryptCipher
+        val iv = cipher.iv
+        outputStream.write(iv.size)
+        outputStream.write(iv)
+
+        val cipherOutputStream = javax.crypto.CipherOutputStream(outputStream, cipher)
+        val buffer = ByteArray(8192)
+        var bytesRead: Int
+        var totalBytes: Long = 0
+        
+        while (inputStream.read(buffer).also { bytesRead = it } != -1) {
+            cipherOutputStream.write(buffer, 0, bytesRead)
+            totalBytes += bytesRead
+        }
+        cipherOutputStream.close()
+        // Note: cipherOutputStream closes the underlying outputStream
+        return totalBytes
+    }
+
     fun decrypt(inputStream: InputStream): ByteArray {
         val ivSize = inputStream.read()
         val iv = ByteArray(ivSize)

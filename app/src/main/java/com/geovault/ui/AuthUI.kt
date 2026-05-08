@@ -1,8 +1,11 @@
 package com.geovault.ui
 
 import android.content.Context
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -12,11 +15,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.border
 import com.geovault.ui.theme.CyberDarkBlue
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.core.graphics.drawable.toBitmap
 import com.geovault.ui.theme.CyberBlue
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Fingerprint
@@ -42,17 +47,29 @@ fun AuthSelectionScreen(
     onAuthenticated: () -> Unit,
     onBiometricRequested: () -> Unit
 ) {
+    val lifecycleOwner = androidx.compose.ui.platform.LocalLifecycleOwner.current
     val secureManager = remember { com.geovault.security.SecureManager.getInstance(context) }
     val prefs = remember { secureManager.prefs }
 
+    // Start Intruder Session when this screen is active
+    DisposableEffect(lifecycleOwner) {
+        IntruderManager.getInstance(context).startSession(lifecycleOwner)
+        onDispose {
+            IntruderManager.getInstance(context).stopSession()
+        }
+    }
+
     val captureIntruder = {
-        IntruderManager.getInstance(context).captureIntruder { uri ->
+        IntruderManager.getInstance(context).captureIntruder { uri, thumbPath ->
+            android.util.Log.d("AuthSelection", "Intruder captured at $uri")
+            
             secureManager.saveFileInfo(
-                UUID.randomUUID().toString(),
+                java.util.UUID.randomUUID().toString(),
                 "Intruder_${System.currentTimeMillis()}.jpg",
                 uri.path ?: "",
-                FileCategory.INTRUDER,
-                0L
+                com.geovault.model.FileCategory.INTRUDER,
+                0L,
+                thumbPath
             )
         }
     }
@@ -64,7 +81,6 @@ fun AuthSelectionScreen(
         apps.contains(targetPackage)
     }
     
-    // Fallback for system targets like Settings/PackageInstaller
     if (relevantVaultId == null && (targetPackage == "com.android.settings" || targetPackage.contains("packageinstaller"))) {
         relevantVaultId = allVaultIds.firstOrNull()
     }
@@ -75,132 +91,150 @@ fun AuthSelectionScreen(
     val vaultLat = relevantVaultId?.let { prefs.getFloat("vault_${it}_lat", 0f).toDouble() } ?: 0.0
     val vaultLon = relevantVaultId?.let { prefs.getFloat("vault_${it}_lon", 0f).toDouble() } ?: 0.0
 
-    val isDarkMode = remember { prefs.getBoolean("is_dark_mode", false) }
     val isSatelliteMode = remember { prefs.getBoolean("is_satellite_mode", false) }
-
     var biometricStatusMessage by remember { mutableStateOf<String?>(null) }
 
-    android.util.Log.d("AuthSelection", "Target: $targetPackage, Vault: $relevantVaultId, Type: $lockType, SecretLength: ${savedSecret.length}")
+    // Fetch Target App Icon and Name
+    val pm = context.packageManager
+    val appIcon = remember(targetPackage) {
+        try { pm.getApplicationIcon(targetPackage) } catch (e: Exception) { null }
+    }
+    val appLabel = remember(targetPackage) {
+        try { pm.getApplicationLabel(pm.getApplicationInfo(targetPackage, 0)).toString() } catch (e: Exception) { "" }
+    }
 
     if (relevantVaultId == null) {
-        // Only exit if there truly are NO vaults setup yet
         onAuthenticated()
         return
     }
 
     Column(
-        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)
+            .statusBarsPadding()
+            .navigationBarsPadding()
+            .verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Surface(
-            shape = RoundedCornerShape(32.dp),
-            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.98f),
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
-            shadowElevation = 12.dp,
-            modifier = Modifier.widthIn(max = 340.dp).wrapContentHeight()
-        ) {
-            Column(
-                modifier = Modifier.padding(32.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    titleOverride ?: "VAULT ACCESS",
-                    color = MaterialTheme.colorScheme.primary,
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Black,
-                    letterSpacing = if (titleOverride != null) 2.sp else 4.sp,
-                    textAlign = TextAlign.Center
-                )
-                Text(
-                    if (lockType == com.geovault.model.LockType.MAP) "LOCATE TARGET COORDINATES" else "VERIFY IDENTITY",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.labelSmall
-                )
-                
-                Spacer(modifier = Modifier.height(40.dp))
+        Spacer(modifier = Modifier.weight(0.1f))
 
-                when (lockType) {
-                    com.geovault.model.LockType.PIN -> {
-                        CompactPinPad(
-                            correctPin = savedSecret, 
-                            onPinComplete = { onAuthenticated() },
-                            onError = captureIntruder
-                        )
-                    }
-                    com.geovault.model.LockType.PATTERN -> {
-                        CompactPatternGrid(
-                            correctPattern = savedSecret, 
-                            onPatternComplete = { onAuthenticated() },
-                            onError = captureIntruder
-                        )
-                    }
-                    com.geovault.model.LockType.MAP -> {
-                        Box(modifier = Modifier.height(280.dp).fillMaxWidth()) {
-                            MapLockScreen(
-                                targetLocation = GeoPoint(vaultLat, vaultLon),
-                                isSatelliteMode = isSatelliteMode,
-                                isDarkMode = isDarkMode,
-                                onSuccess = onAuthenticated
-                            )
-                        }
-                    }
-                    else -> {
-                        CompactPinPad(
-                            correctPin = savedSecret,
-                            onPinComplete = { onAuthenticated() },
-                            onError = captureIntruder
+        // 1. App Logo (Top)
+        appIcon?.let { icon ->
+            Image(
+                bitmap = icon.toBitmap().asImageBitmap(),
+                contentDescription = null,
+                modifier = Modifier
+                    .size(100.dp) // Slightly larger
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(Color.Black.copy(alpha = 0.03f))
+                    .padding(12.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        // 2. Instruction Text
+        Text(
+            text = titleOverride ?: when (lockType) {
+                com.geovault.model.LockType.PIN -> "Enter your PIN"
+                com.geovault.model.LockType.PATTERN -> "Draw your pattern"
+                com.geovault.model.LockType.MAP -> "Tap target coordinates"
+                else -> "Verify identity"
+            },
+            color = Color.Black,
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.weight(0.15f)) // More breathing space
+
+        // 3. PIN / Pattern UI (Center - Expanded)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            when (lockType) {
+                com.geovault.model.LockType.PIN -> {
+                    CompactPinPad(
+                        correctPin = savedSecret, 
+                        onPinComplete = { onAuthenticated() },
+                        onError = captureIntruder,
+                        isLightTheme = true,
+                        isFullPage = true
+                    )
+                }
+                com.geovault.model.LockType.PATTERN -> {
+                    CompactPatternGrid(
+                        correctPattern = savedSecret, 
+                        onPatternComplete = { onAuthenticated() },
+                        onError = captureIntruder,
+                        isLightTheme = true,
+                        isFullPage = true
+                    )
+                }
+                com.geovault.model.LockType.MAP -> {
+                    Box(modifier = Modifier.height(360.dp).fillMaxWidth()) {
+                        MapLockScreen(
+                            targetLocation = GeoPoint(vaultLat, vaultLon),
+                            isSatelliteMode = isSatelliteMode,
+                            isDarkMode = false,
+                            onSuccess = onAuthenticated
                         )
                     }
                 }
-                
-                if (lockType != com.geovault.model.LockType.MAP) {
-                    Spacer(modifier = Modifier.height(24.dp))
-                    
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        IconButton(
-                            onClick = {
-                                val biometricManager = BiometricManager.from(context)
-                                when (biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG)) {
-                                    BiometricManager.BIOMETRIC_SUCCESS -> {
-                                        biometricStatusMessage = null
-                                        onBiometricRequested()
-                                    }
-                                    BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE -> {
-                                        biometricStatusMessage = "Fingerprint not supported on this device"
-                                    }
-                                    BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE -> {
-                                        biometricStatusMessage = "Biometric hardware is currently unavailable"
-                                    }
-                                    BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED -> {
-                                        biometricStatusMessage = "No fingerprints enrolled"
-                                    }
-                                    else -> {
-                                        biometricStatusMessage = "Biometric authentication is unavailable"
-                                    }
-                                }
-                            },
-                            modifier = Modifier
-                                .size(64.dp)
-                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.05f), CircleShape)
-                                .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f), CircleShape)
-                        ) {
-                            Icon(Icons.Default.Fingerprint, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(32.dp))
-                        }
-                        
-                        biometricStatusMessage?.let { msg ->
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = msg,
-                                color = MaterialTheme.colorScheme.error,
-                                style = MaterialTheme.typography.bodySmall,
-                                textAlign = TextAlign.Center
-                            )
-                        }
-                    }
+                else -> {
+                    CompactPinPad(
+                        correctPin = savedSecret,
+                        onPinComplete = { onAuthenticated() },
+                        onError = captureIntruder,
+                        isLightTheme = true
+                    )
                 }
             }
         }
+
+        Spacer(modifier = Modifier.weight(0.2f))
+
+        // 4. Biometric Icon (Bottom)
+        if (lockType != com.geovault.model.LockType.MAP) {
+            IconButton(
+                onClick = {
+                    val biometricManager = BiometricManager.from(context)
+                    if (biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG) == BiometricManager.BIOMETRIC_SUCCESS) {
+                        biometricStatusMessage = null
+                        onBiometricRequested()
+                    } else {
+                        biometricStatusMessage = "Biometric unavailable"
+                    }
+                },
+                modifier = Modifier
+                    .size(80.dp)
+                    .clip(CircleShape)
+                    .background(Color.Black.copy(alpha = 0.04f))
+            ) {
+                Icon(
+                    Icons.Default.Fingerprint, 
+                    contentDescription = "Fingerprint", 
+                    tint = Color.Black, 
+                    modifier = Modifier.size(44.dp)
+                )
+            }
+            
+            biometricStatusMessage?.let { msg ->
+                Text(
+                    text = msg,
+                    color = Color.Gray,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(top = 12.dp, bottom = 16.dp)
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(56.dp))
     }
 }
 

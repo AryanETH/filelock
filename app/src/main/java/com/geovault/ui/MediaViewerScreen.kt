@@ -1,5 +1,11 @@
 package com.geovault.ui
 
+import androidx.compose.foundation.gestures.rememberTransformableState
+import androidx.compose.foundation.gestures.transformable
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.pager.*
 import android.content.Intent
 import android.graphics.Bitmap
@@ -40,6 +46,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
+import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.ui.window.Dialog
 import androidx.compose.foundation.BorderStroke
@@ -87,6 +94,18 @@ fun MediaViewerScreen(
                 },
                 actions = {
                     val currentFile = pagerFiles.getOrNull(pagerState.currentPage)
+                    
+                    // SAVE TO GALLERY BUTTON
+                    IconButton(onClick = { 
+                        currentFile?.let { cf -> onRestore(cf.id) }
+                    }) {
+                        Icon(
+                            imageVector = Icons.Default.Save, 
+                            contentDescription = "Save to Gallery", 
+                            tint = CyberBlue
+                        )
+                    }
+
                     IconButton(onClick = { 
                         currentFile?.let { cf ->
                             // Decrypt current file to a temporary location for sharing
@@ -131,28 +150,46 @@ fun MediaViewerScreen(
             ) { pageIndex ->
                 val currentFile = pagerFiles[pageIndex]
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    var decryptedFile by remember { mutableStateOf<File?>(null) }
-                    
-                    LaunchedEffect(currentFile) {
-                        withContext(Dispatchers.IO) {
-                            try {
-                                val encryptedFile = File(currentFile.encryptedPath)
-                                if (encryptedFile.exists()) {
-                                    val tempFile = File(context.cacheDir, "temp_${currentFile.id}_${currentFile.originalName}")
-                                    if (!tempFile.exists()) {
-                                        cryptoManager.decryptToStream(encryptedFile.inputStream(), FileOutputStream(tempFile))
-                                    }
-                                    decryptedFile = tempFile
-                                }
-                            } catch (e: Exception) {
-                                e.printStackTrace()
+                    var decryptedFile by remember(currentFile.id) { 
+                        mutableStateOf<File?>(
+                            File(context.cacheDir, "temp_${currentFile.id}_${currentFile.originalName}").let { 
+                                if (it.exists()) it else null 
                             }
+                        ) 
+                    }
+                    
+                    // 1. Show Instant Thumbnail Background
+                    if (currentFile.category == FileCategory.PHOTO || currentFile.category == FileCategory.INTRUDER) {
+                        if (currentFile.thumbnailPath != null) {
+                            AsyncImage(
+                                model = File(currentFile.thumbnailPath),
+                                contentDescription = null,
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Fit
+                            )
                         }
                     }
 
                     if (decryptedFile == null) {
-                        CircularProgressIndicator(color = Color.Cyan)
-                    } else {
+                        LaunchedEffect(currentFile) {
+                            withContext(Dispatchers.IO) {
+                                try {
+                                    val encryptedFile = File(currentFile.encryptedPath)
+                                    if (encryptedFile.exists()) {
+                                        val tempFile = File(context.cacheDir, "temp_${currentFile.id}_${currentFile.originalName}")
+                                        if (!tempFile.exists()) {
+                                            cryptoManager.decryptToStream(encryptedFile.inputStream(), FileOutputStream(tempFile))
+                                        }
+                                        decryptedFile = tempFile
+                                    }
+                                } catch (e: Exception) {
+                                    e.printStackTrace()
+                                }
+                            }
+                        }
+                    }
+
+                    if (decryptedFile != null) {
                         when (currentFile.category) {
                             FileCategory.PHOTO, FileCategory.INTRUDER -> PhotoViewer(decryptedFile!!)
                             FileCategory.VIDEO -> VideoViewer(decryptedFile!!)
@@ -166,6 +203,8 @@ fun MediaViewerScreen(
                             }
                             else -> ExternalViewer(currentFile.originalName)
                         }
+                    } else if (currentFile.category != FileCategory.PHOTO && currentFile.category != FileCategory.INTRUDER) {
+                        CircularProgressIndicator(color = Color.Cyan)
                     }
                 }
             }
@@ -267,12 +306,42 @@ private fun shareFile(context: android.content.Context, file: File) {
 
 @Composable
 fun PhotoViewer(file: File) {
-    AsyncImage(
-        model = Uri.fromFile(file),
-        contentDescription = null,
-        modifier = Modifier.fillMaxSize(),
-        contentScale = ContentScale.Fit
-    )
+    var scale by remember { mutableFloatStateOf(1f) }
+    var offset by remember { mutableStateOf(Offset.Zero) }
+    val state = rememberTransformableState { zoomChange, offsetChange, _ ->
+        scale = (scale * zoomChange).coerceIn(1f, 5f)
+        offset += offsetChange
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .pointerInput(Unit) {
+                detectTapGestures(onDoubleTap = {
+                    scale = if (scale > 1f) 1f else 3f
+                    offset = Offset.Zero
+                })
+            }
+            .transformable(
+                state = state,
+                lockRotationOnZoomPan = true,
+                enabled = scale > 1f
+            )
+    ) {
+        AsyncImage(
+            model = Uri.fromFile(file),
+            contentDescription = null,
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer {
+                    scaleX = scale
+                    scaleY = scale
+                    translationX = offset.x
+                    translationY = offset.y
+                },
+            contentScale = ContentScale.Fit
+        )
+    }
 }
 
 @UnstableApi

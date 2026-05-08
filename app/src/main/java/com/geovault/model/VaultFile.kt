@@ -10,5 +10,6 @@ data class VaultFile(
     val encryptedPath: String,
     val category: FileCategory,
     val size: Long,
-    val addedTimestamp: Long
+    val addedTimestamp: Long,
+    val thumbnailPath: String? = null
 )

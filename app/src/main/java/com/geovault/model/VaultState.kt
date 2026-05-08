@@ -43,12 +43,15 @@ data class VaultState(
     val installedApps: List<AppInfo> = emptyList(),
     val isMapDownloading: Boolean = false,
     val isFirstRun: Boolean = true,
+    val isNetworkAvailable: Boolean = true,
+    val isMapLoaded: Boolean = false,
 
     val hasUsageStatsPermission: Boolean = false,
     val hasOverlayPermission: Boolean = false,
     val hasCameraPermission: Boolean = false,
     val hasLocationPermission: Boolean = false,
     val hasStoragePermission: Boolean = false,
+    val hasBatteryOptimizationPermission: Boolean = false,
 
     // Files
     val files: List<VaultFile> = emptyList(),

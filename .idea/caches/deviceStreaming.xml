@@ -4,18 +4,6 @@
     <option name="deviceSelectionList">
       <list>
         <PersistentDeviceSelectionData>
-          <option name="api" value="34" />
-          <option name="brand" value="Sony" />
-          <option name="codename" value="A402SO" />
-          <option name="id" value="A402SO" />
-          <option name="labId" value="google" />
-          <option name="manufacturer" value="Sony" />
-          <option name="name" value="Xperia 10 VI" />
-          <option name="screenDensity" value="450" />
-          <option name="screenX" value="1080" />
-          <option name="screenY" value="2520" />
-        </PersistentDeviceSelectionData>
-        <PersistentDeviceSelectionData>
           <option name="api" value="27" />
           <option name="brand" value="DOCOMO" />
           <option name="codename" value="F01L" />
@@ -396,18 +384,6 @@
           <option name="labId" value="google" />
           <option name="manufacturer" value="Samsung" />
           <option name="name" value="Galaxy A36 5G" />
-          <option name="screenDensity" value="450" />
-          <option name="screenX" value="1080" />
-          <option name="screenY" value="2340" />
-        </PersistentDeviceSelectionData>
-        <PersistentDeviceSelectionData>
-          <option name="api" value="35" />
-          <option name="brand" value="samsung" />
-          <option name="codename" value="a56x" />
-          <option name="id" value="a56x" />
-          <option name="labId" value="google" />
-          <option name="manufacturer" value="Samsung" />
-          <option name="name" value="Galaxy A56 5G" />
           <option name="screenDensity" value="450" />
           <option name="screenX" value="1080" />
           <option name="screenY" value="2340" />
@@ -1234,6 +1210,18 @@
           <option name="screenDensity" value="400" />
           <option name="screenX" value="1080" />
           <option name="screenY" value="2400" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="36" />
+          <option name="brand" value="samsung" />
+          <option name="codename" value="m2q" />
+          <option name="id" value="m2q" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Samsung" />
+          <option name="name" value="Galaxy S26+" />
+          <option name="screenDensity" value="450" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2340" />
         </PersistentDeviceSelectionData>
         <PersistentDeviceSelectionData>
           <option name="api" value="34" />
