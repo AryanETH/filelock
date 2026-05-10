@@ -1,3 +1,0 @@
-com.geovault.test
-style WhiteBackgroundDialogTheme
-style WhiteBackgroundTheme
