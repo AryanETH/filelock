@@ -1,9 +1,0 @@
-com.geovault.app-resValues-0 C:\my projects\file lock\app\build\generated\res\resValues\release
-com.geovault.app-updated_navigation_xml-1 C:\my projects\file lock\app\build\generated\updated_navigation_xml\release
-com.geovault.app-packageReleaseResources-2 C:\my projects\file lock\app\build\intermediates\incremental\release\packageReleaseResources\merged.dir
-com.geovault.app-packageReleaseResources-3 C:\my projects\file lock\app\build\intermediates\incremental\release\packageReleaseResources\stripped.dir
-com.geovault.app-merged-not-compiled-resources-4 C:\my projects\file lock\app\build\intermediates\merged-not-compiled-resources\release
-com.geovault.app-release-5 C:\my projects\file lock\app\build\intermediates\merged_res\release\mergeReleaseResources
-com.geovault.app-main-6 C:\my projects\file lock\app\src\main\res
-com.geovault.app-release-7 C:\my projects\file lock\app\src\release\res
-gradleHome-0 C:\Users\anilp\.gradle

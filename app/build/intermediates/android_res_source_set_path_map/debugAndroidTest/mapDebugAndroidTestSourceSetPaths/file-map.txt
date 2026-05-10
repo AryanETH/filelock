@@ -1,6 +1,0 @@
-com.geovault.test.app-androidTest-0 C:\my projects\file lock\app\build\generated\res\resValues\androidTest\debug
-com.geovault.test.app-updated_navigation_xml-1 C:\my projects\file lock\app\build\generated\updated_navigation_xml\debugAndroidTest
-com.geovault.test.app-mergeDebugAndroidTestResources-2 C:\my projects\file lock\app\build\intermediates\incremental\debugAndroidTest\mergeDebugAndroidTestResources\merged.dir
-com.geovault.test.app-mergeDebugAndroidTestResources-3 C:\my projects\file lock\app\build\intermediates\incremental\debugAndroidTest\mergeDebugAndroidTestResources\stripped.dir
-com.geovault.test.app-debugAndroidTest-4 C:\my projects\file lock\app\build\intermediates\merged_res\debugAndroidTest\mergeDebugAndroidTestResources
-gradleHome-0 C:\Users\anilp\.gradle
