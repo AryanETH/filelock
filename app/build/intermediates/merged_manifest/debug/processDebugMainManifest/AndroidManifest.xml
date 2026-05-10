@@ -90,6 +90,7 @@
         android:theme="@style/Theme.GeoVault" >
         <activity
             android:name="com.geovault.MainActivity"
+            android:configChanges="locale|layoutDirection|orientation|screenSize"
             android:exported="true" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -99,7 +100,7 @@
         </activity>
         <activity
             android:name="com.geovault.LockActivity"
-            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:configChanges="locale|layoutDirection|orientation|screenSize|keyboardHidden"
             android:excludeFromRecents="true"
             android:exported="false"
             android:launchMode="singleTask"
@@ -137,21 +138,6 @@
             android:exported="true" >
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
-            </intent-filter>
-        </receiver>
-        <receiver
-            android:name="com.geovault.security.UninstallProtectionReceiver"
-            android:exported="true"
-            android:label="Mapp Lock Protection"
-            android:permission="android.permission.BIND_DEVICE_ADMIN" >
-            <meta-data
-                android:name="android.app.device_admin"
-                android:resource="@xml/device_admin_rules" />
-
-            <intent-filter>
-                <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
-                <action android:name="android.app.action.DEVICE_ADMIN_DISABLED" />
-                <action android:name="android.app.action.DEVICE_ADMIN_DISABLE_REQUESTED" />
             </intent-filter>
         </receiver>
 
@@ -193,14 +179,6 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
-        <activity
-            android:name="com.google.android.gms.common.api.GoogleApiActivity"
-            android:exported="false"
-            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
-
-        <meta-data
-            android:name="com.google.android.gms.version"
-            android:value="@integer/google_play_services_version" />
         <!--
         Service for holding metadata. Cannot be instantiated.
         Metadata will be merged from other manifests.
@@ -213,6 +191,15 @@
                 android:name="androidx.camera.core.impl.MetadataHolderService.DEFAULT_CONFIG_PROVIDER"
                 android:value="androidx.camera.camera2.Camera2Config$DefaultProvider" />
         </service>
+
+        <activity
+            android:name="com.google.android.gms.common.api.GoogleApiActivity"
+            android:exported="false"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
+        <meta-data
+            android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version" />
 
         <uses-library
             android:name="androidx.window.extensions"

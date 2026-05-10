@@ -44,6 +44,7 @@ fun AuthSelectionScreen(
     context: Context,
     targetPackage: String,
     titleOverride: String? = null,
+    autoRequestBiometric: Boolean = false,
     onAuthenticated: () -> Unit,
     onBiometricRequested: () -> Unit
 ) {
@@ -90,9 +91,42 @@ fun AuthSelectionScreen(
     val savedSecret = relevantVaultId?.let { prefs.getString("vault_${it}_secret", "") } ?: ""
     val vaultLat = relevantVaultId?.let { prefs.getFloat("vault_${it}_lat", 0f).toDouble() } ?: 0.0
     val vaultLon = relevantVaultId?.let { prefs.getFloat("vault_${it}_lon", 0f).toDouble() } ?: 0.0
+    val radius = relevantVaultId?.let { prefs.getFloat("vault_${it}_radius", 0f) } ?: 0f
 
     val isSatelliteMode = remember { prefs.getBoolean("is_satellite_mode", false) }
+    val isFingerprintEnabled = remember { prefs.getBoolean("fingerprint_enabled", false) }
     var biometricStatusMessage by remember { mutableStateOf<String?>(null) }
+    
+    var isWithinRadius by remember { mutableStateOf(radius <= 0f) }
+    var hasAutoRequestedBiometric by remember { mutableStateOf(false) }
+    
+    if (radius > 0) {
+        LaunchedEffect(Unit) {
+            val fusedLocationClient = com.google.android.gms.location.LocationServices.getFusedLocationProviderClient(context)
+            try {
+                fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                    if (location != null) {
+                        isWithinRadius = com.geovault.location.LocationHelper.isWithinRadius(
+                            location.latitude, location.longitude,
+                            vaultLat, vaultLon,
+                            radius
+                        )
+                    } else {
+                        isWithinRadius = false
+                    }
+                }
+            } catch (e: Exception) {
+                isWithinRadius = false
+            }
+        }
+    }
+
+    if (autoRequestBiometric && !hasAutoRequestedBiometric && isWithinRadius) {
+        LaunchedEffect(isWithinRadius) {
+            onBiometricRequested()
+            hasAutoRequestedBiometric = true
+        }
+    }
 
     // Fetch Target App Icon and Name
     val pm = context.packageManager
@@ -136,13 +170,17 @@ fun AuthSelectionScreen(
 
         // 2. Instruction Text
         Text(
-            text = titleOverride ?: when (lockType) {
-                com.geovault.model.LockType.PIN -> "Enter your PIN"
-                com.geovault.model.LockType.PATTERN -> "Draw your pattern"
-                com.geovault.model.LockType.MAP -> "Tap target coordinates"
-                else -> "Verify identity"
+            text = if (!isWithinRadius && radius > 0) {
+                "Location Locked: Stay within ${radius.toInt()}m"
+            } else {
+                titleOverride ?: when (lockType) {
+                    com.geovault.model.LockType.PIN -> "Enter your PIN"
+                    com.geovault.model.LockType.PATTERN -> "Draw your pattern"
+                    com.geovault.model.LockType.MAP -> "Tap target coordinates"
+                    else -> "Verify identity"
+                }
             },
-            color = Color.Black,
+            color = if (!isWithinRadius && radius > 0) Color.Red else Color.Black,
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center
@@ -161,7 +199,7 @@ fun AuthSelectionScreen(
                 com.geovault.model.LockType.PIN -> {
                     CompactPinPad(
                         correctPin = savedSecret, 
-                        onPinComplete = { onAuthenticated() },
+                        onPinComplete = { if (isWithinRadius) onAuthenticated() else captureIntruder() },
                         onError = captureIntruder,
                         isLightTheme = true,
                         isFullPage = true
@@ -170,7 +208,7 @@ fun AuthSelectionScreen(
                 com.geovault.model.LockType.PATTERN -> {
                     CompactPatternGrid(
                         correctPattern = savedSecret, 
-                        onPatternComplete = { onAuthenticated() },
+                        onPatternComplete = { if (isWithinRadius) onAuthenticated() else captureIntruder() },
                         onError = captureIntruder,
                         isLightTheme = true,
                         isFullPage = true
@@ -182,14 +220,14 @@ fun AuthSelectionScreen(
                             targetLocation = GeoPoint(vaultLat, vaultLon),
                             isSatelliteMode = isSatelliteMode,
                             isDarkMode = false,
-                            onSuccess = onAuthenticated
+                            onSuccess = { if (isWithinRadius) onAuthenticated() }
                         )
                     }
                 }
                 else -> {
                     CompactPinPad(
                         correctPin = savedSecret,
-                        onPinComplete = { onAuthenticated() },
+                        onPinComplete = { if (isWithinRadius) onAuthenticated() else captureIntruder() },
                         onError = captureIntruder,
                         isLightTheme = true
                     )
@@ -200,9 +238,13 @@ fun AuthSelectionScreen(
         Spacer(modifier = Modifier.weight(0.2f))
 
         // 4. Biometric Icon (Bottom)
-        if (lockType != com.geovault.model.LockType.MAP) {
+        if (lockType != com.geovault.model.LockType.MAP && isFingerprintEnabled) {
             IconButton(
                 onClick = {
+                    if (!isWithinRadius && radius > 0) {
+                        biometricStatusMessage = "Outside location radius"
+                        return@IconButton
+                    }
                     val biometricManager = BiometricManager.from(context)
                     if (biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG) == BiometricManager.BIOMETRIC_SUCCESS) {
                         biometricStatusMessage = null

@@ -57,7 +57,8 @@
 
         <activity
             android:name=".MainActivity"
-            android:exported="true">
+            android:exported="true"
+            android:configChanges="locale|layoutDirection|orientation|screenSize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -72,7 +73,7 @@
             android:noHistory="true"
             android:taskAffinity="com.geovault.lockstack"
             android:launchMode="singleTask"
-            android:configChanges="orientation|screenSize|keyboardHidden">
+            android:configChanges="locale|layoutDirection|orientation|screenSize|keyboardHidden">
         </activity>
 
         <service
@@ -98,21 +99,6 @@
         <receiver android:name=".service.BootReceiver" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
-            </intent-filter>
-        </receiver>
-
-        <receiver
-            android:name=".security.UninstallProtectionReceiver"
-            android:exported="true"
-            android:label="Mapp Lock Protection"
-            android:permission="android.permission.BIND_DEVICE_ADMIN">
-            <meta-data
-                android:name="android.app.device_admin"
-                android:resource="@xml/device_admin_rules" />
-            <intent-filter>
-                <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
-                <action android:name="android.app.action.DEVICE_ADMIN_DISABLED" />
-                <action android:name="android.app.action.DEVICE_ADMIN_DISABLE_REQUESTED" />
             </intent-filter>
         </receiver>
 

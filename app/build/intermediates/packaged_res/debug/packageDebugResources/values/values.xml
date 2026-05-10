@@ -12,6 +12,8 @@
     <string name="dark_mode">Dark Mode</string>
     <string name="dark_mode_desc">Switch between light and dark themes.</string>
     <string name="documents">Documents</string>
+    <string name="faq">FAQ</string>
+    <string name="feedback">Feedback</string>
     <string name="global_lock">Global Lock</string>
     <string name="global_lock_desc">Lock all selected apps at once.</string>
     <string name="global_lock_title">Global Lock</string>
@@ -41,13 +43,20 @@
     <string name="permission_storage">Storage</string>
     <string name="permission_storage_desc">Required to encrypt and store your files.</string>
     <string name="photos">Photos</string>
+    <string name="privacy_policy">Privacy Policy</string>
     <string name="recycle_bin">Recycle bin</string>
     <string name="save_lock">SAVE LOCK</string>
+    <string name="screenshot_restriction">Screenshot Restriction</string>
+    <string name="screenshot_restriction_desc">Prevent screenshots and screen recording for privacy.</string>
+    <string name="search_languages">Search languages...</string>
     <string name="search_places">Search places...</string>
     <string name="select_apps">SELECT APPS</string>
+    <string name="select_language">Select Language</string>
     <string name="setup_lock">SETUP LOCK</string>
     <string name="stealth_entry">Private Entry</string>
+    <string name="support_links">SUPPORT &amp; LEGAL</string>
     <string name="system_permissions">SYSTEM PERMISSIONS</string>
+    <string name="terms_of_use">Terms of Use</string>
     <string name="tour_next">Next</string>
     <string name="tour_skip">Skip</string>
     <string name="tour_step1">Long-press anywhere on the map to set your secret entry point.</string>
@@ -65,5 +74,5 @@
     <string name="wrong_unlock">Wrong Unlock</string>
     <string name="wrong_unlock_alert">Wrong Unlock Alert</string>
     <string name="wrong_unlocks">Wrong Unlocks</string>
-    <style name="Theme.GeoVault" parent="android:Theme.Material.Light.NoActionBar"/>
+    <style name="Theme.GeoVault" parent="Theme.AppCompat.DayNight.NoActionBar"/>
 </resources>

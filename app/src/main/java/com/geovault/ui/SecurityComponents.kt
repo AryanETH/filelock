@@ -24,6 +24,8 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import com.geovault.ui.theme.CyberBlue
 import com.geovault.ui.theme.CyberDarkBlue
 import com.geovault.ui.theme.CyberNeonRed
@@ -40,6 +42,8 @@ fun CompactPinPad(
 ) {
     var pin by remember { mutableStateOf("") }
     var isError by remember { mutableStateOf(false) }
+    val haptic = LocalHapticFeedback.current
+    val scope = rememberCoroutineScope()
     
     val primaryColor = if (isLightTheme) Color.Black else MaterialTheme.colorScheme.primary
     val onPrimaryColor = if (isLightTheme) Color.White else MaterialTheme.colorScheme.onPrimary
@@ -56,10 +60,14 @@ fun CompactPinPad(
             delay(300)
             if (correctPin != null) {
                 if (pin == correctPin) {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     onPinComplete(pin)
                     pin = ""
                 } else {
                     isError = true
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    delay(100)
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     onError?.invoke()
                     delay(1000)
                     isError = false
@@ -135,11 +143,17 @@ fun CompactPinPad(
                             .padding(horizontal = keyPadding)
                             .size(keySize)
                             .clickable(enabled = !isError) {
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                             when (key) {
                                 "C" -> if (pin.isNotEmpty()) pin = pin.dropLast(1)
                                 "OK" -> if (pin.length == 4) {
                                     if (correctPin != null && pin != correctPin) {
                                         isError = true
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        scope.launch {
+                                            delay(100)
+                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        }
                                         onError?.invoke()
                                     } else {
                                         onPinComplete(pin)
@@ -173,6 +187,7 @@ fun CompactPatternGrid(
     var secret by remember { mutableStateOf("") }
     var isError by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+    val haptic = LocalHapticFeedback.current
     
     val inactiveDotColor = if (isLightTheme) Color.Black.copy(alpha = 0.15f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
     val activeDotColor = if (isLightTheme) Color.Black else MaterialTheme.colorScheme.primary
@@ -192,6 +207,7 @@ fun CompactPatternGrid(
                         onDrag = { change, _ ->
                             val dotIndex = getDotIndexAt(change.position, size.width.toFloat())
                             if (dotIndex != -1 && !secret.contains(dotIndex.toString())) {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 secret += dotIndex.toString()
                             }
                         },
@@ -199,10 +215,16 @@ fun CompactPatternGrid(
                             if (secret.length >= 3) {
                                 if (correctPattern != null) {
                                     if (secret == correctPattern) {
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                         onPatternComplete(secret)
                                         secret = ""
                                     } else {
                                         isError = true
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        scope.launch {
+                                            delay(100)
+                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        }
                                         onError?.invoke()
                                         scope.launch {
                                             delay(1000)
@@ -211,6 +233,7 @@ fun CompactPatternGrid(
                                         }
                                     }
                                 } else {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                     onPatternComplete(secret)
                                     secret = ""
                                 }

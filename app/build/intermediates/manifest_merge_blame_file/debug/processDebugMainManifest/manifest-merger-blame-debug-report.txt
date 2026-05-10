@@ -149,7 +149,7 @@
 77-->[androidx.core:core:1.18.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\63a3124b1bd395fcb4089be1c87d3c5d\transformed\core-1.18.0\AndroidManifest.xml:26:22-94
 78
 79    <application
-79-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:49:5-149:19
+79-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:49:5-135:19
 80        android:name="com.geovault.GeoVaultApp"
 80-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:50:9-36
 81        android:allowBackup="true"
@@ -171,313 +171,286 @@
 90        android:theme="@style/Theme.GeoVault" >
 90-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:56:9-46
 91        <activity
-91-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:58:9-65:20
+91-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:58:9-66:20
 92            android:name="com.geovault.MainActivity"
 92-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:59:13-41
-93            android:exported="true" >
-93-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:60:13-36
-94            <intent-filter>
-94-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:61:13-64:29
-95                <action android:name="android.intent.action.MAIN" />
-95-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:62:17-69
-95-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:62:25-66
-96
-97                <category android:name="android.intent.category.LAUNCHER" />
-97-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:63:17-77
-97-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:63:27-74
-98            </intent-filter>
-99        </activity>
-100        <activity
-100-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:67:9-76:20
-101            android:name="com.geovault.LockActivity"
-101-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:68:13-41
-102            android:configChanges="orientation|screenSize|keyboardHidden"
-102-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:75:13-74
-103            android:excludeFromRecents="true"
-103-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:71:13-46
-104            android:exported="false"
-104-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:69:13-37
-105            android:launchMode="singleTask"
-105-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:74:13-44
-106            android:noHistory="true"
-106-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:72:13-37
-107            android:taskAffinity="com.geovault.lockstack"
-107-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:73:13-58
-108            android:theme="@style/Theme.GeoVault" >
-108-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:70:13-50
-109        </activity>
-110
-111        <service
-111-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:78:9-88:19
-112            android:name="com.geovault.service.WindowChangeDetector"
-112-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:79:13-57
-113            android:exported="false"
-113-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:81:13-37
-114            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE" >
-114-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:80:13-79
-115            <intent-filter>
-115-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:82:13-84:29
-116                <action android:name="android.accessibilityservice.AccessibilityService" />
-116-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:83:17-92
-116-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:83:25-89
-117            </intent-filter>
-118
-119            <meta-data
-119-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:85:13-87:72
-120                android:name="android.accessibilityservice"
-120-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:86:17-60
-121                android:resource="@xml/accessibility_service_config" />
-121-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:87:17-69
-122        </service>
-123        <service
-123-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:90:9-96:19
-124            android:name="com.geovault.service.AppLockerService"
-124-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:91:13-53
-125            android:exported="false"
-125-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:92:13-37
-126            android:foregroundServiceType="specialUse" >
-126-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:93:13-55
-127            <property
-127-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:94:13-158
-128                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-128-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:94:23-82
-129                android:value="App usage monitoring for security and privacy protection" />
-129-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:94:83-155
-130            <property
-130-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:95:13-206
-131                android:name="android.app.PROPERTY_SPECIAL_USE_FQS_REASON"
-131-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:95:23-81
-132                android:value="This service monitors app launches to provide real-time security overlays for user-selected applications." />
-132-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:95:82-203
-133        </service>
-134
-135        <receiver
-135-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:98:9-102:20
-136            android:name="com.geovault.service.BootReceiver"
-136-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:98:19-55
-137            android:exported="true" >
-137-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:98:56-79
-138            <intent-filter>
-138-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:99:13-101:29
-139                <action android:name="android.intent.action.BOOT_COMPLETED" />
-139-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:100:17-79
-139-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:100:25-76
-140            </intent-filter>
-141        </receiver>
-142        <receiver
-142-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:104:9-117:20
-143            android:name="com.geovault.security.UninstallProtectionReceiver"
-143-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:105:13-65
-144            android:exported="true"
-144-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:106:13-36
-145            android:label="Mapp Lock Protection"
-145-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:107:13-49
-146            android:permission="android.permission.BIND_DEVICE_ADMIN" >
-146-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:108:13-70
-147            <meta-data
-147-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:109:13-111:62
-148                android:name="android.app.device_admin"
-148-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:110:17-56
-149                android:resource="@xml/device_admin_rules" />
-149-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:111:17-59
-150
-151            <intent-filter>
-151-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:112:13-116:29
-152                <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
-152-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:113:17-82
-152-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:113:25-79
-153                <action android:name="android.app.action.DEVICE_ADMIN_DISABLED" />
-153-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:114:17-83
-153-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:114:25-80
-154                <action android:name="android.app.action.DEVICE_ADMIN_DISABLE_REQUESTED" />
-154-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:115:17-92
-154-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:115:25-89
-155            </intent-filter>
-156        </receiver>
-157
-158        <service
-158-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:119:9-126:19
-159            android:name="com.geovault.service.NotificationInterceptorService"
-159-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:120:13-67
-160            android:exported="false"
-160-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:121:13-37
-161            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" >
-161-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:122:13-87
-162            <intent-filter>
-162-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:123:13-125:29
-163                <action android:name="android.service.notification.NotificationListenerService" />
-163-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:124:17-99
-163-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:124:25-96
-164            </intent-filter>
-165        </service>
-166
+93            android:configChanges="locale|layoutDirection|orientation|screenSize"
+93-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:61:13-82
+94            android:exported="true" >
+94-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:60:13-36
+95            <intent-filter>
+95-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:62:13-65:29
+96                <action android:name="android.intent.action.MAIN" />
+96-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:63:17-69
+96-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:63:25-66
+97
+98                <category android:name="android.intent.category.LAUNCHER" />
+98-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:64:17-77
+98-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:64:27-74
+99            </intent-filter>
+100        </activity>
+101        <activity
+101-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:68:9-77:20
+102            android:name="com.geovault.LockActivity"
+102-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:69:13-41
+103            android:configChanges="locale|layoutDirection|orientation|screenSize|keyboardHidden"
+103-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:76:13-97
+104            android:excludeFromRecents="true"
+104-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:72:13-46
+105            android:exported="false"
+105-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:70:13-37
+106            android:launchMode="singleTask"
+106-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:75:13-44
+107            android:noHistory="true"
+107-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:73:13-37
+108            android:taskAffinity="com.geovault.lockstack"
+108-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:74:13-58
+109            android:theme="@style/Theme.GeoVault" >
+109-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:71:13-50
+110        </activity>
+111
+112        <service
+112-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:79:9-89:19
+113            android:name="com.geovault.service.WindowChangeDetector"
+113-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:80:13-57
+114            android:exported="false"
+114-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:82:13-37
+115            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE" >
+115-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:81:13-79
+116            <intent-filter>
+116-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:83:13-85:29
+117                <action android:name="android.accessibilityservice.AccessibilityService" />
+117-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:84:17-92
+117-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:84:25-89
+118            </intent-filter>
+119
+120            <meta-data
+120-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:86:13-88:72
+121                android:name="android.accessibilityservice"
+121-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:87:17-60
+122                android:resource="@xml/accessibility_service_config" />
+122-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:88:17-69
+123        </service>
+124        <service
+124-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:91:9-97:19
+125            android:name="com.geovault.service.AppLockerService"
+125-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:92:13-53
+126            android:exported="false"
+126-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:93:13-37
+127            android:foregroundServiceType="specialUse" >
+127-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:94:13-55
+128            <property
+128-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:95:13-158
+129                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+129-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:95:23-82
+130                android:value="App usage monitoring for security and privacy protection" />
+130-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:95:83-155
+131            <property
+131-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:96:13-206
+132                android:name="android.app.PROPERTY_SPECIAL_USE_FQS_REASON"
+132-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:96:23-81
+133                android:value="This service monitors app launches to provide real-time security overlays for user-selected applications." />
+133-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:96:82-203
+134        </service>
+135
+136        <receiver
+136-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:99:9-103:20
+137            android:name="com.geovault.service.BootReceiver"
+137-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:99:19-55
+138            android:exported="true" >
+138-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:99:56-79
+139            <intent-filter>
+139-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:100:13-102:29
+140                <action android:name="android.intent.action.BOOT_COMPLETED" />
+140-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:101:17-79
+140-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:101:25-76
+141            </intent-filter>
+142        </receiver>
+143
+144        <service
+144-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:105:9-112:19
+145            android:name="com.geovault.service.NotificationInterceptorService"
+145-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:106:13-67
+146            android:exported="false"
+146-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:107:13-37
+147            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" >
+147-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:108:13-87
+148            <intent-filter>
+148-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:109:13-111:29
+149                <action android:name="android.service.notification.NotificationListenerService" />
+149-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:110:17-99
+149-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:110:25-96
+150            </intent-filter>
+151        </service>
+152
+153        <activity
+153-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:114:9-119:20
+154            android:name="com.geovault.core.ProxyActivity"
+154-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:115:13-47
+155            android:configChanges="orientation|screenSize|keyboardHidden"
+155-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:118:13-74
+156            android:exported="false"
+156-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:116:13-37
+157            android:theme="@style/Theme.GeoVault" >
+157-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:117:13-50
+158        </activity>
+159        <activity
+159-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:121:9-125
+160            android:name="com.geovault.core.ProxyActivity$Stub1"
+160-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:121:19-59
+161            android:exported="false"
+161-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:121:98-122
+162            android:theme="@style/Theme.GeoVault" />
+162-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:121:60-97
+163        <activity
+163-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:122:9-125
+164            android:name="com.geovault.core.ProxyActivity$Stub2"
+164-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:122:19-59
+165            android:exported="false"
+165-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:122:98-122
+166            android:theme="@style/Theme.GeoVault" />
+166-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:122:60-97
 167        <activity
-167-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:128:9-133:20
-168            android:name="com.geovault.core.ProxyActivity"
-168-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:129:13-47
-169            android:configChanges="orientation|screenSize|keyboardHidden"
-169-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:132:13-74
-170            android:exported="false"
-170-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:130:13-37
-171            android:theme="@style/Theme.GeoVault" >
-171-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:131:13-50
-172        </activity>
-173        <activity
-173-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:135:9-125
-174            android:name="com.geovault.core.ProxyActivity$Stub1"
-174-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:135:19-59
+167-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:123:9-125
+168            android:name="com.geovault.core.ProxyActivity$Stub3"
+168-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:123:19-59
+169            android:exported="false"
+169-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:123:98-122
+170            android:theme="@style/Theme.GeoVault" />
+170-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:123:60-97
+171
+172        <provider
+172-->INJECTED
+173            android:name="androidx.core.content.FileProvider"
+173-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:126:13-62
+174            android:authorities="com.geovault.fileprovider"
+174-->INJECTED
 175            android:exported="false"
-175-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:135:98-122
-176            android:theme="@style/Theme.GeoVault" />
-176-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:135:60-97
-177        <activity
-177-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:136:9-125
-178            android:name="com.geovault.core.ProxyActivity$Stub2"
-178-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:136:19-59
-179            android:exported="false"
-179-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:136:98-122
-180            android:theme="@style/Theme.GeoVault" />
-180-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:136:60-97
-181        <activity
-181-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:137:9-125
-182            android:name="com.geovault.core.ProxyActivity$Stub3"
-182-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:137:19-59
-183            android:exported="false"
-183-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:137:98-122
-184            android:theme="@style/Theme.GeoVault" />
-184-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:137:60-97
-185
-186        <provider
-186-->INJECTED
-187            android:name="androidx.core.content.FileProvider"
-187-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:140:13-62
-188            android:authorities="com.geovault.fileprovider"
-188-->INJECTED
-189            android:exported="false"
-189-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:142:13-37
-190            android:grantUriPermissions="true" >
-190-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:143:13-47
-191            <meta-data
-191-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:144:13-146:54
-192                android:name="android.support.FILE_PROVIDER_PATHS"
-192-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:145:17-67
-193                android:resource="@xml/file_paths" />
-193-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:146:17-51
-194        </provider>
-195
-196        <activity
-196-->[com.google.android.gms:play-services-base:18.5.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\883beef5dbdf4efd426b038435743b43\transformed\play-services-base-18.5.0\AndroidManifest.xml:5:9-173
-197            android:name="com.google.android.gms.common.api.GoogleApiActivity"
-197-->[com.google.android.gms:play-services-base:18.5.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\883beef5dbdf4efd426b038435743b43\transformed\play-services-base-18.5.0\AndroidManifest.xml:5:19-85
-198            android:exported="false"
-198-->[com.google.android.gms:play-services-base:18.5.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\883beef5dbdf4efd426b038435743b43\transformed\play-services-base-18.5.0\AndroidManifest.xml:5:146-170
-199            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
-199-->[com.google.android.gms:play-services-base:18.5.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\883beef5dbdf4efd426b038435743b43\transformed\play-services-base-18.5.0\AndroidManifest.xml:5:86-145
-200
-201        <meta-data
-201-->[com.google.android.gms:play-services-basement:18.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\e14467b749f1d1bca3fa678faaba4176\transformed\play-services-basement-18.4.0\AndroidManifest.xml:6:9-122
-202            android:name="com.google.android.gms.version"
-202-->[com.google.android.gms:play-services-basement:18.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\e14467b749f1d1bca3fa678faaba4176\transformed\play-services-basement-18.4.0\AndroidManifest.xml:6:20-65
-203            android:value="@integer/google_play_services_version" />
-203-->[com.google.android.gms:play-services-basement:18.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\e14467b749f1d1bca3fa678faaba4176\transformed\play-services-basement-18.4.0\AndroidManifest.xml:6:66-119
-204        <!--
-205        Service for holding metadata. Cannot be instantiated.
-206        Metadata will be merged from other manifests.
-207        -->
-208        <service
-208-->[androidx.camera:camera-core:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\2a8254fbc5c914eafd139d9cd0da2246\transformed\camera-core-1.4.0\AndroidManifest.xml:29:9-33:78
-209            android:name="androidx.camera.core.impl.MetadataHolderService"
-209-->[androidx.camera:camera-core:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\2a8254fbc5c914eafd139d9cd0da2246\transformed\camera-core-1.4.0\AndroidManifest.xml:30:13-75
-210            android:enabled="false"
-210-->[androidx.camera:camera-core:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\2a8254fbc5c914eafd139d9cd0da2246\transformed\camera-core-1.4.0\AndroidManifest.xml:31:13-36
-211            android:exported="false" >
-211-->[androidx.camera:camera-core:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\2a8254fbc5c914eafd139d9cd0da2246\transformed\camera-core-1.4.0\AndroidManifest.xml:32:13-37
-212            <meta-data
-212-->[androidx.camera:camera-camera2:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\834f54281739f2084f484ebfb52863d9\transformed\camera-camera2-1.4.0\AndroidManifest.xml:30:13-32:89
-213                android:name="androidx.camera.core.impl.MetadataHolderService.DEFAULT_CONFIG_PROVIDER"
-213-->[androidx.camera:camera-camera2:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\834f54281739f2084f484ebfb52863d9\transformed\camera-camera2-1.4.0\AndroidManifest.xml:31:17-103
-214                android:value="androidx.camera.camera2.Camera2Config$DefaultProvider" />
-214-->[androidx.camera:camera-camera2:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\834f54281739f2084f484ebfb52863d9\transformed\camera-camera2-1.4.0\AndroidManifest.xml:32:17-86
-215        </service>
-216
-217        <uses-library
-217-->[androidx.window:window:1.5.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\1ceab59066c42fd9a75a95033c7c10af\transformed\window-1.5.0\AndroidManifest.xml:23:9-25:40
-218            android:name="androidx.window.extensions"
-218-->[androidx.window:window:1.5.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\1ceab59066c42fd9a75a95033c7c10af\transformed\window-1.5.0\AndroidManifest.xml:24:13-54
-219            android:required="false" />
-219-->[androidx.window:window:1.5.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\1ceab59066c42fd9a75a95033c7c10af\transformed\window-1.5.0\AndroidManifest.xml:25:13-37
-220        <uses-library
-220-->[androidx.window:window:1.5.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\1ceab59066c42fd9a75a95033c7c10af\transformed\window-1.5.0\AndroidManifest.xml:26:9-28:40
-221            android:name="androidx.window.sidecar"
-221-->[androidx.window:window:1.5.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\1ceab59066c42fd9a75a95033c7c10af\transformed\window-1.5.0\AndroidManifest.xml:27:13-51
-222            android:required="false" />
-222-->[androidx.window:window:1.5.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\1ceab59066c42fd9a75a95033c7c10af\transformed\window-1.5.0\AndroidManifest.xml:28:13-37
-223
-224        <provider
-224-->[androidx.emoji2:emoji2:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\63066beb648a4d8565262cdf02c99bed\transformed\emoji2-1.4.0\AndroidManifest.xml:24:9-32:20
-225            android:name="androidx.startup.InitializationProvider"
-225-->[androidx.emoji2:emoji2:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\63066beb648a4d8565262cdf02c99bed\transformed\emoji2-1.4.0\AndroidManifest.xml:25:13-67
-226            android:authorities="com.geovault.androidx-startup"
-226-->[androidx.emoji2:emoji2:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\63066beb648a4d8565262cdf02c99bed\transformed\emoji2-1.4.0\AndroidManifest.xml:26:13-68
-227            android:exported="false" >
-227-->[androidx.emoji2:emoji2:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\63066beb648a4d8565262cdf02c99bed\transformed\emoji2-1.4.0\AndroidManifest.xml:27:13-37
-228            <meta-data
-228-->[androidx.emoji2:emoji2:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\63066beb648a4d8565262cdf02c99bed\transformed\emoji2-1.4.0\AndroidManifest.xml:29:13-31:52
-229                android:name="androidx.emoji2.text.EmojiCompatInitializer"
-229-->[androidx.emoji2:emoji2:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\63066beb648a4d8565262cdf02c99bed\transformed\emoji2-1.4.0\AndroidManifest.xml:30:17-75
-230                android:value="androidx.startup" />
-230-->[androidx.emoji2:emoji2:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\63066beb648a4d8565262cdf02c99bed\transformed\emoji2-1.4.0\AndroidManifest.xml:31:17-49
-231            <meta-data
-231-->[androidx.lifecycle:lifecycle-process:2.10.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\b4cd38a5f0d8c7abfe95a864d5604be8\transformed\lifecycle-process-2.10.0\AndroidManifest.xml:29:13-31:52
-232                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
-232-->[androidx.lifecycle:lifecycle-process:2.10.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\b4cd38a5f0d8c7abfe95a864d5604be8\transformed\lifecycle-process-2.10.0\AndroidManifest.xml:30:17-78
-233                android:value="androidx.startup" />
-233-->[androidx.lifecycle:lifecycle-process:2.10.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\b4cd38a5f0d8c7abfe95a864d5604be8\transformed\lifecycle-process-2.10.0\AndroidManifest.xml:31:17-49
-234            <meta-data
-234-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\274dbbb41a5807b3e484fd4491212674\transformed\profileinstaller-1.4.0\AndroidManifest.xml:29:13-31:52
-235                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
-235-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\274dbbb41a5807b3e484fd4491212674\transformed\profileinstaller-1.4.0\AndroidManifest.xml:30:17-85
-236                android:value="androidx.startup" />
-236-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\274dbbb41a5807b3e484fd4491212674\transformed\profileinstaller-1.4.0\AndroidManifest.xml:31:17-49
-237        </provider>
-238
-239        <receiver
-239-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\274dbbb41a5807b3e484fd4491212674\transformed\profileinstaller-1.4.0\AndroidManifest.xml:34:9-52:20
-240            android:name="androidx.profileinstaller.ProfileInstallReceiver"
-240-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\274dbbb41a5807b3e484fd4491212674\transformed\profileinstaller-1.4.0\AndroidManifest.xml:35:13-76
-241            android:directBootAware="false"
-241-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\274dbbb41a5807b3e484fd4491212674\transformed\profileinstaller-1.4.0\AndroidManifest.xml:36:13-44
-242            android:enabled="true"
-242-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\274dbbb41a5807b3e484fd4491212674\transformed\profileinstaller-1.4.0\AndroidManifest.xml:37:13-35
-243            android:exported="true"
-243-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\274dbbb41a5807b3e484fd4491212674\transformed\profileinstaller-1.4.0\AndroidManifest.xml:38:13-36
-244            android:permission="android.permission.DUMP" >
-244-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\274dbbb41a5807b3e484fd4491212674\transformed\profileinstaller-1.4.0\AndroidManifest.xml:39:13-57
-245            <intent-filter>
-245-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\274dbbb41a5807b3e484fd4491212674\transformed\profileinstaller-1.4.0\AndroidManifest.xml:40:13-42:29
-246                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
-246-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\274dbbb41a5807b3e484fd4491212674\transformed\profileinstaller-1.4.0\AndroidManifest.xml:41:17-91
-246-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\274dbbb41a5807b3e484fd4491212674\transformed\profileinstaller-1.4.0\AndroidManifest.xml:41:25-88
-247            </intent-filter>
-248            <intent-filter>
-248-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\274dbbb41a5807b3e484fd4491212674\transformed\profileinstaller-1.4.0\AndroidManifest.xml:43:13-45:29
-249                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
-249-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\274dbbb41a5807b3e484fd4491212674\transformed\profileinstaller-1.4.0\AndroidManifest.xml:44:17-85
-249-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\274dbbb41a5807b3e484fd4491212674\transformed\profileinstaller-1.4.0\AndroidManifest.xml:44:25-82
-250            </intent-filter>
-251            <intent-filter>
-251-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\274dbbb41a5807b3e484fd4491212674\transformed\profileinstaller-1.4.0\AndroidManifest.xml:46:13-48:29
-252                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
-252-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\274dbbb41a5807b3e484fd4491212674\transformed\profileinstaller-1.4.0\AndroidManifest.xml:47:17-88
-252-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\274dbbb41a5807b3e484fd4491212674\transformed\profileinstaller-1.4.0\AndroidManifest.xml:47:25-85
-253            </intent-filter>
-254            <intent-filter>
-254-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\274dbbb41a5807b3e484fd4491212674\transformed\profileinstaller-1.4.0\AndroidManifest.xml:49:13-51:29
-255                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
-255-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\274dbbb41a5807b3e484fd4491212674\transformed\profileinstaller-1.4.0\AndroidManifest.xml:50:17-95
-255-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\274dbbb41a5807b3e484fd4491212674\transformed\profileinstaller-1.4.0\AndroidManifest.xml:50:25-92
-256            </intent-filter>
-257        </receiver>
-258    </application>
-259
-260</manifest>
+175-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:128:13-37
+176            android:grantUriPermissions="true" >
+176-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:129:13-47
+177            <meta-data
+177-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:130:13-132:54
+178                android:name="android.support.FILE_PROVIDER_PATHS"
+178-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:131:17-67
+179                android:resource="@xml/file_paths" />
+179-->C:\my projects\file lock\app\src\main\AndroidManifest.xml:132:17-51
+180        </provider>
+181
+182        <!--
+183        Service for holding metadata. Cannot be instantiated.
+184        Metadata will be merged from other manifests.
+185        -->
+186        <service
+186-->[androidx.camera:camera-core:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\2a8254fbc5c914eafd139d9cd0da2246\transformed\camera-core-1.4.0\AndroidManifest.xml:29:9-33:78
+187            android:name="androidx.camera.core.impl.MetadataHolderService"
+187-->[androidx.camera:camera-core:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\2a8254fbc5c914eafd139d9cd0da2246\transformed\camera-core-1.4.0\AndroidManifest.xml:30:13-75
+188            android:enabled="false"
+188-->[androidx.camera:camera-core:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\2a8254fbc5c914eafd139d9cd0da2246\transformed\camera-core-1.4.0\AndroidManifest.xml:31:13-36
+189            android:exported="false" >
+189-->[androidx.camera:camera-core:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\2a8254fbc5c914eafd139d9cd0da2246\transformed\camera-core-1.4.0\AndroidManifest.xml:32:13-37
+190            <meta-data
+190-->[androidx.camera:camera-camera2:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\834f54281739f2084f484ebfb52863d9\transformed\camera-camera2-1.4.0\AndroidManifest.xml:30:13-32:89
+191                android:name="androidx.camera.core.impl.MetadataHolderService.DEFAULT_CONFIG_PROVIDER"
+191-->[androidx.camera:camera-camera2:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\834f54281739f2084f484ebfb52863d9\transformed\camera-camera2-1.4.0\AndroidManifest.xml:31:17-103
+192                android:value="androidx.camera.camera2.Camera2Config$DefaultProvider" />
+192-->[androidx.camera:camera-camera2:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\834f54281739f2084f484ebfb52863d9\transformed\camera-camera2-1.4.0\AndroidManifest.xml:32:17-86
+193        </service>
+194
+195        <activity
+195-->[com.google.android.gms:play-services-base:18.5.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\883beef5dbdf4efd426b038435743b43\transformed\play-services-base-18.5.0\AndroidManifest.xml:5:9-173
+196            android:name="com.google.android.gms.common.api.GoogleApiActivity"
+196-->[com.google.android.gms:play-services-base:18.5.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\883beef5dbdf4efd426b038435743b43\transformed\play-services-base-18.5.0\AndroidManifest.xml:5:19-85
+197            android:exported="false"
+197-->[com.google.android.gms:play-services-base:18.5.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\883beef5dbdf4efd426b038435743b43\transformed\play-services-base-18.5.0\AndroidManifest.xml:5:146-170
+198            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+198-->[com.google.android.gms:play-services-base:18.5.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\883beef5dbdf4efd426b038435743b43\transformed\play-services-base-18.5.0\AndroidManifest.xml:5:86-145
+199
+200        <meta-data
+200-->[com.google.android.gms:play-services-basement:18.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\e14467b749f1d1bca3fa678faaba4176\transformed\play-services-basement-18.4.0\AndroidManifest.xml:6:9-122
+201            android:name="com.google.android.gms.version"
+201-->[com.google.android.gms:play-services-basement:18.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\e14467b749f1d1bca3fa678faaba4176\transformed\play-services-basement-18.4.0\AndroidManifest.xml:6:20-65
+202            android:value="@integer/google_play_services_version" />
+202-->[com.google.android.gms:play-services-basement:18.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\e14467b749f1d1bca3fa678faaba4176\transformed\play-services-basement-18.4.0\AndroidManifest.xml:6:66-119
+203
+204        <uses-library
+204-->[androidx.window:window:1.5.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\1ceab59066c42fd9a75a95033c7c10af\transformed\window-1.5.0\AndroidManifest.xml:23:9-25:40
+205            android:name="androidx.window.extensions"
+205-->[androidx.window:window:1.5.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\1ceab59066c42fd9a75a95033c7c10af\transformed\window-1.5.0\AndroidManifest.xml:24:13-54
+206            android:required="false" />
+206-->[androidx.window:window:1.5.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\1ceab59066c42fd9a75a95033c7c10af\transformed\window-1.5.0\AndroidManifest.xml:25:13-37
+207        <uses-library
+207-->[androidx.window:window:1.5.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\1ceab59066c42fd9a75a95033c7c10af\transformed\window-1.5.0\AndroidManifest.xml:26:9-28:40
+208            android:name="androidx.window.sidecar"
+208-->[androidx.window:window:1.5.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\1ceab59066c42fd9a75a95033c7c10af\transformed\window-1.5.0\AndroidManifest.xml:27:13-51
+209            android:required="false" />
+209-->[androidx.window:window:1.5.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\1ceab59066c42fd9a75a95033c7c10af\transformed\window-1.5.0\AndroidManifest.xml:28:13-37
+210
+211        <provider
+211-->[androidx.emoji2:emoji2:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\63066beb648a4d8565262cdf02c99bed\transformed\emoji2-1.4.0\AndroidManifest.xml:24:9-32:20
+212            android:name="androidx.startup.InitializationProvider"
+212-->[androidx.emoji2:emoji2:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\63066beb648a4d8565262cdf02c99bed\transformed\emoji2-1.4.0\AndroidManifest.xml:25:13-67
+213            android:authorities="com.geovault.androidx-startup"
+213-->[androidx.emoji2:emoji2:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\63066beb648a4d8565262cdf02c99bed\transformed\emoji2-1.4.0\AndroidManifest.xml:26:13-68
+214            android:exported="false" >
+214-->[androidx.emoji2:emoji2:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\63066beb648a4d8565262cdf02c99bed\transformed\emoji2-1.4.0\AndroidManifest.xml:27:13-37
+215            <meta-data
+215-->[androidx.emoji2:emoji2:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\63066beb648a4d8565262cdf02c99bed\transformed\emoji2-1.4.0\AndroidManifest.xml:29:13-31:52
+216                android:name="androidx.emoji2.text.EmojiCompatInitializer"
+216-->[androidx.emoji2:emoji2:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\63066beb648a4d8565262cdf02c99bed\transformed\emoji2-1.4.0\AndroidManifest.xml:30:17-75
+217                android:value="androidx.startup" />
+217-->[androidx.emoji2:emoji2:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\63066beb648a4d8565262cdf02c99bed\transformed\emoji2-1.4.0\AndroidManifest.xml:31:17-49
+218            <meta-data
+218-->[androidx.lifecycle:lifecycle-process:2.10.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\b4cd38a5f0d8c7abfe95a864d5604be8\transformed\lifecycle-process-2.10.0\AndroidManifest.xml:29:13-31:52
+219                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+219-->[androidx.lifecycle:lifecycle-process:2.10.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\b4cd38a5f0d8c7abfe95a864d5604be8\transformed\lifecycle-process-2.10.0\AndroidManifest.xml:30:17-78
+220                android:value="androidx.startup" />
+220-->[androidx.lifecycle:lifecycle-process:2.10.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\b4cd38a5f0d8c7abfe95a864d5604be8\transformed\lifecycle-process-2.10.0\AndroidManifest.xml:31:17-49
+221            <meta-data
+221-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\274dbbb41a5807b3e484fd4491212674\transformed\profileinstaller-1.4.0\AndroidManifest.xml:29:13-31:52
+222                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
+222-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\274dbbb41a5807b3e484fd4491212674\transformed\profileinstaller-1.4.0\AndroidManifest.xml:30:17-85
+223                android:value="androidx.startup" />
+223-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\274dbbb41a5807b3e484fd4491212674\transformed\profileinstaller-1.4.0\AndroidManifest.xml:31:17-49
+224        </provider>
+225
+226        <receiver
+226-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\274dbbb41a5807b3e484fd4491212674\transformed\profileinstaller-1.4.0\AndroidManifest.xml:34:9-52:20
+227            android:name="androidx.profileinstaller.ProfileInstallReceiver"
+227-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\274dbbb41a5807b3e484fd4491212674\transformed\profileinstaller-1.4.0\AndroidManifest.xml:35:13-76
+228            android:directBootAware="false"
+228-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\274dbbb41a5807b3e484fd4491212674\transformed\profileinstaller-1.4.0\AndroidManifest.xml:36:13-44
+229            android:enabled="true"
+229-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\274dbbb41a5807b3e484fd4491212674\transformed\profileinstaller-1.4.0\AndroidManifest.xml:37:13-35
+230            android:exported="true"
+230-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\274dbbb41a5807b3e484fd4491212674\transformed\profileinstaller-1.4.0\AndroidManifest.xml:38:13-36
+231            android:permission="android.permission.DUMP" >
+231-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\274dbbb41a5807b3e484fd4491212674\transformed\profileinstaller-1.4.0\AndroidManifest.xml:39:13-57
+232            <intent-filter>
+232-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\274dbbb41a5807b3e484fd4491212674\transformed\profileinstaller-1.4.0\AndroidManifest.xml:40:13-42:29
+233                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
+233-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\274dbbb41a5807b3e484fd4491212674\transformed\profileinstaller-1.4.0\AndroidManifest.xml:41:17-91
+233-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\274dbbb41a5807b3e484fd4491212674\transformed\profileinstaller-1.4.0\AndroidManifest.xml:41:25-88
+234            </intent-filter>
+235            <intent-filter>
+235-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\274dbbb41a5807b3e484fd4491212674\transformed\profileinstaller-1.4.0\AndroidManifest.xml:43:13-45:29
+236                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
+236-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\274dbbb41a5807b3e484fd4491212674\transformed\profileinstaller-1.4.0\AndroidManifest.xml:44:17-85
+236-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\274dbbb41a5807b3e484fd4491212674\transformed\profileinstaller-1.4.0\AndroidManifest.xml:44:25-82
+237            </intent-filter>
+238            <intent-filter>
+238-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\274dbbb41a5807b3e484fd4491212674\transformed\profileinstaller-1.4.0\AndroidManifest.xml:46:13-48:29
+239                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
+239-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\274dbbb41a5807b3e484fd4491212674\transformed\profileinstaller-1.4.0\AndroidManifest.xml:47:17-88
+239-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\274dbbb41a5807b3e484fd4491212674\transformed\profileinstaller-1.4.0\AndroidManifest.xml:47:25-85
+240            </intent-filter>
+241            <intent-filter>
+241-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\274dbbb41a5807b3e484fd4491212674\transformed\profileinstaller-1.4.0\AndroidManifest.xml:49:13-51:29
+242                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
+242-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\274dbbb41a5807b3e484fd4491212674\transformed\profileinstaller-1.4.0\AndroidManifest.xml:50:17-95
+242-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\274dbbb41a5807b3e484fd4491212674\transformed\profileinstaller-1.4.0\AndroidManifest.xml:50:25-92
+243            </intent-filter>
+244        </receiver>
+245    </application>
+246
+247</manifest>

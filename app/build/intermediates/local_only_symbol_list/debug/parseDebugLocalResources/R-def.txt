@@ -18,6 +18,8 @@ string categories
 string dark_mode
 string dark_mode_desc
 string documents
+string faq
+string feedback
 string global_lock
 string global_lock_desc
 string global_lock_title
@@ -47,13 +49,20 @@ string permission_lock_window_desc
 string permission_storage
 string permission_storage_desc
 string photos
+string privacy_policy
 string recycle_bin
 string save_lock
+string screenshot_restriction
+string screenshot_restriction_desc
+string search_languages
 string search_places
 string select_apps
+string select_language
 string setup_lock
 string stealth_entry
+string support_links
 string system_permissions
+string terms_of_use
 string tour_next
 string tour_skip
 string tour_step1
@@ -73,5 +82,4 @@ string wrong_unlock_alert
 string wrong_unlocks
 style Theme.GeoVault
 xml accessibility_service_config
-xml device_admin_rules
 xml file_paths

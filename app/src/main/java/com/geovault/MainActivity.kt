@@ -57,13 +57,13 @@ import androidx.core.view.WindowCompat
 import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
 
-class MainActivity : androidx.fragment.app.FragmentActivity() {
+import androidx.appcompat.app.AppCompatActivity
+
+class MainActivity : AppCompatActivity() {
     private val viewModel: VaultViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Prevent screen capture and hide from Recents preview for privacy
-        window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
 
         WindowCompat.setDecorFitsSystemWindows(window, false)
         MapLibre.getInstance(this)
@@ -76,6 +76,14 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
                 showSplash = false
             }
 
+            LaunchedEffect(uiState.isScreenshotRestricted) {
+                if (uiState.isScreenshotRestricted) {
+                    window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
+                } else {
+                    window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+                }
+            }
+
             GeoVaultTheme(darkTheme = uiState.isDarkMode) {
                 val context = LocalContext.current
 
@@ -83,18 +91,31 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
                     contract = ActivityResultContracts.RequestMultiplePermissions()
                 ) { /* handle results */ }
 
+                val deleteLauncher = rememberLauncherForActivityResult(
+                    contract = ActivityResultContracts.StartIntentSenderForResult()
+                ) { result ->
+                    if (result.resultCode == android.app.Activity.RESULT_OK) {
+                        // Deletion confirmed
+                    }
+                    viewModel.clearPendingDelete()
+                }
+
+                LaunchedEffect(uiState.pendingDeleteIntent) {
+                    uiState.pendingDeleteIntent?.let {
+                        val intentSenderRequest = androidx.activity.result.IntentSenderRequest.Builder(it.intentSender).build()
+                        deleteLauncher.launch(intentSenderRequest)
+                    }
+                }
+
                 LaunchedEffect(Unit) {
-                    val permissions = mutableListOf(
-                        Manifest.permission.CAMERA,
-                        Manifest.permission.VIBRATE
-                    )
+                    val permissions = mutableListOf<String>()
+                    
+                    // Essential for Map-Gate and Service
+                    permissions.add(Manifest.permission.ACCESS_FINE_LOCATION)
+                    permissions.add(Manifest.permission.ACCESS_COARSE_LOCATION)
                     
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        permissions.add(Manifest.permission.READ_MEDIA_IMAGES)
                         permissions.add(Manifest.permission.POST_NOTIFICATIONS)
-                    } else {
-                        permissions.add(Manifest.permission.READ_EXTERNAL_STORAGE)
-                        permissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                     }
 
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
@@ -137,7 +158,7 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
                         targetState = when {
                             showSplash -> "intro"
                             uiState.isFirstRun -> "onboarding"
-                            !uiState.hasUsageStatsPermission || !uiState.hasOverlayPermission || !uiState.hasCameraPermission || !uiState.hasStoragePermission || !uiState.hasLocationPermission || !uiState.hasBatteryOptimizationPermission -> "permissions"
+                            !uiState.hasUsageStatsPermission || !uiState.hasOverlayPermission || !uiState.hasLocationPermission || !uiState.hasBatteryOptimizationPermission -> "permissions"
                             else -> "vault"
                         },
                         transitionSpec = {
@@ -161,9 +182,6 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
                                     state = uiState,
                                     onGrantUsage = { viewModel.openUsageStatsSettings() },
                                     onGrantOverlay = { viewModel.openOverlaySettings() },
-                                    onGrantCamera = {
-                                        permissionLauncher.launch(arrayOf(Manifest.permission.CAMERA))
-                                    },
                                     onGrantLocation = {
                                         permissionLauncher.launch(
                                             arrayOf(
@@ -171,13 +189,6 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
                                                 Manifest.permission.ACCESS_COARSE_LOCATION
                                             )
                                         )
-                                    },
-                                    onGrantStorage = {
-                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                            permissionLauncher.launch(arrayOf(Manifest.permission.READ_MEDIA_IMAGES))
-                                        } else {
-                                            permissionLauncher.launch(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE))
-                                        }
                                     },
                                     onGrantBattery = {
                                         viewModel.openProtectedAppsSettings()
@@ -193,8 +204,8 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
                                     onUnlockAttempt = { lat, lon, pin -> 
                                         viewModel.attemptUnlockAtLocation(lat, lon, pin)
                                     },
-                                    onSaveConfig = { point, secret, apps, lockType ->
-                                        viewModel.saveVaultConfiguration(point, secret, apps, lockType)
+                                    onSaveConfig = { point, secret, apps, lockType, radius ->
+                                        viewModel.saveVaultConfiguration(point, secret, apps, lockType, radius)
                                     },
                                     onLockClick = { viewModel.lock() },
                                     onAppClick = { packageName -> viewModel.launchApp(packageName) },
@@ -204,7 +215,7 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
                                     onOpenOverlaySettings = { viewModel.openOverlaySettings() },
                                     onOpenProtectedApps = { viewModel.openProtectedAppsSettings() },
                                     onToggleMasterStealth = { viewModel.toggleMasterStealth() },
-                                    onAddFile = { uri, category -> viewModel.addFileToVault(uri, category) },
+                                    onAddFiles = { uris, category -> viewModel.addFilesToVault(uris, category) },
                                     onToggleAppLock = { packageName -> viewModel.toggleAppLock(packageName) },
                                     onRemoveVault = { id -> viewModel.removeVault(id) },
                                     onClearAllVaults = { viewModel.clearAllVaults() },
@@ -221,18 +232,11 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
                                     onDeleteFile = { fileId -> viewModel.removeFileFromVault(fileId) },
                                     onRestoreFile = { fileId -> viewModel.restoreFileToGallery(fileId) },
                                     onToggleDarkMode = { viewModel.toggleDarkMode() },
+                                    onToggleFingerprint = { viewModel.toggleFingerprint() },
                                     onToggleSatellite = { viewModel.toggleSatelliteMode() },
-                                    onToggleUninstallProtection = {
-                                        viewModel.toggleUninstallProtection(
-                                            onBiometricPrompt = {
-                                                showUninstallBiometricPrompt {
-                                                    viewModel.deactivateUninstallProtection()
-                                                }
-                                            }
-                                        )
-                                    },
                                     onSetLanguage = { lang -> viewModel.setLanguage(lang) },
-                                    onCompleteTour = { viewModel.completeTour() }
+                                    onCompleteTour = { viewModel.completeTour() },
+                                    onToggleScreenshotRestriction = { viewModel.toggleScreenshotRestriction() }
                                 )
                             }
                         }
@@ -258,27 +262,6 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
         if (hasFocus) {
             viewModel.checkPermissions()
         }
-    }
-
-    private fun showUninstallBiometricPrompt(onSuccess: () -> Unit) {
-        val executor = ContextCompat.getMainExecutor(this)
-        val biometricPrompt = BiometricPrompt(this, executor,
-            object : BiometricPrompt.AuthenticationCallback() {
-                override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
-                    super.onAuthenticationSucceeded(result)
-                    onSuccess()
-                }
-            })
-
-        val builder = BiometricPrompt.PromptInfo.Builder()
-            .setTitle("Identity Verification")
-            .setSubtitle("Confirm your Phone PIN/Pattern to disable protection")
-            .setAllowedAuthenticators(
-                androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG or
-                        androidx.biometric.BiometricManager.Authenticators.DEVICE_CREDENTIAL
-            )
-
-        biometricPrompt.authenticate(builder.build())
     }
 
     @Composable

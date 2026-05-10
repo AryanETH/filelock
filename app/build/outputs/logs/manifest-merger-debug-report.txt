@@ -1,26 +1,21 @@
 -- Merging decision tree log ---
 provider#androidx.core.content.FileProvider
-INJECTED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:139:9-147:20
+INJECTED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:125:9-133:20
 	android:grantUriPermissions
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:143:13-47
+		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:129:13-47
 	android:authorities
 		INJECTED from C:\my projects\file lock\app\src\main\AndroidManifest.xml
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:141:13-64
+		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:127:13-64
 	android:exported
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:142:13-37
+		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:128:13-37
 	android:name
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:140:13-62
+		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:126:13-62
 manifest
-ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:2:1-151:12
-INJECTED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:2:1-151:12
-INJECTED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:2:1-151:12
-INJECTED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:2:1-151:12
+ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:2:1-137:12
+INJECTED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:2:1-137:12
+INJECTED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:2:1-137:12
+INJECTED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:2:1-137:12
 MERGED from [androidx.biometric:biometric:1.2.0-alpha05] C:\Users\anilp\.gradle\caches\9.4.1\transforms\8e14c67196cdf6117b1e497055ea7eb3\transformed\biometric-1.2.0-alpha05\AndroidManifest.xml:17:1-27:12
-MERGED from [org.maplibre.gl:android-sdk:11.5.1] C:\Users\anilp\.gradle\caches\9.4.1\transforms\c811766665f2dca53b24aea4caa35108\transformed\android-sdk-11.5.1\AndroidManifest.xml:2:1-20:12
-MERGED from [com.google.android.gms:play-services-location:21.3.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\662e63800a3fd56d545e94d3ea311014\transformed\play-services-location-21.3.0\AndroidManifest.xml:2:1-8:12
-MERGED from [com.google.android.gms:play-services-base:18.5.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\883beef5dbdf4efd426b038435743b43\transformed\play-services-base-18.5.0\AndroidManifest.xml:2:1-7:12
-MERGED from [com.google.android.gms:play-services-tasks:18.2.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\4509af02176706a406553c679f69c128\transformed\play-services-tasks-18.2.0\AndroidManifest.xml:2:1-5:12
-MERGED from [com.google.android.gms:play-services-basement:18.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\e14467b749f1d1bca3fa678faaba4176\transformed\play-services-basement-18.4.0\AndroidManifest.xml:2:1-9:12
 MERGED from [androidx.camera:camera-video:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\e741627a1061ba92b7cdd793fdd65c0c\transformed\camera-video-1.4.0\AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.camera:camera-core:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\2a8254fbc5c914eafd139d9cd0da2246\transformed\camera-core-1.4.0\AndroidManifest.xml:17:1-36:12
 MERGED from [androidx.camera:camera-lifecycle:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\ea8a6678f5ba3b82a6761308d97a424c\transformed\camera-lifecycle-1.4.0\AndroidManifest.xml:2:1-7:12
@@ -32,8 +27,13 @@ MERGED from [io.coil-kt:coil-compose:2.7.0] C:\Users\anilp\.gradle\caches\9.4.1\
 MERGED from [io.coil-kt:coil-compose-base:2.7.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\0d489b55689456fd9f3bc07fe797ddb8\transformed\coil-compose-base-2.7.0\AndroidManifest.xml:2:1-7:12
 MERGED from [io.coil-kt:coil:2.7.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\90eda1a5dfeed7116753254b68ea5e1f\transformed\coil-2.7.0\AndroidManifest.xml:2:1-7:12
 MERGED from [io.coil-kt:coil-base:2.7.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\f4fe10f690ff487f04f55f5a50ebb9a6\transformed\coil-base-2.7.0\AndroidManifest.xml:2:1-7:12
-MERGED from [androidx.appcompat:appcompat-resources:1.6.1] C:\Users\anilp\.gradle\caches\9.4.1\transforms\65c7c037f2ee8da0ffacdb6f5071848f\transformed\appcompat-resources-1.6.1\AndroidManifest.xml:17:1-22:12
-MERGED from [androidx.appcompat:appcompat:1.6.1] C:\Users\anilp\.gradle\caches\9.4.1\transforms\285a7086ebdb8f4474bd8d7135322199\transformed\appcompat-1.6.1\AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.appcompat:appcompat-resources:1.7.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\d77e32e62c91718e7bacbb4af2d66b01\transformed\appcompat-resources-1.7.0\AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.appcompat:appcompat:1.7.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\c6fb5fea02a2b3bb88ae70ecbf8ba3a1\transformed\appcompat-1.7.0\AndroidManifest.xml:2:1-7:12
+MERGED from [org.maplibre.gl:android-sdk:11.5.1] C:\Users\anilp\.gradle\caches\9.4.1\transforms\c811766665f2dca53b24aea4caa35108\transformed\android-sdk-11.5.1\AndroidManifest.xml:2:1-20:12
+MERGED from [com.google.android.gms:play-services-location:21.3.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\662e63800a3fd56d545e94d3ea311014\transformed\play-services-location-21.3.0\AndroidManifest.xml:2:1-8:12
+MERGED from [com.google.android.gms:play-services-base:18.5.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\883beef5dbdf4efd426b038435743b43\transformed\play-services-base-18.5.0\AndroidManifest.xml:2:1-7:12
+MERGED from [com.google.android.gms:play-services-tasks:18.2.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\4509af02176706a406553c679f69c128\transformed\play-services-tasks-18.2.0\AndroidManifest.xml:2:1-5:12
+MERGED from [com.google.android.gms:play-services-basement:18.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\e14467b749f1d1bca3fa678faaba4176\transformed\play-services-basement-18.4.0\AndroidManifest.xml:2:1-9:12
 MERGED from [androidx.fragment:fragment:1.8.2] C:\Users\anilp\.gradle\caches\9.4.1\transforms\08bda27c441efba2df04e81a1f8bccfe\transformed\fragment-1.8.2\AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.navigationevent:navigationevent-android:1.0.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\439c30d8826513d5d1b490ac67318bf5\transformed\navigationevent\AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.navigationevent:navigationevent-compose-android:1.0.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\00ebdf646f6712b5f1339cd8faa34545\transformed\navigationevent-compose\AndroidManifest.xml:2:1-7:12
@@ -56,6 +56,7 @@ MERGED from [androidx.compose.ui:ui-android:1.11.0] C:\Users\anilp\.gradle\cache
 MERGED from [androidx.activity:activity-ktx:1.13.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\17b6915f9db8ccf28fe87a3d143a7823\transformed\activity-ktx-1.13.0\AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.activity:activity:1.13.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\204eb8f294b7aeed70a9304ae45cce63\transformed\activity-1.13.0\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.activity:activity-compose:1.13.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\ba670d6f1ec3233f26002c8f0479e0cd\transformed\activity-compose-1.13.0\AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.drawerlayout:drawerlayout:1.0.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\1a18030e1aa6aab056ad71a8b90b8628\transformed\drawerlayout-1.0.0\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.media3:media3-exoplayer:1.10.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\5abbbbbe462d0ef60fce1ed22e4e68c0\transformed\media3-exoplayer-1.10.0\AndroidManifest.xml:17:1-25:12
 MERGED from [androidx.media3:media3-extractor:1.10.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\9d9be5faf44c9fbee7c534a808e8f4b2\transformed\media3-extractor-1.10.0\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.media3:media3-container:1.10.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\50059ea076454ec76c5138fef5a751bd\transformed\media3-container-1.10.0\AndroidManifest.xml:17:1-22:12
@@ -65,15 +66,14 @@ MERGED from [androidx.media3:media3-database:1.10.0] C:\Users\anilp\.gradle\cach
 MERGED from [androidx.media3:media3-common:1.10.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\96d5ee3fab605b2927a55944b3bfc86c\transformed\media3-common-1.10.0\AndroidManifest.xml:17:1-24:12
 MERGED from [androidx.media3:media3-ui:1.10.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\51c552e34fbce8e07306354b32a3e341\transformed\media3-ui-1.10.0\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.recyclerview:recyclerview:1.3.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\464679c22006a6b479e0079f6469d9ec\transformed\recyclerview-1.3.0\AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.vectordrawable:vectordrawable-animated:1.1.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\b7dde15ec59cebaaaa6e817bc360bc94\transformed\vectordrawable-animated-1.1.0\AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.vectordrawable:vectordrawable:1.1.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\b3feb04fad22aa1a9dd66a90124b40b9\transformed\vectordrawable-1.1.0\AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.viewpager:viewpager:1.0.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\ed17005b82ea56e727abdf5f1588121e\transformed\viewpager-1.0.0\AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.customview:customview:1.0.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\5d2a27fe8996bf019ac7c0ba1c01c72d\transformed\customview-1.0.0\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.transition:transition:1.6.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\2d9ec87e742568c7bd4b374dc2cc3cff\transformed\transition-1.6.0\AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.dynamicanimation:dynamicanimation:1.0.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\692d02af9fef84d325337b1f1bf1375f\transformed\dynamicanimation-1.0.0\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.legacy:legacy-support-core-utils:1.0.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\9ff72d6dc32d3375000fedca0186d13c\transformed\legacy-support-core-utils-1.0.0\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.loader:loader:1.0.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\0ca60246ed23c9ae206339edac0c0aaf\transformed\loader-1.0.0\AndroidManifest.xml:17:1-22:12
-MERGED from [androidx.viewpager:viewpager:1.0.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\ed17005b82ea56e727abdf5f1588121e\transformed\viewpager-1.0.0\AndroidManifest.xml:17:1-22:12
-MERGED from [androidx.drawerlayout:drawerlayout:1.0.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\1a18030e1aa6aab056ad71a8b90b8628\transformed\drawerlayout-1.0.0\AndroidManifest.xml:17:1-22:12
-MERGED from [androidx.customview:customview:1.0.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\5d2a27fe8996bf019ac7c0ba1c01c72d\transformed\customview-1.0.0\AndroidManifest.xml:17:1-22:12
-MERGED from [androidx.vectordrawable:vectordrawable-animated:1.1.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\b7dde15ec59cebaaaa6e817bc360bc94\transformed\vectordrawable-animated-1.1.0\AndroidManifest.xml:17:1-24:12
-MERGED from [androidx.vectordrawable:vectordrawable:1.1.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\b3feb04fad22aa1a9dd66a90124b40b9\transformed\vectordrawable-1.1.0\AndroidManifest.xml:17:1-24:12
 MERGED from [androidx.autofill:autofill:1.0.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\5a642b8bdb16699d7fea07215cb26f3c\transformed\autofill-1.0.0\AndroidManifest.xml:17:1-24:12
 MERGED from [androidx.window:window-core-android:1.5.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\5d87202b564126011a6c1ae875138e34\transformed\window-core\AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.window:window:1.5.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\1ceab59066c42fd9a75a95033c7c10af\transformed\window-1.5.0\AndroidManifest.xml:17:1-31:12
@@ -110,11 +110,11 @@ MERGED from [androidx.tracing:tracing-ktx:1.2.0] C:\Users\anilp\.gradle\caches\9
 MERGED from [androidx.annotation:annotation-experimental:1.4.1] C:\Users\anilp\.gradle\caches\9.4.1\transforms\8c32956308d64574dbf81862e56fac9d\transformed\annotation-experimental-1.4.1\AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.core:core-viewtree:1.0.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\d75fc9b9893adadb60e2cfb8ba55a246\transformed\core-viewtree-1.0.0\AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.security:security-crypto:1.1.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\b14cdeeab34c1c6dde30913898e0bf15\transformed\security-crypto-1.1.0\AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.cursoradapter:cursoradapter:1.0.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\4657ae1f4832482b787fed811fcb14bd\transformed\cursoradapter-1.0.0\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.interpolator:interpolator:1.0.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\062a83849b71e75ffc1dbfebd5b23296\transformed\interpolator-1.0.0\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] C:\Users\anilp\.gradle\caches\9.4.1\transforms\c430cb545e1aaa0ad20e24e41000fe7d\transformed\versionedparcelable-1.1.1\AndroidManifest.xml:17:1-27:12
 MERGED from [androidx.exifinterface:exifinterface:1.3.7] C:\Users\anilp\.gradle\caches\9.4.1\transforms\e106afb14da3961ba865938cc8d05a5c\transformed\exifinterface-1.3.7\AndroidManifest.xml:17:1-24:12
 MERGED from [androidx.arch.core:core-runtime:2.2.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\8cb5f3ab976db79b4e7d4f2f3e5eef10\transformed\core-runtime-2.2.0\AndroidManifest.xml:17:1-22:12
-MERGED from [androidx.cursoradapter:cursoradapter:1.0.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\4657ae1f4832482b787fed811fcb14bd\transformed\cursoradapter-1.0.0\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.documentfile:documentfile:1.0.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\ec6d112365ec5e5a262888a49f3fc55f\transformed\documentfile-1.0.0\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.localbroadcastmanager:localbroadcastmanager:1.0.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\b2bfcb41e72e01a78c8b80ff9693e4d4\transformed\localbroadcastmanager-1.0.0\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.print:print:1.0.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\77c859cc03269d5d34b4b7d229e7ad92\transformed\print-1.0.0\AndroidManifest.xml:17:1-22:12
@@ -264,8 +264,12 @@ ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:47:5-114
 	android:name
 		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:47:22-75
 application
-ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:49:5-149:19
-INJECTED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:49:5-149:19
+ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:49:5-135:19
+INJECTED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:49:5-135:19
+MERGED from [androidx.camera:camera-core:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\2a8254fbc5c914eafd139d9cd0da2246\transformed\camera-core-1.4.0\AndroidManifest.xml:23:5-34:19
+MERGED from [androidx.camera:camera-core:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\2a8254fbc5c914eafd139d9cd0da2246\transformed\camera-core-1.4.0\AndroidManifest.xml:23:5-34:19
+MERGED from [androidx.camera:camera-camera2:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\834f54281739f2084f484ebfb52863d9\transformed\camera-camera2-1.4.0\AndroidManifest.xml:23:5-34:19
+MERGED from [androidx.camera:camera-camera2:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\834f54281739f2084f484ebfb52863d9\transformed\camera-camera2-1.4.0\AndroidManifest.xml:23:5-34:19
 MERGED from [com.google.android.gms:play-services-location:21.3.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\662e63800a3fd56d545e94d3ea311014\transformed\play-services-location-21.3.0\AndroidManifest.xml:6:5-20
 MERGED from [com.google.android.gms:play-services-location:21.3.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\662e63800a3fd56d545e94d3ea311014\transformed\play-services-location-21.3.0\AndroidManifest.xml:6:5-20
 MERGED from [com.google.android.gms:play-services-base:18.5.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\883beef5dbdf4efd426b038435743b43\transformed\play-services-base-18.5.0\AndroidManifest.xml:4:5-6:19
@@ -274,10 +278,6 @@ MERGED from [com.google.android.gms:play-services-tasks:18.2.0] C:\Users\anilp\.
 MERGED from [com.google.android.gms:play-services-tasks:18.2.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\4509af02176706a406553c679f69c128\transformed\play-services-tasks-18.2.0\AndroidManifest.xml:4:5-20
 MERGED from [com.google.android.gms:play-services-basement:18.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\e14467b749f1d1bca3fa678faaba4176\transformed\play-services-basement-18.4.0\AndroidManifest.xml:5:5-7:19
 MERGED from [com.google.android.gms:play-services-basement:18.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\e14467b749f1d1bca3fa678faaba4176\transformed\play-services-basement-18.4.0\AndroidManifest.xml:5:5-7:19
-MERGED from [androidx.camera:camera-core:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\2a8254fbc5c914eafd139d9cd0da2246\transformed\camera-core-1.4.0\AndroidManifest.xml:23:5-34:19
-MERGED from [androidx.camera:camera-core:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\2a8254fbc5c914eafd139d9cd0da2246\transformed\camera-core-1.4.0\AndroidManifest.xml:23:5-34:19
-MERGED from [androidx.camera:camera-camera2:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\834f54281739f2084f484ebfb52863d9\transformed\camera-camera2-1.4.0\AndroidManifest.xml:23:5-34:19
-MERGED from [androidx.camera:camera-camera2:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\834f54281739f2084f484ebfb52863d9\transformed\camera-camera2-1.4.0\AndroidManifest.xml:23:5-34:19
 MERGED from [androidx.window:window:1.5.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\1ceab59066c42fd9a75a95033c7c10af\transformed\window-1.5.0\AndroidManifest.xml:22:5-29:19
 MERGED from [androidx.window:window:1.5.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\1ceab59066c42fd9a75a95033c7c10af\transformed\window-1.5.0\AndroidManifest.xml:22:5-29:19
 MERGED from [androidx.emoji2:emoji2:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\63066beb648a4d8565262cdf02c99bed\transformed\emoji2-1.4.0\AndroidManifest.xml:23:5-33:19
@@ -313,191 +313,153 @@ MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] C:\Users\an
 	android:name
 		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:50:9-36
 activity#com.geovault.MainActivity
-ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:58:9-65:20
+ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:58:9-66:20
 	android:exported
 		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:60:13-36
+	android:configChanges
+		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:61:13-82
 	android:name
 		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:59:13-41
 intent-filter#action:name:android.intent.action.MAIN+category:name:android.intent.category.LAUNCHER
-ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:61:13-64:29
+ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:62:13-65:29
 action#android.intent.action.MAIN
-ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:62:17-69
+ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:63:17-69
 	android:name
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:62:25-66
+		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:63:25-66
 category#android.intent.category.LAUNCHER
-ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:63:17-77
+ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:64:17-77
 	android:name
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:63:27-74
+		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:64:27-74
 activity#com.geovault.LockActivity
-ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:67:9-76:20
+ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:68:9-77:20
 	android:excludeFromRecents
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:71:13-46
+		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:72:13-46
 	android:launchMode
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:74:13-44
+		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:75:13-44
 	android:noHistory
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:72:13-37
+		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:73:13-37
 	android:exported
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:69:13-37
+		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:70:13-37
 	android:configChanges
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:75:13-74
+		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:76:13-97
 	android:theme
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:70:13-50
+		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:71:13-50
 	android:taskAffinity
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:73:13-58
+		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:74:13-58
 	android:name
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:68:13-41
+		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:69:13-41
 service#com.geovault.service.WindowChangeDetector
-ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:78:9-88:19
+ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:79:9-89:19
 	android:exported
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:81:13-37
+		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:82:13-37
 	android:permission
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:80:13-79
+		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:81:13-79
 	android:name
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:79:13-57
+		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:80:13-57
 intent-filter#action:name:android.accessibilityservice.AccessibilityService
-ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:82:13-84:29
+ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:83:13-85:29
 action#android.accessibilityservice.AccessibilityService
-ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:83:17-92
+ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:84:17-92
 	android:name
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:83:25-89
+		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:84:25-89
 meta-data#android.accessibilityservice
-ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:85:13-87:72
+ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:86:13-88:72
 	android:resource
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:87:17-69
+		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:88:17-69
 	android:name
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:86:17-60
+		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:87:17-60
 service#com.geovault.service.AppLockerService
-ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:90:9-96:19
+ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:91:9-97:19
 	android:exported
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:92:13-37
+		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:93:13-37
 	android:foregroundServiceType
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:93:13-55
+		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:94:13-55
 	android:name
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:91:13-53
+		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:92:13-53
 property#android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE
-ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:94:13-158
+ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:95:13-158
 	android:value
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:94:83-155
+		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:95:83-155
 	android:name
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:94:23-82
+		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:95:23-82
 property#android.app.PROPERTY_SPECIAL_USE_FQS_REASON
-ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:95:13-206
+ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:96:13-206
 	android:value
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:95:82-203
+		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:96:82-203
 	android:name
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:95:23-81
+		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:96:23-81
 receiver#com.geovault.service.BootReceiver
-ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:98:9-102:20
+ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:99:9-103:20
 	android:exported
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:98:56-79
+		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:99:56-79
 	android:name
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:98:19-55
+		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:99:19-55
 intent-filter#action:name:android.intent.action.BOOT_COMPLETED
-ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:99:13-101:29
+ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:100:13-102:29
 action#android.intent.action.BOOT_COMPLETED
-ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:100:17-79
+ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:101:17-79
 	android:name
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:100:25-76
-receiver#com.geovault.security.UninstallProtectionReceiver
-ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:104:9-117:20
-	android:label
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:107:13-49
-	android:exported
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:106:13-36
-	android:permission
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:108:13-70
-	android:name
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:105:13-65
-meta-data#android.app.device_admin
-ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:109:13-111:62
-	android:resource
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:111:17-59
-	android:name
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:110:17-56
-intent-filter#action:name:android.app.action.DEVICE_ADMIN_DISABLED+action:name:android.app.action.DEVICE_ADMIN_DISABLE_REQUESTED+action:name:android.app.action.DEVICE_ADMIN_ENABLED
-ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:112:13-116:29
-action#android.app.action.DEVICE_ADMIN_ENABLED
-ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:113:17-82
-	android:name
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:113:25-79
-action#android.app.action.DEVICE_ADMIN_DISABLED
-ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:114:17-83
-	android:name
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:114:25-80
-action#android.app.action.DEVICE_ADMIN_DISABLE_REQUESTED
-ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:115:17-92
-	android:name
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:115:25-89
+		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:101:25-76
 service#com.geovault.service.NotificationInterceptorService
-ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:119:9-126:19
+ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:105:9-112:19
 	android:exported
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:121:13-37
+		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:107:13-37
 	android:permission
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:122:13-87
+		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:108:13-87
 	android:name
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:120:13-67
+		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:106:13-67
 intent-filter#action:name:android.service.notification.NotificationListenerService
-ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:123:13-125:29
+ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:109:13-111:29
 action#android.service.notification.NotificationListenerService
-ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:124:17-99
+ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:110:17-99
 	android:name
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:124:25-96
+		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:110:25-96
 activity#com.geovault.core.ProxyActivity
-ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:128:9-133:20
+ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:114:9-119:20
 	android:exported
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:130:13-37
+		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:116:13-37
 	android:configChanges
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:132:13-74
+		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:118:13-74
 	android:theme
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:131:13-50
+		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:117:13-50
 	android:name
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:129:13-47
+		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:115:13-47
 activity#com.geovault.core.ProxyActivity$Stub1
-ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:135:9-125
+ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:121:9-125
 	android:exported
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:135:98-122
+		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:121:98-122
 	android:theme
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:135:60-97
+		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:121:60-97
 	android:name
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:135:19-59
+		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:121:19-59
 activity#com.geovault.core.ProxyActivity$Stub2
-ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:136:9-125
+ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:122:9-125
 	android:exported
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:136:98-122
+		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:122:98-122
 	android:theme
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:136:60-97
+		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:122:60-97
 	android:name
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:136:19-59
+		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:122:19-59
 activity#com.geovault.core.ProxyActivity$Stub3
-ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:137:9-125
+ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:123:9-125
 	android:exported
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:137:98-122
+		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:123:98-122
 	android:theme
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:137:60-97
+		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:123:60-97
 	android:name
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:137:19-59
+		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:123:19-59
 meta-data#android.support.FILE_PROVIDER_PATHS
-ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:144:13-146:54
+ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:130:13-132:54
 	android:resource
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:146:17-51
+		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:132:17-51
 	android:name
-		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:145:17-67
+		ADDED from C:\my projects\file lock\app\src\main\AndroidManifest.xml:131:17-67
 uses-sdk
 INJECTED from C:\my projects\file lock\app\src\main\AndroidManifest.xml reason: use-sdk injection requested
 INJECTED from C:\my projects\file lock\app\src\main\AndroidManifest.xml
 INJECTED from C:\my projects\file lock\app\src\main\AndroidManifest.xml
 MERGED from [androidx.biometric:biometric:1.2.0-alpha05] C:\Users\anilp\.gradle\caches\9.4.1\transforms\8e14c67196cdf6117b1e497055ea7eb3\transformed\biometric-1.2.0-alpha05\AndroidManifest.xml:20:5-44
 MERGED from [androidx.biometric:biometric:1.2.0-alpha05] C:\Users\anilp\.gradle\caches\9.4.1\transforms\8e14c67196cdf6117b1e497055ea7eb3\transformed\biometric-1.2.0-alpha05\AndroidManifest.xml:20:5-44
-MERGED from [org.maplibre.gl:android-sdk:11.5.1] C:\Users\anilp\.gradle\caches\9.4.1\transforms\c811766665f2dca53b24aea4caa35108\transformed\android-sdk-11.5.1\AndroidManifest.xml:5:5-44
-MERGED from [org.maplibre.gl:android-sdk:11.5.1] C:\Users\anilp\.gradle\caches\9.4.1\transforms\c811766665f2dca53b24aea4caa35108\transformed\android-sdk-11.5.1\AndroidManifest.xml:5:5-44
-MERGED from [com.google.android.gms:play-services-location:21.3.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\662e63800a3fd56d545e94d3ea311014\transformed\play-services-location-21.3.0\AndroidManifest.xml:4:5-44
-MERGED from [com.google.android.gms:play-services-location:21.3.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\662e63800a3fd56d545e94d3ea311014\transformed\play-services-location-21.3.0\AndroidManifest.xml:4:5-44
-MERGED from [com.google.android.gms:play-services-base:18.5.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\883beef5dbdf4efd426b038435743b43\transformed\play-services-base-18.5.0\AndroidManifest.xml:3:5-44
-MERGED from [com.google.android.gms:play-services-base:18.5.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\883beef5dbdf4efd426b038435743b43\transformed\play-services-base-18.5.0\AndroidManifest.xml:3:5-44
-MERGED from [com.google.android.gms:play-services-tasks:18.2.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\4509af02176706a406553c679f69c128\transformed\play-services-tasks-18.2.0\AndroidManifest.xml:3:5-44
-MERGED from [com.google.android.gms:play-services-tasks:18.2.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\4509af02176706a406553c679f69c128\transformed\play-services-tasks-18.2.0\AndroidManifest.xml:3:5-44
-MERGED from [com.google.android.gms:play-services-basement:18.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\e14467b749f1d1bca3fa678faaba4176\transformed\play-services-basement-18.4.0\AndroidManifest.xml:3:5-44
-MERGED from [com.google.android.gms:play-services-basement:18.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\e14467b749f1d1bca3fa678faaba4176\transformed\play-services-basement-18.4.0\AndroidManifest.xml:3:5-44
 MERGED from [androidx.camera:camera-video:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\e741627a1061ba92b7cdd793fdd65c0c\transformed\camera-video-1.4.0\AndroidManifest.xml:5:5-44
 MERGED from [androidx.camera:camera-video:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\e741627a1061ba92b7cdd793fdd65c0c\transformed\camera-video-1.4.0\AndroidManifest.xml:5:5-44
 MERGED from [androidx.camera:camera-core:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\2a8254fbc5c914eafd139d9cd0da2246\transformed\camera-core-1.4.0\AndroidManifest.xml:21:5-44
@@ -520,10 +482,20 @@ MERGED from [io.coil-kt:coil:2.7.0] C:\Users\anilp\.gradle\caches\9.4.1\transfor
 MERGED from [io.coil-kt:coil:2.7.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\90eda1a5dfeed7116753254b68ea5e1f\transformed\coil-2.7.0\AndroidManifest.xml:5:5-44
 MERGED from [io.coil-kt:coil-base:2.7.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\f4fe10f690ff487f04f55f5a50ebb9a6\transformed\coil-base-2.7.0\AndroidManifest.xml:5:5-44
 MERGED from [io.coil-kt:coil-base:2.7.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\f4fe10f690ff487f04f55f5a50ebb9a6\transformed\coil-base-2.7.0\AndroidManifest.xml:5:5-44
-MERGED from [androidx.appcompat:appcompat-resources:1.6.1] C:\Users\anilp\.gradle\caches\9.4.1\transforms\65c7c037f2ee8da0ffacdb6f5071848f\transformed\appcompat-resources-1.6.1\AndroidManifest.xml:20:5-44
-MERGED from [androidx.appcompat:appcompat-resources:1.6.1] C:\Users\anilp\.gradle\caches\9.4.1\transforms\65c7c037f2ee8da0ffacdb6f5071848f\transformed\appcompat-resources-1.6.1\AndroidManifest.xml:20:5-44
-MERGED from [androidx.appcompat:appcompat:1.6.1] C:\Users\anilp\.gradle\caches\9.4.1\transforms\285a7086ebdb8f4474bd8d7135322199\transformed\appcompat-1.6.1\AndroidManifest.xml:20:5-44
-MERGED from [androidx.appcompat:appcompat:1.6.1] C:\Users\anilp\.gradle\caches\9.4.1\transforms\285a7086ebdb8f4474bd8d7135322199\transformed\appcompat-1.6.1\AndroidManifest.xml:20:5-44
+MERGED from [androidx.appcompat:appcompat-resources:1.7.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\d77e32e62c91718e7bacbb4af2d66b01\transformed\appcompat-resources-1.7.0\AndroidManifest.xml:5:5-44
+MERGED from [androidx.appcompat:appcompat-resources:1.7.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\d77e32e62c91718e7bacbb4af2d66b01\transformed\appcompat-resources-1.7.0\AndroidManifest.xml:5:5-44
+MERGED from [androidx.appcompat:appcompat:1.7.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\c6fb5fea02a2b3bb88ae70ecbf8ba3a1\transformed\appcompat-1.7.0\AndroidManifest.xml:5:5-44
+MERGED from [androidx.appcompat:appcompat:1.7.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\c6fb5fea02a2b3bb88ae70ecbf8ba3a1\transformed\appcompat-1.7.0\AndroidManifest.xml:5:5-44
+MERGED from [org.maplibre.gl:android-sdk:11.5.1] C:\Users\anilp\.gradle\caches\9.4.1\transforms\c811766665f2dca53b24aea4caa35108\transformed\android-sdk-11.5.1\AndroidManifest.xml:5:5-44
+MERGED from [org.maplibre.gl:android-sdk:11.5.1] C:\Users\anilp\.gradle\caches\9.4.1\transforms\c811766665f2dca53b24aea4caa35108\transformed\android-sdk-11.5.1\AndroidManifest.xml:5:5-44
+MERGED from [com.google.android.gms:play-services-location:21.3.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\662e63800a3fd56d545e94d3ea311014\transformed\play-services-location-21.3.0\AndroidManifest.xml:4:5-44
+MERGED from [com.google.android.gms:play-services-location:21.3.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\662e63800a3fd56d545e94d3ea311014\transformed\play-services-location-21.3.0\AndroidManifest.xml:4:5-44
+MERGED from [com.google.android.gms:play-services-base:18.5.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\883beef5dbdf4efd426b038435743b43\transformed\play-services-base-18.5.0\AndroidManifest.xml:3:5-44
+MERGED from [com.google.android.gms:play-services-base:18.5.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\883beef5dbdf4efd426b038435743b43\transformed\play-services-base-18.5.0\AndroidManifest.xml:3:5-44
+MERGED from [com.google.android.gms:play-services-tasks:18.2.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\4509af02176706a406553c679f69c128\transformed\play-services-tasks-18.2.0\AndroidManifest.xml:3:5-44
+MERGED from [com.google.android.gms:play-services-tasks:18.2.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\4509af02176706a406553c679f69c128\transformed\play-services-tasks-18.2.0\AndroidManifest.xml:3:5-44
+MERGED from [com.google.android.gms:play-services-basement:18.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\e14467b749f1d1bca3fa678faaba4176\transformed\play-services-basement-18.4.0\AndroidManifest.xml:3:5-44
+MERGED from [com.google.android.gms:play-services-basement:18.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\e14467b749f1d1bca3fa678faaba4176\transformed\play-services-basement-18.4.0\AndroidManifest.xml:3:5-44
 MERGED from [androidx.fragment:fragment:1.8.2] C:\Users\anilp\.gradle\caches\9.4.1\transforms\08bda27c441efba2df04e81a1f8bccfe\transformed\fragment-1.8.2\AndroidManifest.xml:5:5-44
 MERGED from [androidx.fragment:fragment:1.8.2] C:\Users\anilp\.gradle\caches\9.4.1\transforms\08bda27c441efba2df04e81a1f8bccfe\transformed\fragment-1.8.2\AndroidManifest.xml:5:5-44
 MERGED from [androidx.navigationevent:navigationevent-android:1.0.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\439c30d8826513d5d1b490ac67318bf5\transformed\navigationevent\AndroidManifest.xml:5:5-44
@@ -568,6 +540,8 @@ MERGED from [androidx.activity:activity:1.13.0] C:\Users\anilp\.gradle\caches\9.
 MERGED from [androidx.activity:activity:1.13.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\204eb8f294b7aeed70a9304ae45cce63\transformed\activity-1.13.0\AndroidManifest.xml:20:5-44
 MERGED from [androidx.activity:activity-compose:1.13.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\ba670d6f1ec3233f26002c8f0479e0cd\transformed\activity-compose-1.13.0\AndroidManifest.xml:5:5-44
 MERGED from [androidx.activity:activity-compose:1.13.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\ba670d6f1ec3233f26002c8f0479e0cd\transformed\activity-compose-1.13.0\AndroidManifest.xml:5:5-44
+MERGED from [androidx.drawerlayout:drawerlayout:1.0.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\1a18030e1aa6aab056ad71a8b90b8628\transformed\drawerlayout-1.0.0\AndroidManifest.xml:20:5-44
+MERGED from [androidx.drawerlayout:drawerlayout:1.0.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\1a18030e1aa6aab056ad71a8b90b8628\transformed\drawerlayout-1.0.0\AndroidManifest.xml:20:5-44
 MERGED from [androidx.media3:media3-exoplayer:1.10.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\5abbbbbe462d0ef60fce1ed22e4e68c0\transformed\media3-exoplayer-1.10.0\AndroidManifest.xml:20:5-44
 MERGED from [androidx.media3:media3-exoplayer:1.10.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\5abbbbbe462d0ef60fce1ed22e4e68c0\transformed\media3-exoplayer-1.10.0\AndroidManifest.xml:20:5-44
 MERGED from [androidx.media3:media3-extractor:1.10.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\9d9be5faf44c9fbee7c534a808e8f4b2\transformed\media3-extractor-1.10.0\AndroidManifest.xml:20:5-44
@@ -586,6 +560,14 @@ MERGED from [androidx.media3:media3-ui:1.10.0] C:\Users\anilp\.gradle\caches\9.4
 MERGED from [androidx.media3:media3-ui:1.10.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\51c552e34fbce8e07306354b32a3e341\transformed\media3-ui-1.10.0\AndroidManifest.xml:20:5-44
 MERGED from [androidx.recyclerview:recyclerview:1.3.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\464679c22006a6b479e0079f6469d9ec\transformed\recyclerview-1.3.0\AndroidManifest.xml:20:5-44
 MERGED from [androidx.recyclerview:recyclerview:1.3.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\464679c22006a6b479e0079f6469d9ec\transformed\recyclerview-1.3.0\AndroidManifest.xml:20:5-44
+MERGED from [androidx.vectordrawable:vectordrawable-animated:1.1.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\b7dde15ec59cebaaaa6e817bc360bc94\transformed\vectordrawable-animated-1.1.0\AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.vectordrawable:vectordrawable-animated:1.1.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\b7dde15ec59cebaaaa6e817bc360bc94\transformed\vectordrawable-animated-1.1.0\AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.vectordrawable:vectordrawable:1.1.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\b3feb04fad22aa1a9dd66a90124b40b9\transformed\vectordrawable-1.1.0\AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.vectordrawable:vectordrawable:1.1.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\b3feb04fad22aa1a9dd66a90124b40b9\transformed\vectordrawable-1.1.0\AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.viewpager:viewpager:1.0.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\ed17005b82ea56e727abdf5f1588121e\transformed\viewpager-1.0.0\AndroidManifest.xml:20:5-44
+MERGED from [androidx.viewpager:viewpager:1.0.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\ed17005b82ea56e727abdf5f1588121e\transformed\viewpager-1.0.0\AndroidManifest.xml:20:5-44
+MERGED from [androidx.customview:customview:1.0.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\5d2a27fe8996bf019ac7c0ba1c01c72d\transformed\customview-1.0.0\AndroidManifest.xml:20:5-44
+MERGED from [androidx.customview:customview:1.0.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\5d2a27fe8996bf019ac7c0ba1c01c72d\transformed\customview-1.0.0\AndroidManifest.xml:20:5-44
 MERGED from [androidx.transition:transition:1.6.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\2d9ec87e742568c7bd4b374dc2cc3cff\transformed\transition-1.6.0\AndroidManifest.xml:5:5-44
 MERGED from [androidx.transition:transition:1.6.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\2d9ec87e742568c7bd4b374dc2cc3cff\transformed\transition-1.6.0\AndroidManifest.xml:5:5-44
 MERGED from [androidx.dynamicanimation:dynamicanimation:1.0.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\692d02af9fef84d325337b1f1bf1375f\transformed\dynamicanimation-1.0.0\AndroidManifest.xml:20:5-44
@@ -594,16 +576,6 @@ MERGED from [androidx.legacy:legacy-support-core-utils:1.0.0] C:\Users\anilp\.gr
 MERGED from [androidx.legacy:legacy-support-core-utils:1.0.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\9ff72d6dc32d3375000fedca0186d13c\transformed\legacy-support-core-utils-1.0.0\AndroidManifest.xml:20:5-44
 MERGED from [androidx.loader:loader:1.0.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\0ca60246ed23c9ae206339edac0c0aaf\transformed\loader-1.0.0\AndroidManifest.xml:20:5-44
 MERGED from [androidx.loader:loader:1.0.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\0ca60246ed23c9ae206339edac0c0aaf\transformed\loader-1.0.0\AndroidManifest.xml:20:5-44
-MERGED from [androidx.viewpager:viewpager:1.0.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\ed17005b82ea56e727abdf5f1588121e\transformed\viewpager-1.0.0\AndroidManifest.xml:20:5-44
-MERGED from [androidx.viewpager:viewpager:1.0.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\ed17005b82ea56e727abdf5f1588121e\transformed\viewpager-1.0.0\AndroidManifest.xml:20:5-44
-MERGED from [androidx.drawerlayout:drawerlayout:1.0.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\1a18030e1aa6aab056ad71a8b90b8628\transformed\drawerlayout-1.0.0\AndroidManifest.xml:20:5-44
-MERGED from [androidx.drawerlayout:drawerlayout:1.0.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\1a18030e1aa6aab056ad71a8b90b8628\transformed\drawerlayout-1.0.0\AndroidManifest.xml:20:5-44
-MERGED from [androidx.customview:customview:1.0.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\5d2a27fe8996bf019ac7c0ba1c01c72d\transformed\customview-1.0.0\AndroidManifest.xml:20:5-44
-MERGED from [androidx.customview:customview:1.0.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\5d2a27fe8996bf019ac7c0ba1c01c72d\transformed\customview-1.0.0\AndroidManifest.xml:20:5-44
-MERGED from [androidx.vectordrawable:vectordrawable-animated:1.1.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\b7dde15ec59cebaaaa6e817bc360bc94\transformed\vectordrawable-animated-1.1.0\AndroidManifest.xml:20:5-22:41
-MERGED from [androidx.vectordrawable:vectordrawable-animated:1.1.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\b7dde15ec59cebaaaa6e817bc360bc94\transformed\vectordrawable-animated-1.1.0\AndroidManifest.xml:20:5-22:41
-MERGED from [androidx.vectordrawable:vectordrawable:1.1.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\b3feb04fad22aa1a9dd66a90124b40b9\transformed\vectordrawable-1.1.0\AndroidManifest.xml:20:5-22:41
-MERGED from [androidx.vectordrawable:vectordrawable:1.1.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\b3feb04fad22aa1a9dd66a90124b40b9\transformed\vectordrawable-1.1.0\AndroidManifest.xml:20:5-22:41
 MERGED from [androidx.autofill:autofill:1.0.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\5a642b8bdb16699d7fea07215cb26f3c\transformed\autofill-1.0.0\AndroidManifest.xml:20:5-22:41
 MERGED from [androidx.autofill:autofill:1.0.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\5a642b8bdb16699d7fea07215cb26f3c\transformed\autofill-1.0.0\AndroidManifest.xml:20:5-22:41
 MERGED from [androidx.window:window-core-android:1.5.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\5d87202b564126011a6c1ae875138e34\transformed\window-core\AndroidManifest.xml:5:5-44
@@ -676,6 +648,8 @@ MERGED from [androidx.core:core-viewtree:1.0.0] C:\Users\anilp\.gradle\caches\9.
 MERGED from [androidx.core:core-viewtree:1.0.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\d75fc9b9893adadb60e2cfb8ba55a246\transformed\core-viewtree-1.0.0\AndroidManifest.xml:5:5-44
 MERGED from [androidx.security:security-crypto:1.1.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\b14cdeeab34c1c6dde30913898e0bf15\transformed\security-crypto-1.1.0\AndroidManifest.xml:20:5-44
 MERGED from [androidx.security:security-crypto:1.1.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\b14cdeeab34c1c6dde30913898e0bf15\transformed\security-crypto-1.1.0\AndroidManifest.xml:20:5-44
+MERGED from [androidx.cursoradapter:cursoradapter:1.0.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\4657ae1f4832482b787fed811fcb14bd\transformed\cursoradapter-1.0.0\AndroidManifest.xml:20:5-44
+MERGED from [androidx.cursoradapter:cursoradapter:1.0.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\4657ae1f4832482b787fed811fcb14bd\transformed\cursoradapter-1.0.0\AndroidManifest.xml:20:5-44
 MERGED from [androidx.interpolator:interpolator:1.0.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\062a83849b71e75ffc1dbfebd5b23296\transformed\interpolator-1.0.0\AndroidManifest.xml:20:5-44
 MERGED from [androidx.interpolator:interpolator:1.0.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\062a83849b71e75ffc1dbfebd5b23296\transformed\interpolator-1.0.0\AndroidManifest.xml:20:5-44
 MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] C:\Users\anilp\.gradle\caches\9.4.1\transforms\c430cb545e1aaa0ad20e24e41000fe7d\transformed\versionedparcelable-1.1.1\AndroidManifest.xml:20:5-22:41
@@ -684,8 +658,6 @@ MERGED from [androidx.exifinterface:exifinterface:1.3.7] C:\Users\anilp\.gradle\
 MERGED from [androidx.exifinterface:exifinterface:1.3.7] C:\Users\anilp\.gradle\caches\9.4.1\transforms\e106afb14da3961ba865938cc8d05a5c\transformed\exifinterface-1.3.7\AndroidManifest.xml:20:5-22:41
 MERGED from [androidx.arch.core:core-runtime:2.2.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\8cb5f3ab976db79b4e7d4f2f3e5eef10\transformed\core-runtime-2.2.0\AndroidManifest.xml:20:5-44
 MERGED from [androidx.arch.core:core-runtime:2.2.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\8cb5f3ab976db79b4e7d4f2f3e5eef10\transformed\core-runtime-2.2.0\AndroidManifest.xml:20:5-44
-MERGED from [androidx.cursoradapter:cursoradapter:1.0.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\4657ae1f4832482b787fed811fcb14bd\transformed\cursoradapter-1.0.0\AndroidManifest.xml:20:5-44
-MERGED from [androidx.cursoradapter:cursoradapter:1.0.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\4657ae1f4832482b787fed811fcb14bd\transformed\cursoradapter-1.0.0\AndroidManifest.xml:20:5-44
 MERGED from [androidx.documentfile:documentfile:1.0.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\ec6d112365ec5e5a262888a49f3fc55f\transformed\documentfile-1.0.0\AndroidManifest.xml:20:5-44
 MERGED from [androidx.documentfile:documentfile:1.0.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\ec6d112365ec5e5a262888a49f3fc55f\transformed\documentfile-1.0.0\AndroidManifest.xml:20:5-44
 MERGED from [androidx.localbroadcastmanager:localbroadcastmanager:1.0.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\b2bfcb41e72e01a78c8b80ff9693e4d4\transformed\localbroadcastmanager-1.0.0\AndroidManifest.xml:20:5-44
@@ -698,6 +670,24 @@ MERGED from [com.caverock:androidsvg-aar:1.4] C:\Users\anilp\.gradle\caches\9.4.
 		INJECTED from C:\my projects\file lock\app\src\main\AndroidManifest.xml
 	android:minSdkVersion
 		INJECTED from C:\my projects\file lock\app\src\main\AndroidManifest.xml
+service#androidx.camera.core.impl.MetadataHolderService
+ADDED from [androidx.camera:camera-core:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\2a8254fbc5c914eafd139d9cd0da2246\transformed\camera-core-1.4.0\AndroidManifest.xml:29:9-33:78
+MERGED from [androidx.camera:camera-camera2:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\834f54281739f2084f484ebfb52863d9\transformed\camera-camera2-1.4.0\AndroidManifest.xml:24:9-33:19
+MERGED from [androidx.camera:camera-camera2:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\834f54281739f2084f484ebfb52863d9\transformed\camera-camera2-1.4.0\AndroidManifest.xml:24:9-33:19
+	android:enabled
+		ADDED from [androidx.camera:camera-core:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\2a8254fbc5c914eafd139d9cd0da2246\transformed\camera-core-1.4.0\AndroidManifest.xml:31:13-36
+	android:exported
+		ADDED from [androidx.camera:camera-core:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\2a8254fbc5c914eafd139d9cd0da2246\transformed\camera-core-1.4.0\AndroidManifest.xml:32:13-37
+	tools:ignore
+		ADDED from [androidx.camera:camera-core:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\2a8254fbc5c914eafd139d9cd0da2246\transformed\camera-core-1.4.0\AndroidManifest.xml:33:13-75
+	android:name
+		ADDED from [androidx.camera:camera-core:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\2a8254fbc5c914eafd139d9cd0da2246\transformed\camera-core-1.4.0\AndroidManifest.xml:30:13-75
+meta-data#androidx.camera.core.impl.MetadataHolderService.DEFAULT_CONFIG_PROVIDER
+ADDED from [androidx.camera:camera-camera2:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\834f54281739f2084f484ebfb52863d9\transformed\camera-camera2-1.4.0\AndroidManifest.xml:30:13-32:89
+	android:value
+		ADDED from [androidx.camera:camera-camera2:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\834f54281739f2084f484ebfb52863d9\transformed\camera-camera2-1.4.0\AndroidManifest.xml:32:17-86
+	android:name
+		ADDED from [androidx.camera:camera-camera2:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\834f54281739f2084f484ebfb52863d9\transformed\camera-camera2-1.4.0\AndroidManifest.xml:31:17-103
 uses-feature#0x00030000
 ADDED from [org.maplibre.gl:android-sdk:11.5.1] C:\Users\anilp\.gradle\caches\9.4.1\transforms\c811766665f2dca53b24aea4caa35108\transformed\android-sdk-11.5.1\AndroidManifest.xml:7:5-9:35
 	android:glEsVersion
@@ -728,24 +718,6 @@ ADDED from [com.google.android.gms:play-services-basement:18.4.0] C:\Users\anilp
 		ADDED from [com.google.android.gms:play-services-basement:18.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\e14467b749f1d1bca3fa678faaba4176\transformed\play-services-basement-18.4.0\AndroidManifest.xml:6:66-119
 	android:name
 		ADDED from [com.google.android.gms:play-services-basement:18.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\e14467b749f1d1bca3fa678faaba4176\transformed\play-services-basement-18.4.0\AndroidManifest.xml:6:20-65
-service#androidx.camera.core.impl.MetadataHolderService
-ADDED from [androidx.camera:camera-core:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\2a8254fbc5c914eafd139d9cd0da2246\transformed\camera-core-1.4.0\AndroidManifest.xml:29:9-33:78
-MERGED from [androidx.camera:camera-camera2:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\834f54281739f2084f484ebfb52863d9\transformed\camera-camera2-1.4.0\AndroidManifest.xml:24:9-33:19
-MERGED from [androidx.camera:camera-camera2:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\834f54281739f2084f484ebfb52863d9\transformed\camera-camera2-1.4.0\AndroidManifest.xml:24:9-33:19
-	android:enabled
-		ADDED from [androidx.camera:camera-core:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\2a8254fbc5c914eafd139d9cd0da2246\transformed\camera-core-1.4.0\AndroidManifest.xml:31:13-36
-	android:exported
-		ADDED from [androidx.camera:camera-core:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\2a8254fbc5c914eafd139d9cd0da2246\transformed\camera-core-1.4.0\AndroidManifest.xml:32:13-37
-	tools:ignore
-		ADDED from [androidx.camera:camera-core:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\2a8254fbc5c914eafd139d9cd0da2246\transformed\camera-core-1.4.0\AndroidManifest.xml:33:13-75
-	android:name
-		ADDED from [androidx.camera:camera-core:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\2a8254fbc5c914eafd139d9cd0da2246\transformed\camera-core-1.4.0\AndroidManifest.xml:30:13-75
-meta-data#androidx.camera.core.impl.MetadataHolderService.DEFAULT_CONFIG_PROVIDER
-ADDED from [androidx.camera:camera-camera2:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\834f54281739f2084f484ebfb52863d9\transformed\camera-camera2-1.4.0\AndroidManifest.xml:30:13-32:89
-	android:value
-		ADDED from [androidx.camera:camera-camera2:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\834f54281739f2084f484ebfb52863d9\transformed\camera-camera2-1.4.0\AndroidManifest.xml:32:17-86
-	android:name
-		ADDED from [androidx.camera:camera-camera2:1.4.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\834f54281739f2084f484ebfb52863d9\transformed\camera-camera2-1.4.0\AndroidManifest.xml:31:17-103
 uses-library#androidx.window.extensions
 ADDED from [androidx.window:window:1.5.0] C:\Users\anilp\.gradle\caches\9.4.1\transforms\1ceab59066c42fd9a75a95033c7c10af\transformed\window-1.5.0\AndroidManifest.xml:23:9-25:40
 	android:required

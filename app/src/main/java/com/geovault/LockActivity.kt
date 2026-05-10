@@ -47,9 +47,10 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import android.view.WindowManager
 import android.graphics.Color as AndroidColor
+import androidx.appcompat.app.AppCompatActivity
 import android.os.Build
 
-class LockActivity : FragmentActivity() {
+class LockActivity : AppCompatActivity() {
 
     private var isUnlocked = false
 
@@ -70,10 +71,6 @@ class LockActivity : FragmentActivity() {
         controller.hide(WindowInsetsCompat.Type.statusBars() or WindowInsetsCompat.Type.navigationBars())
         controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         
-        if (requestBiometric) {
-            showBiometricPrompt(targetPackage)
-        }
-
         IntruderManager.getInstance(this).startSession(this)
 
         onBackPressedDispatcher.addCallback(this) {
@@ -87,17 +84,26 @@ class LockActivity : FragmentActivity() {
         }
 
         setContent {
+            val isRestricted = remember { prefs.getBoolean("screenshot_restriction", true) }
+            
             GeoVaultTheme(darkTheme = false) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = Color.White,
                 ) {
-                    // Always set FLAG_SECURE to prevent content leaking in Recents previews
-                    window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
+                    // Apply FLAG_SECURE dynamically
+                    SideEffect {
+                        if (isRestricted) {
+                            window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
+                        } else {
+                            window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+                        }
+                    }
 
                     AuthSelectionScreen(
                         context = this,
                         targetPackage = targetPackage,
+                        autoRequestBiometric = requestBiometric,
                         onAuthenticated = {
                             isUnlocked = true
                             val authPrefs = com.geovault.security.SecureManager.getInstance(this).prefs
