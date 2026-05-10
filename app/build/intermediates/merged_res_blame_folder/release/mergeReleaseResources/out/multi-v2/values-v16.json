@@ -1,0 +1,20 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.geovault.app-mergeReleaseResources-57:/values-v16/values-v16.xml",
+            "map": [
+                {
+                    "source": "C:\\Users\\anilp\\.gradle\\caches\\9.4.1\\transforms\\285a7086ebdb8f4474bd8d7135322199\\transformed\\appcompat-1.6.1\\res\\values-v16\\values-v16.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endLines": "5",
+                        "endColumns": "12",
+                        "endOffsets": "223"
+                    }
+                }
+            ]
+        }
+    ]
+}

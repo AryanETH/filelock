@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">قفل الخريطة</string>
+    <string name="audio">الصوت</string>
+    <string name="documents">المستندات</string>
+    <string name="language">اللغة</string>
+    <string name="photos">الصور</string>
+    <string name="search_languages">بحث عن اللغات...</string>
+    <string name="select_language">اختر اللغة</string>
+    <string name="videos">الفيديوهات</string>
+</resources>
