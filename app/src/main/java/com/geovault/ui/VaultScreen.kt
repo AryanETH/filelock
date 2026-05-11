@@ -77,14 +77,16 @@ import androidx.biometric.BiometricManager
 import android.widget.Toast
 import com.geovault.security.IntruderManager
 import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.compose.animation.core.Animatable
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import android.view.HapticFeedbackConstants
 import androidx.compose.animation.core.AnimationVector1D
 
 @Composable
 fun VaultScreen(
     state: VaultState,
     onUnlockAttempt: (Double, Double, String) -> Unit,
-    onSaveConfig: (GeoPoint, String, Set<String>, LockType) -> Unit,
+    onSaveConfig: (GeoPoint, String, Set<String>, LockType, Float) -> Unit,
     onLockClick: () -> Unit,
     onAppClick: (String) -> Unit,
     onRemoveApp: (String) -> Unit,
@@ -93,7 +95,7 @@ fun VaultScreen(
     onOpenOverlaySettings: () -> Unit,
     onOpenProtectedApps: () -> Unit,
     onToggleMasterStealth: () -> Unit,
-    onAddFile: (android.net.Uri, com.geovault.model.FileCategory) -> Unit,
+    onAddFiles: (List<android.net.Uri>, com.geovault.model.FileCategory) -> Unit,
     onToggleAppLock: (String) -> Unit,
     onRemoveVault: (String) -> Unit,
     onClearAllVaults: () -> Unit,
@@ -102,10 +104,11 @@ fun VaultScreen(
     onDeleteFile: (String) -> Unit,
     onRestoreFile: (String) -> Unit,
     onToggleDarkMode: () -> Unit,
+    onToggleFingerprint: () -> Unit,
     onToggleSatellite: () -> Unit,
-    onToggleUninstallProtection: () -> Unit,
     onSetLanguage: (String) -> Unit,
-    onCompleteTour: () -> Unit
+    onCompleteTour: () -> Unit,
+    onToggleScreenshotRestriction: () -> Unit
 ) {
     val currentVaults by rememberUpdatedState(state.vaults)
     val currentInstalledApps by rememberUpdatedState(state.installedApps)
@@ -114,6 +117,7 @@ fun VaultScreen(
     
     var showSetupDialog by remember { mutableStateOf(false) }
     var setupLatLng by remember { mutableStateOf<LatLng?>(null) }
+    var isNativeEligible by remember { mutableStateOf(false) }
     
     val currentStyleUrl = remember(state.isSatelliteMode, state.isDarkMode) {
         if (state.isSatelliteMode) {
@@ -130,7 +134,39 @@ fun VaultScreen(
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
     
     var searchQuery by remember { mutableStateOf("") }
+    var searchSuggestions by remember { mutableStateOf<List<Pair<String, LatLng>>>(emptyList()) }
+    var showOfflineDialog by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+    
+    val haptic = LocalHapticFeedback.current
+    
+    // Search suggestions logic
+    LaunchedEffect(searchQuery) {
+        if (searchQuery.length > 2) {
+            delay(500) // Debounce
+            if (state.isNetworkAvailable) {
+                searchSuggestions = getSearchSuggestions(searchQuery)
+            } else {
+                searchSuggestions = emptyList()
+            }
+        } else {
+            searchSuggestions = emptyList()
+        }
+    }
+
+    // Dynamic Gyro Rotation
+    var isCenteredOnUser by remember { mutableStateOf(false) }
+    LaunchedEffect(isCenteredOnUser) {
+        mapLibreMap?.let { map ->
+            if (isCenteredOnUser) {
+                map.locationComponent.renderMode = org.maplibre.android.location.modes.RenderMode.COMPASS
+                map.locationComponent.cameraMode = org.maplibre.android.location.modes.CameraMode.TRACKING_COMPASS
+            } else {
+                map.locationComponent.renderMode = org.maplibre.android.location.modes.RenderMode.NORMAL
+                map.locationComponent.cameraMode = org.maplibre.android.location.modes.CameraMode.NONE
+            }
+        }
+    }
     
     var selectedVaultForUnlock by remember { mutableStateOf<com.geovault.model.VaultConfig?>(null) }
     var showUnlockPrompt by remember { mutableStateOf(false) }
@@ -210,7 +246,9 @@ fun VaultScreen(
                                     map.uiSettings.isLogoEnabled = false
                                     map.uiSettings.isAttributionEnabled = false
                                     map.uiSettings.isCompassEnabled = false
-                                    map.uiSettings.isDoubleTapGesturesEnabled = false // Disable native double tap zoom
+                                    map.uiSettings.isDoubleTapGesturesEnabled = false // Reverted: Disable native double tap zoom
+                                    map.uiSettings.isTiltGesturesEnabled = true // Enable 3D tilt gestures
+                                    map.uiSettings.isRotateGesturesEnabled = true // Enable rotation gestures
 
                                     map.addOnCameraMoveListener {
                                         mapBearing = map.cameraPosition.bearing.toFloat()
@@ -264,17 +302,31 @@ fun VaultScreen(
                                             
                                             if (existingVault == null) {
                                                 setupLatLng = point
+                                                
+                                                // Check if eligible for "Native" option (within 1km of current location)
+                                                isNativeEligible = state.currentLocation?.let { live ->
+                                                    LocationHelper.calculateDistance(point.latitude, point.longitude, live.latitude, live.longitude) <= 1000f
+                                                } ?: false
+                                                
                                                 showSetupDialog = true
                                             }
                                         }
                                     })
 
-                                    // Intercept ALL touches before the map gets them
-                                    setOnTouchListener { _, event ->
-                                        gestureDetector.onTouchEvent(event)
-                                        // Returning false lets other events (scroll/pinch) fall through to the map
-                                        // while our detector handles the prioritized double-tap and long-press
-                                        false
+                                    // Intercept touches for custom logic but allow map to handle its own gestures (tilt/pan/zoom)
+                                    setOnTouchListener { view, event ->
+                                        val handled = gestureDetector.onTouchEvent(event)
+                                        // If our gesture detector consumed it (e.g. double tap), we might want to block the map.
+                                        // However, to ensure 3D tilt (multi-touch) works, we must return false 
+                                        // unless we are absolutely sure we want to stop the map from seeing the event.
+                                        if (event.pointerCount > 1) {
+                                            false // Multi-touch always goes to the map (for 3D tilt)
+                                        } else {
+                                            // For single touches, we return whatever the detector says, 
+                                            // but for long press/double tap to work alongside panning, 
+                                            // we usually return false anyway.
+                                            false
+                                        }
                                     }
 
                                     map.setStyle(currentStyleUrl) { style ->
@@ -313,6 +365,88 @@ fun VaultScreen(
                             }
                         }
                     )
+
+                    // Map Search Bar
+                    Column(
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .padding(top = 64.dp, start = 16.dp, end = 16.dp)
+                            .alpha(if (showUnlockPrompt || showSetupDialog) 0.5f else 1f)
+                    ) {
+                        MapSearchBar(
+                            query = searchQuery,
+                            onQueryChange = { searchQuery = it },
+                            onSearch = { query ->
+                                if (!state.isNetworkAvailable) {
+                                    showOfflineDialog = true
+                                } else {
+                                    scope.launch {
+                                        searchLocation(query)?.let { latLng ->
+                                            mapLibreMap?.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15.0))
+                                            searchQuery = ""
+                                            searchSuggestions = emptyList()
+                                        }
+                                    }
+                                }
+                            }
+                        )
+                        
+                        if (searchSuggestions.isNotEmpty()) {
+                            Surface(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 4.dp),
+                                shape = RoundedCornerShape(12.dp),
+                                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
+                                shadowElevation = 4.dp
+                            ) {
+                                Column {
+                                    searchSuggestions.take(5).forEach { suggestion ->
+                                        val keyboardController = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
+                                        Text(
+                                            text = suggestion.first,
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clickable {
+                                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                    mapLibreMap?.animateCamera(CameraUpdateFactory.newLatLngZoom(suggestion.second, 15.0))
+                                                    searchQuery = ""
+                                                    searchSuggestions = emptyList()
+                                                    isCenteredOnUser = false
+                                                    keyboardController?.hide()
+                                                }
+                                                .padding(16.dp),
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                        HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (showOfflineDialog) {
+                        AlertDialog(
+                            onDismissRequest = { showOfflineDialog = false },
+                            title = { Text("Internet Connection Required") },
+                            text = { Text("You need an active internet connection to search for locations.") },
+                            confirmButton = {
+                                Button(onClick = {
+                                    val intent = android.content.Intent(android.provider.Settings.ACTION_DATA_ROAMING_SETTINGS)
+                                    context.startActivity(intent)
+                                    showOfflineDialog = false
+                                }) {
+                                    Text("Turn on Data")
+                                }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = { showOfflineDialog = false }) {
+                                    Text("Cancel")
+                                }
+                            }
+                        )
+                    }
 
                     // Ripple overlay
                     rippleOffset?.let { offset ->
@@ -354,22 +488,28 @@ fun VaultScreen(
                                 active = false,
                                 modifier = Modifier.rotate(-mapBearing)
                             ) {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 mapLibreMap?.animateCamera(CameraUpdateFactory.bearingTo(0.0))
                             }
 
-                            // Style Selector (Toggle between Normal and Satellite)
-                            SmallMapFab(
-                                icon = if (state.isSatelliteMode) Icons.Default.Public else Icons.Default.Map,
-                                active = state.isSatelliteMode
-                            ) { 
-                                onToggleSatellite()
+                            // Zoom Controls
+                            SmallMapFab(icon = Icons.Default.Add, active = false) {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                mapLibreMap?.animateCamera(CameraUpdateFactory.zoomIn())
                             }
 
-                            SmallMapFab(icon = Icons.Default.MyLocation, active = false) {
+                            SmallMapFab(icon = Icons.Default.Remove, active = false) {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                mapLibreMap?.animateCamera(CameraUpdateFactory.zoomOut())
+                            }
+
+                            SmallMapFab(icon = Icons.Default.MyLocation, active = isCenteredOnUser) {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 if (state.hasLocationPermission) {
                                     try {
                                         fusedLocationClient.lastLocation.addOnSuccessListener { location ->
                                             location?.let {
+                                                isCenteredOnUser = true
                                                 mapLibreMap?.animateCamera(
                                                     CameraUpdateFactory.newLatLngZoom(LatLng(it.latitude, it.longitude), 15.0)
                                                 )
@@ -384,6 +524,15 @@ fun VaultScreen(
                                         )
                                     )
                                 }
+                            }
+                        }
+                    }
+                    
+                    // Reset centering if user moves map manually
+                    LaunchedEffect(mapLibreMap) {
+                        mapLibreMap?.addOnCameraMoveStartedListener { reason ->
+                            if (reason == org.maplibre.android.maps.MapLibreMap.OnCameraMoveStartedListener.REASON_API_GESTURE) {
+                                isCenteredOnUser = false
                             }
                         }
                     }
@@ -450,9 +599,10 @@ fun VaultScreen(
                         ) {
                             VaultSetupDialog(
                                 apps = currentInstalledApps,
+                                isNativeEligible = isNativeEligible,
                                 onDismiss = { showSetupDialog = false },
-                                onConfirm = { secret, selectedApps, lockType ->
-                                    onSaveConfig(GeoPoint(setupLatLng!!.latitude, setupLatLng!!.longitude), secret, selectedApps, lockType)
+                                onConfirm = { secret, selectedApps, lockType, radius ->
+                                    onSaveConfig(GeoPoint(setupLatLng!!.latitude, setupLatLng!!.longitude), secret, selectedApps, lockType, radius)
                                     showSetupDialog = false
                                 }
                             )
@@ -482,7 +632,7 @@ fun VaultScreen(
                     onOpenOverlaySettings = onOpenOverlaySettings,
                     onOpenProtectedApps = onOpenProtectedApps,
                     onToggleMasterStealth = onToggleMasterStealth,
-                    onAddFile = onAddFile,
+                    onAddFiles = onAddFiles,
                     onToggleAppLock = onToggleAppLock,
                     onRemoveVault = onRemoveVault,
                     onClearAllVaults = onClearAllVaults,
@@ -491,8 +641,9 @@ fun VaultScreen(
                     onDeleteFile = onDeleteFile,
                     onRestoreFile = onRestoreFile,
                     onToggleDarkMode = onToggleDarkMode,
-                    onToggleUninstallProtection = onToggleUninstallProtection,
-                    onSetLanguage = onSetLanguage
+                    onToggleFingerprint = onToggleFingerprint,
+                    onSetLanguage = onSetLanguage,
+                    onToggleScreenshotRestriction = onToggleScreenshotRestriction
                 )
             }
         }
@@ -506,6 +657,7 @@ fun VaultUnlockDialog(
     onConfirm: (String) -> Unit
 ) {
     val context = LocalContext.current
+    val haptic = LocalHapticFeedback.current
     Dialog(onDismissRequest = onDismiss) {
         Surface(
             shape = RoundedCornerShape(28.dp),
@@ -565,11 +717,20 @@ fun VaultUnlockDialog(
 }
 
 @Composable
-fun VaultSetupDialog(apps: List<AppInfo>, onDismiss: () -> Unit, onConfirm: (String, Set<String>, LockType) -> Unit) {
+fun VaultSetupDialog(
+    apps: List<AppInfo>, 
+    isNativeEligible: Boolean,
+    onDismiss: () -> Unit, 
+    onConfirm: (String, Set<String>, LockType, Float) -> Unit
+) {
     var secret by remember { mutableStateOf("") }
     var lockType by remember { mutableStateOf(LockType.PIN) }
     val selectedApps = remember { mutableStateOf(setOf<String>()) }
     var showApps by remember { mutableStateOf(false) }
+    
+    val haptic = LocalHapticFeedback.current
+    var isNativeEnabled by remember { mutableStateOf(false) }
+    var radius by remember { mutableStateOf(500f) }
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -593,6 +754,69 @@ fun VaultSetupDialog(apps: List<AppInfo>, onDismiss: () -> Unit, onConfirm: (Str
                 Spacer(Modifier.height(20.dp))
                 
                 if (!showApps) {
+                    if (isNativeEligible) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.05f))
+                                .padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                "Native", 
+                                style = MaterialTheme.typography.bodyLarge, 
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Switch(
+                                checked = isNativeEnabled,
+                                onCheckedChange = { isNativeEnabled = it },
+                                colors = SwitchDefaults.colors(
+                                    checkedThumbColor = Color.White,
+                                    checkedTrackColor = CyberBlue
+                                )
+                            )
+                        }
+                        
+                        if (isNativeEnabled) {
+                            Column(modifier = Modifier.padding(vertical = 16.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        "Lock Radius", 
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Spacer(Modifier.weight(1f))
+                                    Text(
+                                        "${radius.toInt()}m", 
+                                        color = CyberBlue,
+                                        fontWeight = FontWeight.Black
+                                    )
+                                }
+                                Slider(
+                                    value = radius,
+                                    onValueChange = { 
+                                        if (it.toInt() != radius.toInt()) {
+                                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                        }
+                                        radius = it 
+                                    },
+                                    valueRange = 100f..2000f,
+                                    steps = 19,
+                                    colors = SliderDefaults.colors(
+                                        thumbColor = CyberBlue,
+                                        activeTrackColor = CyberBlue
+                                    )
+                                )
+                            }
+                        }
+                        
+                        Spacer(Modifier.height(16.dp))
+                    }
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -660,7 +884,10 @@ fun VaultSetupDialog(apps: List<AppInfo>, onDismiss: () -> Unit, onConfirm: (Str
                             Text(stringResource(R.string.back), color = MaterialTheme.colorScheme.onSurfaceVariant) 
                         }
                         Button(
-                            onClick = { onConfirm(secret, selectedApps.value, lockType) },
+                            onClick = { 
+                                val finalRadius = if (isNativeEnabled) radius else 0f
+                                onConfirm(secret, selectedApps.value, lockType, finalRadius) 
+                            },
                             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                             shape = RoundedCornerShape(12.dp)
                         ) {
@@ -709,27 +936,34 @@ fun SmallMapFab(icon: ImageVector, active: Boolean, modifier: Modifier = Modifie
     }
 }
 
-suspend fun searchLocation(query: String): LatLng? = withContext(Dispatchers.IO) {
+suspend fun searchLocation(query: String): LatLng? = getSearchSuggestions(query).firstOrNull()?.second
+
+suspend fun getSearchSuggestions(query: String): List<Pair<String, LatLng>> = withContext(Dispatchers.IO) {
     try {
-        val url = URL("https://nominatim.openstreetmap.org/search?q=${java.net.URLEncoder.encode(query, "UTF-8")}&format=json&limit=1")
+        val url = URL("https://nominatim.openstreetmap.org/search?q=${java.net.URLEncoder.encode(query, "UTF-8")}&format=json&limit=5")
         val connection = url.openConnection()
         connection.setRequestProperty("User-Agent", "GeoVault-App")
         val response = connection.getInputStream().bufferedReader().use { it.readText() }
         val jsonArray = JSONArray(response)
-        if (jsonArray.length() > 0) {
-            val first = jsonArray.getJSONObject(0)
-            val lat = first.getDouble("lat")
-            val lon = first.getDouble("lon")
-            LatLng(lat, lon)
-        } else null
+        val suggestions = mutableListOf<Pair<String, LatLng>>()
+        for (i in 0 until jsonArray.length()) {
+            val item = jsonArray.getJSONObject(i)
+            val name = item.getString("display_name")
+            val lat = item.getDouble("lat")
+            val lon = item.getDouble("lon")
+            suggestions.add(name to LatLng(lat, lon))
+        }
+        suggestions
     } catch (e: Exception) {
         e.printStackTrace()
-        null
+        emptyList()
     }
 }
 
+@OptIn(androidx.compose.ui.ExperimentalComposeUiApi::class)
 @Composable
 fun MapSearchBar(query: String, onQueryChange: (String) -> Unit, onSearch: (String) -> Unit, modifier: Modifier = Modifier) {
+    val keyboardController = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
     Surface(
         modifier = modifier.fillMaxWidth().height(56.dp),
         shape = RoundedCornerShape(28.dp),
@@ -753,7 +987,10 @@ fun MapSearchBar(query: String, onQueryChange: (String) -> Unit, onSearch: (Stri
                 ),
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                keyboardActions = androidx.compose.foundation.text.KeyboardActions(onSearch = { onSearch(query) }),
+                keyboardActions = androidx.compose.foundation.text.KeyboardActions(onSearch = { 
+                    onSearch(query)
+                    keyboardController?.hide()
+                }),
                 cursorBrush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.primary),
                 decorationBox = { innerTextField ->
                     if (query.isEmpty()) {

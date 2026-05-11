@@ -11,6 +11,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
@@ -75,7 +76,7 @@ fun VaultContentScreen(
     onOpenOverlaySettings: () -> Unit,
     onOpenProtectedApps: () -> Unit,
     onToggleMasterStealth: () -> Unit,
-    onAddFile: (android.net.Uri, FileCategory) -> Unit,
+    onAddFiles: (List<android.net.Uri>, FileCategory) -> Unit,
     onToggleAppLock: (String) -> Unit,
     onRemoveVault: (String) -> Unit,
     onClearAllVaults: () -> Unit,
@@ -84,8 +85,9 @@ fun VaultContentScreen(
     onDeleteFile: (String) -> Unit,
     onRestoreFile: (String) -> Unit,
     onToggleDarkMode: () -> Unit,
-    onToggleUninstallProtection: () -> Unit,
-    onSetLanguage: (String) -> Unit
+    onToggleFingerprint: () -> Unit,
+    onSetLanguage: (String) -> Unit,
+    onToggleScreenshotRestriction: () -> Unit
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -105,11 +107,11 @@ fun VaultContentScreen(
     ) { _ -> }
 
     val filePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri ->
-        uri?.let {
+        contract = ActivityResultContracts.GetMultipleContents()
+    ) { uris ->
+        if (uris.isNotEmpty()) {
             selectedCategoryForAdd?.let { cat ->
-                onAddFile(it, cat)
+                onAddFiles(uris, cat)
             }
         }
     }
@@ -264,13 +266,23 @@ fun VaultContentScreen(
                         onGrantCamera = onGrantCamera,
                         onGrantStorage = onGrantStorage,
                         onToggleDarkMode = onToggleDarkMode,
-                        onToggleUninstallProtection = onToggleUninstallProtection,
-                        onSetLanguage = onSetLanguage
+                        onToggleFingerprint = onToggleFingerprint,
+                        onSetLanguage = onSetLanguage,
+                        onOpenLanguageSelection = { currentScreen = ContentScreen.LanguageSelection },
+                        onToggleScreenshotRestriction = onToggleScreenshotRestriction
                     )
                     is ContentScreen.CategoryView -> FileCategoryList(
                         category = screen.category,
                         files = state.files.filter { it.category == screen.category },
                         onFileClick = { viewingFile = it }
+                    )
+                    is ContentScreen.LanguageSelection -> LanguageSelectionScreen(
+                        currentLanguageCode = state.currentLanguage,
+                        onLanguageSelected = { 
+                            onSetLanguage(it)
+                            currentScreen = ContentScreen.Dashboard
+                        },
+                        onBack = { currentScreen = ContentScreen.Settings }
                     )
                 }
             }
@@ -337,6 +349,7 @@ sealed class ContentScreen {
     object Dashboard : ContentScreen()
     object AppLock : ContentScreen()
     object Settings : ContentScreen()
+    object LanguageSelection : ContentScreen()
     data class CategoryView(val category: FileCategory) : ContentScreen()
 }
 
@@ -469,6 +482,9 @@ fun FileCategoryList(category: FileCategory, files: List<com.geovault.model.Vaul
         }
     }
 }
+
+
+
 
 @Composable
 fun FileItem(file: com.geovault.model.VaultFile, onClick: () -> Unit) {
@@ -621,7 +637,12 @@ fun AppLockManagement(
                     Switch(
                         checked = isLocked,
                         onCheckedChange = { onToggleAppLock(app.packageName) },
-                        colors = SwitchDefaults.colors(checkedThumbColor = CyberBlue)
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = Color.White,
+                            checkedTrackColor = CyberBlue,
+                            uncheckedThumbColor = Color.Gray,
+                            uncheckedTrackColor = Color.Gray.copy(alpha = 0.3f)
+                        )
                     )
                 }
                 HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
@@ -644,18 +665,24 @@ fun DashboardCard(
         modifier = modifier.height(140.dp),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
             contentColor = MaterialTheme.colorScheme.onSurfaceVariant
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         onClick = onClick
     ) {
         Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
             Box(
                 modifier = Modifier
                     .size(44.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(iconContainerColor),
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(
+                        androidx.compose.ui.graphics.Brush.linearGradient(
+                            colors = listOf(iconContainerColor, iconContainerColor.copy(alpha = 0.6f))
+                        )
+                    )
+                    .border(BorderStroke(1.dp, Color.White.copy(alpha = 0.2f)), RoundedCornerShape(14.dp)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(icon, contentDescription = null, tint = iconColor, modifier = Modifier.size(24.dp))
@@ -663,15 +690,17 @@ fun DashboardCard(
             Spacer(modifier = Modifier.weight(1f))
             Text(
                 title, 
-                fontWeight = FontWeight.ExtraBold, 
+                fontWeight = FontWeight.Black, 
                 fontSize = 18.sp, 
-                color = MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface,
+                letterSpacing = (-0.5).sp
             )
             Text(
                 subtitle, 
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f), 
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f), 
                 fontSize = 11.sp, 
-                lineHeight = 14.sp
+                lineHeight = 14.sp,
+                fontWeight = FontWeight.Medium
             )
         }
     }
@@ -683,37 +712,43 @@ fun CategoryItem(title: String, count: Int, icon: ImageVector, color: Color, onC
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(20.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+            .border(BorderStroke(0.5.dp, Color.White.copy(alpha = 0.1f)), RoundedCornerShape(20.dp))
             .clickable { onClick() }
-            .padding(vertical = 12.dp)
+            .padding(12.dp)
     ) {
         Box(
             modifier = Modifier
-                .size(52.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .background(color.copy(alpha = 0.15f)),
+                .size(48.dp)
+                .clip(RoundedCornerShape(14.dp))
+                .background(color.copy(alpha = 0.12f))
+                .border(BorderStroke(1.dp, color.copy(alpha = 0.2f)), RoundedCornerShape(14.dp)),
             contentAlignment = Alignment.Center
         ) {
-            Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(28.dp))
+            Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(24.dp))
         }
         Spacer(modifier = Modifier.width(16.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 title, 
-                fontWeight = FontWeight.Bold, 
+                fontWeight = FontWeight.ExtraBold, 
                 fontSize = 17.sp, 
-                color = MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface,
+                letterSpacing = (-0.3).sp
             )
             Text(
                 stringResource(R.string.items_count, count),
-                color = MaterialTheme.colorScheme.onSurfaceVariant, 
-                fontSize = 13.sp
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f), 
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Medium
             )
         }
         Icon(
-            Icons.Default.ChevronRight, 
+            Icons.Default.ChevronRight,
             contentDescription = null, 
-            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+            modifier = Modifier.size(20.dp)
         )
     }
 }
@@ -728,9 +763,16 @@ fun SettingsSection(
     onGrantCamera: () -> Unit,
     onGrantStorage: () -> Unit,
     onToggleDarkMode: () -> Unit,
-    onToggleUninstallProtection: () -> Unit,
-    onSetLanguage: (String) -> Unit
+    onToggleFingerprint: () -> Unit,
+    onSetLanguage: (String) -> Unit,
+    onOpenLanguageSelection: () -> Unit,
+    onToggleScreenshotRestriction: () -> Unit
 ) {
+    val context = LocalContext.current
+    val biometricManager = remember { androidx.biometric.BiometricManager.from(context) }
+    val isFingerprintSupported = remember {
+        biometricManager.canAuthenticate(androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG) == androidx.biometric.BiometricManager.BIOMETRIC_SUCCESS
+    }
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -753,47 +795,6 @@ fun SettingsSection(
         HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
 
         Text(
-            stringResource(R.string.advanced_security), 
-            style = MaterialTheme.typography.titleSmall, 
-            fontWeight = FontWeight.Bold, 
-            color = MaterialTheme.colorScheme.primary
-        )
-
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-        ) {
-            Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    Icons.Default.DeleteForever,
-                    contentDescription = null,
-                    tint = if (state.isUninstallProtectionEnabled) Color(0xFF4CAF50) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                )
-                Spacer(Modifier.width(16.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        stringResource(R.string.uninstall_protection), 
-                        style = MaterialTheme.typography.bodyLarge, 
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        stringResource(R.string.uninstall_protection_desc),
-                        style = MaterialTheme.typography.bodySmall, 
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                    )
-                }
-                Switch(
-                    checked = state.isUninstallProtectionEnabled,
-                    onCheckedChange = { onToggleUninstallProtection() },
-                    colors = SwitchDefaults.colors(checkedThumbColor = CyberBlue)
-                )
-            }
-        }
-
-        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
-
-        Text(
             stringResource(R.string.lock_options), 
             style = MaterialTheme.typography.titleSmall, 
             fontWeight = FontWeight.Bold, 
@@ -807,31 +808,72 @@ fun SettingsSection(
             Column {
                 Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        if (state.isMasterStealthEnabled) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                        Icons.Default.Screenshot,
                         contentDescription = null,
-                        tint = if (state.isMasterStealthEnabled) Color(0xFFFF5252) else MaterialTheme.colorScheme.primary
+                        tint = if (state.isScreenshotRestricted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                     )
                     Spacer(Modifier.width(16.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            stringResource(R.string.global_lock_title), 
+                            stringResource(R.string.screenshot_restriction), 
                             style = MaterialTheme.typography.bodyLarge, 
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            stringResource(R.string.global_lock_desc),
+                            stringResource(R.string.screenshot_restriction_desc),
                             style = MaterialTheme.typography.bodySmall, 
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                         )
                     }
                     Switch(
-                        checked = state.isMasterStealthEnabled,
-                        onCheckedChange = { onToggleMasterStealth() },
-                        colors = SwitchDefaults.colors(checkedThumbColor = CyberBlue)
+                        checked = state.isScreenshotRestricted,
+                        onCheckedChange = { onToggleScreenshotRestriction() },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = Color.White,
+                            checkedTrackColor = CyberBlue,
+                            uncheckedThumbColor = Color.Gray,
+                            uncheckedTrackColor = Color.Gray.copy(alpha = 0.3f)
+                        )
                     )
                 }
-                
+
+                if (isFingerprintSupported) {
+                    HorizontalDivider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.1f), modifier = Modifier.padding(horizontal = 16.dp))
+                    
+                    Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Default.Fingerprint,
+                            contentDescription = null,
+                            tint = if (state.isFingerprintEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                        )
+                        Spacer(Modifier.width(16.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                "Fingerprint Unlock", 
+                                style = MaterialTheme.typography.bodyLarge, 
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                "Use biometric to unlock hidden apps",
+                                style = MaterialTheme.typography.bodySmall, 
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                            )
+                        }
+                        Switch(
+                            checked = state.isFingerprintEnabled,
+                            onCheckedChange = { onToggleFingerprint() },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = Color.White,
+                                checkedTrackColor = CyberBlue,
+                                uncheckedThumbColor = Color.Gray,
+                                uncheckedTrackColor = Color.Gray.copy(alpha = 0.3f)
+                            )
+                        )
+                    }
+                }
+
                 HorizontalDivider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.1f), modifier = Modifier.padding(horizontal = 16.dp))
                 
                 Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -857,13 +899,23 @@ fun SettingsSection(
                     Switch(
                         checked = state.isDarkMode,
                         onCheckedChange = { onToggleDarkMode() },
-                        colors = SwitchDefaults.colors(checkedThumbColor = CyberBlue)
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = Color.White,
+                            checkedTrackColor = CyberBlue,
+                            uncheckedThumbColor = Color.Gray,
+                            uncheckedTrackColor = Color.Gray.copy(alpha = 0.3f)
+                        )
                     )
                 }
 
                 HorizontalDivider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.1f), modifier = Modifier.padding(horizontal = 16.dp))
 
-                Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    modifier = Modifier
+                        .clickable { onOpenLanguageSelection() }
+                        .padding(16.dp), 
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Icon(
                         Icons.Default.Language,
                         contentDescription = null,
@@ -877,63 +929,114 @@ fun SettingsSection(
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                        val currentLang = remember(state.currentLanguage) {
+                            com.geovault.model.supportedLanguages.find { it.code == state.currentLanguage }?.nativeName ?: "English"
+                        }
                         Text(
-                            if (state.currentLanguage == "hi") "हिन्दी (Hindi)" else "English", 
+                            currentLang, 
                             style = MaterialTheme.typography.bodySmall, 
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                         )
                     }
                     
-                    Row {
-                        FilterChip(
-                            selected = state.currentLanguage == "en",
-                            onClick = { onSetLanguage("en") },
-                            label = { Text("EN") }
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        FilterChip(
-                            selected = state.currentLanguage == "hi",
-                            onClick = { onSetLanguage("hi") },
-                            label = { Text("HI") }
-                        )
-                    }
+                    Icon(
+                        Icons.Default.ChevronRight,
+                        contentDescription = null, 
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                    )
+                }
+            }
+        }
+
+        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+
+        Text(
+            stringResource(R.string.support_links), 
+            style = MaterialTheme.typography.titleSmall, 
+            fontWeight = FontWeight.Bold, 
+            color = MaterialTheme.colorScheme.primary
+        )
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        ) {
+            Column {
+                SettingsLinkItem(stringResource(R.string.feedback), Icons.Default.Feedback) {
+                    // Handle Feedback
+                }
+                HorizontalDivider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.1f), modifier = Modifier.padding(horizontal = 16.dp))
+                SettingsLinkItem(stringResource(R.string.faq), Icons.Default.Help) {
+                    // Handle FAQ
+                }
+                HorizontalDivider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.1f), modifier = Modifier.padding(horizontal = 16.dp))
+                SettingsLinkItem(stringResource(R.string.terms_of_use), Icons.Default.Description) {
+                    // Handle Terms
+                }
+                HorizontalDivider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.1f), modifier = Modifier.padding(horizontal = 16.dp))
+                SettingsLinkItem(stringResource(R.string.privacy_policy), Icons.Default.PrivacyTip) {
+                    // Handle Privacy
                 }
             }
         }
     }
 }
 
+
+
+
 @Composable
 fun PermissionItem(title: String, description: String, granted: Boolean, onClick: () -> Unit) {
     Card(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-        )
+        ),
+        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f))
     ) {
         Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                if (granted) Icons.Default.CheckCircle else Icons.Default.Warning,
-                contentDescription = null,
-                tint = if (granted) Color(0xFF4CAF50) else Color(0xFFFF5252)
-            )
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(if (granted) Color(0xFF4CAF50).copy(alpha = 0.1f) else Color(0xFFFF5252).copy(alpha = 0.1f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    if (granted) Icons.Default.CheckCircle else Icons.Default.Info,
+                    contentDescription = null,
+                    tint = if (granted) Color(0xFF4CAF50) else Color(0xFFFF5252),
+                    modifier = Modifier.size(24.dp)
+                )
+            }
             Spacer(Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     title, 
                     style = MaterialTheme.typography.bodyLarge, 
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.Black,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
                     description, 
                     style = MaterialTheme.typography.bodySmall, 
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                    fontWeight = FontWeight.Medium
                 )
             }
             if (!granted) {
-                Text("FIX", color = Color(0xFFFF5252), fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                Text(
+                    "GRANT", 
+                    color = Color(0xFFFF5252), 
+                    fontWeight = FontWeight.Black, 
+                    fontSize = 11.sp,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color(0xFFFF5252).copy(alpha = 0.1f))
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                )
             }
         }
     }
@@ -1090,6 +1193,33 @@ fun BackupManagementDialog(
                 }
             }
         }
+    }
+}
+
+
+@Composable
+fun SettingsLinkItem(text: String, icon: ImageVector, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+        Spacer(Modifier.width(16.dp))
+        Text(
+            text,
+            modifier = Modifier.weight(1f),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Icon(
+            Icons.Default.OpenInNew,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f),
+            modifier = Modifier.size(18.dp)
+        )
     }
 }
 

@@ -50,6 +50,7 @@ class AppLockerService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedSt
     private var overlayView: ComposeView? = null
     private var windowManager: WindowManager? = null
     private var usageStatsManager: UsageStatsManager? = null
+    private lateinit var prefs: android.content.SharedPreferences
     
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private var targetPackageState = mutableStateOf("")
@@ -59,7 +60,6 @@ class AppLockerService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedSt
 
     // Pre-calculated set for O(1) lookups
     private var lockedPackages = emptySet<String>()
-    private var isUninstallProtectionEnabled = false
     private var isMasterStealthEnabled = false
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -88,8 +88,7 @@ class AppLockerService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedSt
 
     override fun onCreate() {
         super.onCreate()
-        
-        val prefs = com.geovault.security.SecureManager.getInstance(this).prefs
+        prefs = com.geovault.security.SecureManager.getInstance(this).prefs
         prefs.registerOnSharedPreferenceChangeListener(preferenceListener)
         
         // Register screen receiver
@@ -220,7 +219,6 @@ class AppLockerService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedSt
 
     private fun refreshLockedPackages() {
         serviceScope.launch(Dispatchers.IO) {
-            val prefs = com.geovault.security.SecureManager.getInstance(this@AppLockerService).prefs
             val allVaultIds = prefs.getStringSet("vault_ids", emptySet()) ?: emptySet()
             val apps = mutableSetOf<String>()
             allVaultIds.forEach { id ->
@@ -228,10 +226,6 @@ class AppLockerService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedSt
             }
             lockedPackages = apps
             
-            // Sync uninstall protection state
-            val dpm = getSystemService(Context.DEVICE_POLICY_SERVICE) as android.app.admin.DevicePolicyManager
-            val adminComponent = android.content.ComponentName(this@AppLockerService, com.geovault.security.UninstallProtectionReceiver::class.java)
-            isUninstallProtectionEnabled = dpm.isAdminActive(adminComponent)
             isMasterStealthEnabled = prefs.getBoolean("master_stealth_enabled", false)
         }
     }
@@ -320,7 +314,6 @@ class AppLockerService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedSt
                                  currentPackage == "com.android.vending"
 
             val shouldLock = lockedPackages.contains(currentPackage) || 
-                             (isUninstallProtectionEnabled && isSystemTarget) ||
                              (isMasterStealthEnabled && isSystemTarget)
 
             if (shouldLock && currentPackage != updatedBypass) {
@@ -365,8 +358,10 @@ class AppLockerService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedSt
                 isOverlayAttached = true
                 
                 // Launch LockActivity to provide the actual PIN UI
+                val isFingerprintEnabled = prefs.getBoolean("fingerprint_enabled", false)
                 val lockIntent = Intent(this, com.geovault.LockActivity::class.java).apply {
                     putExtra("target_package", targetPackageState.value)
+                    putExtra("request_biometric", isFingerprintEnabled)
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NO_ANIMATION)
                 }
                 startActivity(lockIntent)
@@ -374,8 +369,10 @@ class AppLockerService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedSt
         } else {
             // Even if attached, if we are calling showOverlayImmediate, it means a lock is required.
             // Re-trigger LockActivity to be safe (handles the case where user cleared it from Recents).
+            val isFingerprintEnabled = prefs.getBoolean("fingerprint_enabled", false)
             val lockIntent = Intent(this, com.geovault.LockActivity::class.java).apply {
                 putExtra("target_package", targetPackageState.value)
+                putExtra("request_biometric", isFingerprintEnabled)
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NO_ANIMATION)
             }
             startActivity(lockIntent)

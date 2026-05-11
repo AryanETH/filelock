@@ -37,6 +37,7 @@ data class VaultState(
     val vaults: List<VaultConfig> = emptyList(),
     val vaultHistory: List<VaultHistory> = emptyList(),
     val activeVaultId: String? = null,
+    val currentLocation: GeoPoint? = null,
     val isNearAnyVault: Boolean = false,
     val nearbyVaultIds: Set<String> = emptySet(),
     
@@ -64,9 +65,11 @@ data class VaultState(
     val intruderCount: Int = 0,
     val recycleBinCount: Int = 0,
     val isMasterStealthEnabled: Boolean = false,
+    val isFingerprintEnabled: Boolean = false,
     val isDarkMode: Boolean = false,
     val isSatelliteMode: Boolean = false,
-    val isUninstallProtectionEnabled: Boolean = false,
     val showTour: Boolean = false,
-    val currentLanguage: String = "en"
+    val currentLanguage: String = "en",
+    val isScreenshotRestricted: Boolean = true,
+    val pendingDeleteIntent: android.app.PendingIntent? = null
 )
