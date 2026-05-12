@@ -26,6 +26,8 @@ import com.geovault.ui.theme.CyberBlue
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
+import com.geovault.R
 import com.geovault.map.MapStyleHelper
 import com.geovault.security.IntruderManager
 import com.geovault.model.FileCategory
@@ -40,7 +42,7 @@ import androidx.biometric.BiometricManager
 import androidx.compose.ui.text.style.TextAlign
 
 @Composable
-fun AuthSelectionScreen(
+fun AuthUI(
     context: Context,
     targetPackage: String,
     titleOverride: String? = null,
@@ -52,7 +54,6 @@ fun AuthSelectionScreen(
     val secureManager = remember { com.geovault.security.SecureManager.getInstance(context) }
     val prefs = remember { secureManager.prefs }
 
-    // Start Intruder Session when this screen is active
     DisposableEffect(lifecycleOwner) {
         IntruderManager.getInstance(context).startSession(lifecycleOwner)
         onDispose {
@@ -63,7 +64,6 @@ fun AuthSelectionScreen(
     val captureIntruder = {
         IntruderManager.getInstance(context).captureIntruder { uri, thumbPath ->
             android.util.Log.d("AuthSelection", "Intruder captured at $uri")
-            
             secureManager.saveFileInfo(
                 java.util.UUID.randomUUID().toString(),
                 "Intruder_${System.currentTimeMillis()}.jpg",
@@ -74,18 +74,18 @@ fun AuthSelectionScreen(
             )
         }
     }
-    
+
     val allVaultIds = remember { prefs.getStringSet("vault_ids", emptySet()) ?: emptySet() }
-    
+
     var relevantVaultId = allVaultIds.find { id ->
         val apps = prefs.getStringSet("vault_${id}_apps", emptySet()) ?: emptySet()
         apps.contains(targetPackage)
     }
-    
+
     if (relevantVaultId == null && (targetPackage == "com.android.settings" || targetPackage.contains("packageinstaller"))) {
         relevantVaultId = allVaultIds.firstOrNull()
     }
-    
+
     val lockTypeStr = relevantVaultId?.let { prefs.getString("vault_${it}_lock_type", "PIN") } ?: "PIN"
     val lockType = com.geovault.model.LockType.valueOf(lockTypeStr)
     val savedSecret = relevantVaultId?.let { prefs.getString("vault_${it}_secret", "") } ?: ""
@@ -96,10 +96,10 @@ fun AuthSelectionScreen(
     val isSatelliteMode = remember { prefs.getBoolean("is_satellite_mode", false) }
     val isFingerprintEnabled = remember { prefs.getBoolean("fingerprint_enabled", false) }
     var biometricStatusMessage by remember { mutableStateOf<String?>(null) }
-    
+
     var isWithinRadius by remember { mutableStateOf(radius <= 0f) }
     var hasAutoRequestedBiometric by remember { mutableStateOf(false) }
-    
+
     if (radius > 0) {
         LaunchedEffect(Unit) {
             val fusedLocationClient = com.google.android.gms.location.LocationServices.getFusedLocationProviderClient(context)
@@ -128,7 +128,6 @@ fun AuthSelectionScreen(
         }
     }
 
-    // Fetch Target App Icon and Name
     val pm = context.packageManager
     val appIcon = remember(targetPackage) {
         try { pm.getApplicationIcon(targetPackage) } catch (e: Exception) { null }
@@ -142,6 +141,15 @@ fun AuthSelectionScreen(
         return
     }
 
+    // Pre-resolve strings needed inside lambdas/non-composable contexts
+    val locationLockedStr = stringResource(R.string.location_locked, radius.toInt())
+    val enterPinStr = stringResource(R.string.enter_pin)
+    val drawPatternStr = stringResource(R.string.draw_pattern)
+    val tapCoordinatesStr = stringResource(R.string.tap_coordinates)
+    val verifyIdentityStr = stringResource(R.string.verify_identity)
+    val outsideRadiusStr = stringResource(R.string.outside_radius)
+    val biometricUnavailableStr = stringResource(R.string.biometric_unavailable)
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -153,13 +161,12 @@ fun AuthSelectionScreen(
     ) {
         Spacer(modifier = Modifier.weight(0.1f))
 
-        // 1. App Logo (Top)
         appIcon?.let { icon ->
             Image(
                 bitmap = icon.toBitmap().asImageBitmap(),
                 contentDescription = null,
                 modifier = Modifier
-                    .size(100.dp) // Slightly larger
+                    .size(100.dp)
                     .clip(RoundedCornerShape(20.dp))
                     .background(Color.Black.copy(alpha = 0.03f))
                     .padding(12.dp)
@@ -168,16 +175,15 @@ fun AuthSelectionScreen(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // 2. Instruction Text
         Text(
             text = if (!isWithinRadius && radius > 0) {
-                "Location Locked: Stay within ${radius.toInt()}m"
+                locationLockedStr
             } else {
                 titleOverride ?: when (lockType) {
-                    com.geovault.model.LockType.PIN -> "Enter your PIN"
-                    com.geovault.model.LockType.PATTERN -> "Draw your pattern"
-                    com.geovault.model.LockType.MAP -> "Tap target coordinates"
-                    else -> "Verify identity"
+                    com.geovault.model.LockType.PIN -> enterPinStr
+                    com.geovault.model.LockType.PATTERN -> drawPatternStr
+                    com.geovault.model.LockType.MAP -> tapCoordinatesStr
+                    else -> verifyIdentityStr
                 }
             },
             color = if (!isWithinRadius && radius > 0) Color.Red else Color.Black,
@@ -186,9 +192,8 @@ fun AuthSelectionScreen(
             textAlign = TextAlign.Center
         )
 
-        Spacer(modifier = Modifier.weight(0.15f)) // More breathing space
+        Spacer(modifier = Modifier.weight(0.15f))
 
-        // 3. PIN / Pattern UI (Center - Expanded)
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -198,7 +203,7 @@ fun AuthSelectionScreen(
             when (lockType) {
                 com.geovault.model.LockType.PIN -> {
                     CompactPinPad(
-                        correctPin = savedSecret, 
+                        correctPin = savedSecret,
                         onPinComplete = { if (isWithinRadius) onAuthenticated() else captureIntruder() },
                         onError = captureIntruder,
                         isLightTheme = true,
@@ -207,7 +212,7 @@ fun AuthSelectionScreen(
                 }
                 com.geovault.model.LockType.PATTERN -> {
                     CompactPatternGrid(
-                        correctPattern = savedSecret, 
+                        correctPattern = savedSecret,
                         onPatternComplete = { if (isWithinRadius) onAuthenticated() else captureIntruder() },
                         onError = captureIntruder,
                         isLightTheme = true,
@@ -237,12 +242,11 @@ fun AuthSelectionScreen(
 
         Spacer(modifier = Modifier.weight(0.2f))
 
-        // 4. Biometric Icon (Bottom)
         if (lockType != com.geovault.model.LockType.MAP && isFingerprintEnabled) {
             IconButton(
                 onClick = {
                     if (!isWithinRadius && radius > 0) {
-                        biometricStatusMessage = "Outside location radius"
+                        biometricStatusMessage = outsideRadiusStr
                         return@IconButton
                     }
                     val biometricManager = BiometricManager.from(context)
@@ -250,7 +254,7 @@ fun AuthSelectionScreen(
                         biometricStatusMessage = null
                         onBiometricRequested()
                     } else {
-                        biometricStatusMessage = "Biometric unavailable"
+                        biometricStatusMessage = biometricUnavailableStr
                     }
                 },
                 modifier = Modifier
@@ -259,13 +263,13 @@ fun AuthSelectionScreen(
                     .background(Color.Black.copy(alpha = 0.04f))
             ) {
                 Icon(
-                    Icons.Default.Fingerprint, 
-                    contentDescription = "Fingerprint", 
-                    tint = Color.Black, 
+                    Icons.Default.Fingerprint,
+                    contentDescription = stringResource(R.string.fingerprint),
+                    tint = Color.Black,
                     modifier = Modifier.size(44.dp)
                 )
             }
-            
+
             biometricStatusMessage?.let { msg ->
                 Text(
                     text = msg,
@@ -284,7 +288,7 @@ fun AuthSelectionScreen(
 fun MapLockScreen(targetLocation: GeoPoint, isSatelliteMode: Boolean, isDarkMode: Boolean, onSuccess: () -> Unit) {
     val context = LocalContext.current
     val mapView = remember { MapView(context) }
-    
+
     val currentStyle = remember(isSatelliteMode, isDarkMode) {
         if (isSatelliteMode) {
             MapStyleHelper.getSatelliteStyle(isHybrid = true)
@@ -292,6 +296,9 @@ fun MapLockScreen(targetLocation: GeoPoint, isSatelliteMode: Boolean, isDarkMode
             if (isDarkMode) MapStyleHelper.DARK else MapStyleHelper.BRIGHT
         }
     }
+
+    val zoomInHint = stringResource(R.string.zoom_in_hint)
+    val tapTargetCoordinates = stringResource(R.string.tap_target_coordinates)
 
     Box(modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(16.dp)).border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(16.dp))) {
         AndroidView(
@@ -302,10 +309,10 @@ fun MapLockScreen(targetLocation: GeoPoint, isSatelliteMode: Boolean, isDarkMode
                         map.setStyle(currentStyle)
                         map.uiSettings.isLogoEnabled = false
                         map.uiSettings.isAttributionEnabled = false
-                        
+
                         map.addOnMapClickListener { point ->
                             if (map.cameraPosition.zoom < 16.0) {
-                                android.widget.Toast.makeText(context, "Zoom in closer to target (100m scale)", android.widget.Toast.LENGTH_SHORT).show()
+                                android.widget.Toast.makeText(context, zoomInHint, android.widget.Toast.LENGTH_SHORT).show()
                                 return@addOnMapClickListener true
                             }
                             val targetLatLng = LatLng(targetLocation.latitude, targetLocation.longitude)
@@ -318,14 +325,14 @@ fun MapLockScreen(targetLocation: GeoPoint, isSatelliteMode: Boolean, isDarkMode
                 }
             }
         )
-        
+
         Surface(
             modifier = Modifier.align(Alignment.TopCenter).padding(top = 16.dp),
             color = CyberDarkBlue.copy(alpha = 0.7f),
             shape = RoundedCornerShape(8.dp)
         ) {
             Text(
-                "TAP TARGET COORDINATES",
+                tapTargetCoordinates,
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
                 color = CyberBlue,
                 fontSize = 10.sp,

@@ -37,13 +37,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.core.graphics.drawable.toBitmap
 import androidx.media3.common.util.UnstableApi
-import androidx.compose.ui.res.stringResource
 import com.geovault.R
 import com.geovault.model.FileCategory
 import com.geovault.model.VaultState
@@ -63,6 +63,7 @@ import java.io.FileOutputStream
 import com.geovault.core.AppCloner
 import com.geovault.core.VirtualAppManager
 import android.widget.Toast
+import androidx.compose.ui.platform.LocalLocale
 
 @UnstableApi
 @OptIn(ExperimentalMaterial3Api::class)
@@ -93,7 +94,7 @@ fun VaultContentScreen(
     val scope = rememberCoroutineScope()
     val virtualAppManager = remember { VirtualAppManager(context) }
     val appCloner = remember { AppCloner(context) }
-    
+
     var currentScreen by remember { mutableStateOf<ContentScreen>(ContentScreen.Dashboard) }
     var selectedCategoryForAdd by remember { mutableStateOf<FileCategory?>(null) }
     var viewingFile by remember { mutableStateOf<com.geovault.model.VaultFile?>(null) }
@@ -110,9 +111,7 @@ fun VaultContentScreen(
         contract = ActivityResultContracts.GetMultipleContents()
     ) { uris ->
         if (uris.isNotEmpty()) {
-            selectedCategoryForAdd?.let { cat ->
-                onAddFiles(uris, cat)
-            }
+            selectedCategoryForAdd?.let { cat -> onAddFiles(uris, cat) }
         }
     }
 
@@ -121,14 +120,8 @@ fun VaultContentScreen(
             file = viewingFile!!,
             allFiles = state.files,
             onBack = { viewingFile = null },
-            onDelete = { id ->
-                onDeleteFile(id)
-                viewingFile = null
-            },
-            onRestore = { id ->
-                onRestoreFile(id)
-                viewingFile = null
-            }
+            onDelete = { id -> onDeleteFile(id); viewingFile = null },
+            onRestore = { id -> onRestoreFile(id); viewingFile = null }
         )
         return
     }
@@ -136,7 +129,7 @@ fun VaultContentScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { 
+                title = {
                     val title = when {
                         currentScreen is ContentScreen.CategoryView -> {
                             val category = (currentScreen as ContentScreen.CategoryView).category
@@ -151,28 +144,23 @@ fun VaultContentScreen(
                         }
                         else -> stringResource(R.string.app_name)
                     }
-                    Text(
-                        title,
-                        fontWeight = FontWeight.ExtraBold, 
-                        letterSpacing = 2.sp,
-                        color = CyberBlue
-                    ) 
+                    Text(title, fontWeight = FontWeight.ExtraBold, letterSpacing = 2.sp, color = CyberBlue)
                 },
                 navigationIcon = {
                     if (currentScreen != ContentScreen.Dashboard) {
                         IconButton(onClick = { currentScreen = ContentScreen.Dashboard }) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                         }
                     }
                 },
                 actions = {
                     if (currentScreen == ContentScreen.Dashboard) {
                         IconButton(onClick = { currentScreen = ContentScreen.Settings }) {
-                            Icon(Icons.Default.Settings, contentDescription = "Settings")
+                            Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.settings))
                         }
                     }
                     IconButton(onClick = onLockClick) {
-                        Icon(Icons.Default.LockOpen, contentDescription = "Lock", tint = CyberBlue)
+                        Icon(Icons.Default.LockOpen, contentDescription = stringResource(R.string.lock), tint = CyberBlue)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
@@ -182,10 +170,8 @@ fun VaultContentScreen(
             val isIntruderCategory = currentScreen is ContentScreen.CategoryView && (currentScreen as ContentScreen.CategoryView).category == FileCategory.INTRUDER
             if (!isIntruderCategory && (currentScreen is ContentScreen.Dashboard || currentScreen is ContentScreen.CategoryView)) {
                 FloatingActionButton(
-                    onClick = { 
+                    onClick = {
                         selectedCategoryForAdd = if (currentScreen is ContentScreen.CategoryView) (currentScreen as ContentScreen.CategoryView).category else FileCategory.OTHER
-                        
-                        // Contextual Permission Check
                         val hasPermission = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
                             when (selectedCategoryForAdd) {
                                 FileCategory.PHOTO -> androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_MEDIA_IMAGES) == android.content.pm.PackageManager.PERMISSION_GRANTED
@@ -193,16 +179,14 @@ fun VaultContentScreen(
                                 FileCategory.AUDIO -> androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_MEDIA_AUDIO) == android.content.pm.PackageManager.PERMISSION_GRANTED
                                 else -> state.hasStoragePermission
                             }
-                        } else {
-                            state.hasStoragePermission
-                        }
+                        } else { state.hasStoragePermission }
 
                         if (hasPermission) {
-                            val mime = when(selectedCategoryForAdd) {
+                            val mime = when (selectedCategoryForAdd) {
                                 FileCategory.PHOTO -> "image/*"
                                 FileCategory.VIDEO -> "video/*"
                                 FileCategory.AUDIO -> "audio/*"
-                                FileCategory.DOCUMENT -> "*/*" 
+                                FileCategory.DOCUMENT -> "*/*"
                                 else -> "*/*"
                             }
                             filePickerLauncher.launch(mime)
@@ -223,7 +207,7 @@ fun VaultContentScreen(
                     containerColor = CyberBlue,
                     shape = CircleShape
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "Add", tint = Color.White)
+                    Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add), tint = Color.White)
                 }
             }
         }
@@ -245,17 +229,15 @@ fun VaultContentScreen(
             ) { screen ->
                 when (screen) {
                     is ContentScreen.Dashboard -> DashboardContent(
-                        state = state, 
+                        state = state,
                         onAppLockClick = { currentScreen = ContentScreen.AppLock },
                         onCategoryClick = { currentScreen = ContentScreen.CategoryView(it) },
                         onBackupClick = { showBackupDialog = true }
                     )
                     is ContentScreen.AppLock -> AppLockManagement(
-                        state = state, 
+                        state = state,
                         onToggleAppLock = onToggleAppLock,
-                        onHideApp = { pkg ->
-                            appToHide = pkg
-                        }
+                        onHideApp = { pkg -> appToHide = pkg }
                     )
                     is ContentScreen.Settings -> SettingsSection(
                         state = state,
@@ -278,10 +260,7 @@ fun VaultContentScreen(
                     )
                     is ContentScreen.LanguageSelection -> LanguageSelectionScreen(
                         currentLanguageCode = state.currentLanguage,
-                        onLanguageSelected = { 
-                            onSetLanguage(it)
-                            currentScreen = ContentScreen.Dashboard
-                        },
+                        onLanguageSelected = { onSetLanguage(it); currentScreen = ContentScreen.Dashboard },
                         onBack = { currentScreen = ContentScreen.Settings }
                     )
                 }
@@ -301,16 +280,16 @@ fun VaultContentScreen(
     if (appToHide != null) {
         AlertDialog(
             onDismissRequest = { if (!isCloning) appToHide = null },
-            title = { Text("Hide App (Clone & Uninstall)") },
-            text = { 
+            title = { Text(stringResource(R.string.hide_app_dialog_title)) },
+            text = {
                 if (isCloning) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
                         CircularProgressIndicator(color = CyberBlue)
                         Spacer(Modifier.height(16.dp))
-                        Text("Cloning app to secure sandbox...")
+                        Text(stringResource(R.string.cloning_in_progress))
                     }
                 } else {
-                    Text("This will create a secure clone of the app inside GeoVault and then prompt you to uninstall the original app. You will only be able to access the app via GeoVault's map-gate.")
+                    Text(stringResource(R.string.hide_app_dialog_body))
                 }
             },
             confirmButton = {
@@ -324,20 +303,26 @@ fun VaultContentScreen(
                                 virtualAppManager.setAppHidden(appToHide!!, true)
                                 virtualAppManager.uninstallOriginalApp(appToHide!!)
                                 appToHide = null
-                                Toast.makeText(context, "App cloned successfully!", Toast.LENGTH_SHORT).show()
-                            } else {
-                                Toast.makeText(context, "Cloning failed. Please try again.", Toast.LENGTH_SHORT).show()
-                            }
+                                Toast.makeText(
+                                    context,
+                                    context.resources.getString(R.string.clone_success),
+                                    Toast.LENGTH_SHORT
+                                ).show()                            } else {
+                                Toast.makeText(
+                                    context,
+                                    context.resources.getString(R.string.clone_failed),
+                                    Toast.LENGTH_SHORT
+                                ).show()                            }
                         }
                     }, colors = ButtonDefaults.buttonColors(containerColor = CyberBlue)) {
-                        Text("PROCEED")
+                        Text(stringResource(R.string.proceed))
                     }
                 }
             },
             dismissButton = {
                 if (!isCloning) {
                     TextButton(onClick = { appToHide = null }) {
-                        Text("CANCEL")
+                        Text(stringResource(R.string.cancel))
                     }
                 }
             }
@@ -355,7 +340,7 @@ sealed class ContentScreen {
 
 @Composable
 fun DashboardContent(
-    state: VaultState, 
+    state: VaultState,
     onAppLockClick: () -> Unit,
     onCategoryClick: (FileCategory) -> Unit,
     onBackupClick: () -> Unit
@@ -363,63 +348,22 @@ fun DashboardContent(
     val itemsVisible = remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { itemsVisible.value = true }
 
-    LazyColumn(
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        modifier = Modifier.fillMaxSize()
-    ) {
+    LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.fillMaxSize()) {
         item {
-            AnimatedVisibility(
-                visible = itemsVisible.value,
-                enter = fadeIn(tween(600)) + slideInVertically(tween(600), initialOffsetY = { 50 })
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    DashboardCard(
-                        title = stringResource(R.string.app_lock_title),
-                        subtitle = stringResource(R.string.app_lock_subtitle),
-                        icon = Icons.Default.Security,
-                        modifier = Modifier.weight(1f),
-                        iconContainerColor = Color(0xFF00C853).copy(alpha = 0.2f),
-                        iconColor = Color(0xFF00C853),
-                        onClick = onAppLockClick
-                    )
-                    DashboardCard(
-                        title = stringResource(R.string.history_title),
-                        subtitle = stringResource(R.string.history_subtitle),
-                        icon = Icons.Default.History,
-                        modifier = Modifier.weight(1f),
-                        iconContainerColor = CyberBlue.copy(alpha = 0.2f),
-                        iconColor = CyberBlue,
-                        onClick = onBackupClick
-                    )
+            AnimatedVisibility(visible = itemsVisible.value, enter = fadeIn(tween(600)) + slideInVertically(tween(600), initialOffsetY = { 50 })) {
+                Row(modifier = Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    DashboardCard(title = stringResource(R.string.app_lock_title), subtitle = stringResource(R.string.app_lock_subtitle), icon = Icons.Default.Security, modifier = Modifier.weight(1f), iconContainerColor = Color(0xFF00C853).copy(alpha = 0.2f), iconColor = Color(0xFF00C853), onClick = onAppLockClick)
+                    DashboardCard(title = stringResource(R.string.history_title), subtitle = stringResource(R.string.history_subtitle), icon = Icons.Default.History, modifier = Modifier.weight(1f), iconContainerColor = CyberBlue.copy(alpha = 0.2f), iconColor = CyberBlue, onClick = onBackupClick)
                 }
             }
         }
 
         item {
-            AnimatedVisibility(
-                visible = itemsVisible.value,
-                enter = fadeIn(tween(600, delayMillis = 100)) + slideInVertically(tween(600, delayMillis = 100), initialOffsetY = { 50 })
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(vertical = 8.dp)
-                ) {
-                    Text(
-                        stringResource(R.string.categories), 
-                        style = MaterialTheme.typography.titleSmall, 
-                        fontWeight = FontWeight.Bold, 
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+            AnimatedVisibility(visible = itemsVisible.value, enter = fadeIn(tween(600, delayMillis = 100)) + slideInVertically(tween(600, delayMillis = 100), initialOffsetY = { 50 })) {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 8.dp)) {
+                    Text(stringResource(R.string.categories), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Spacer(modifier = Modifier.weight(1f))
-                    Icon(
-                        Icons.AutoMirrored.Filled.Sort, 
-                        contentDescription = "Sort", 
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant, 
-                        modifier = Modifier.size(16.dp)
-                    )
+                    Icon(Icons.AutoMirrored.Filled.Sort, contentDescription = stringResource(R.string.sort), tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(16.dp))
                 }
             }
         }
@@ -437,15 +381,12 @@ fun DashboardContent(
             val (catIcon, color) = data
             val (category, icon) = catIcon
             item {
-                AnimatedVisibility(
-                    visible = itemsVisible.value,
-                    enter = fadeIn(tween(600, delayMillis = 150 + (index * 50))) + slideInVertically(tween(600, delayMillis = 150 + (index * 50)), initialOffsetY = { 50 })
-                ) {
+                AnimatedVisibility(visible = itemsVisible.value, enter = fadeIn(tween(600, delayMillis = 150 + (index * 50))) + slideInVertically(tween(600, delayMillis = 150 + (index * 50)), initialOffsetY = { 50 })) {
                     CategoryItem(stringResource(titleRes), count, icon, color) { onCategoryClick(category) }
                 }
             }
         }
-        
+
         item { Spacer(modifier = Modifier.height(80.dp)) }
     }
 }
@@ -457,25 +398,16 @@ fun FileCategoryList(category: FileCategory, files: List<com.geovault.model.Vaul
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Icon(Icons.Default.FolderOpen, contentDescription = null, modifier = Modifier.size(64.dp), tint = TextSecondary)
                 Spacer(Modifier.height(16.dp))
-                Text("Vault is empty in this category.", color = TextSecondary)
-                Text("Add files using the + button.", fontSize = 12.sp, color = TextSecondary.copy(alpha = 0.6f))
+                Text(stringResource(R.string.vault_empty), color = TextSecondary)
+                Text(stringResource(R.string.vault_empty_hint), fontSize = 12.sp, color = TextSecondary.copy(alpha = 0.6f))
             }
         }
     } else {
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(3),
-            contentPadding = PaddingValues(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier.fillMaxSize()
-        ) {
+        LazyVerticalGrid(columns = GridCells.Fixed(3), contentPadding = PaddingValues(16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxSize()) {
             items(files) { file ->
                 var visible by remember { mutableStateOf(false) }
                 LaunchedEffect(Unit) { visible = true }
-                AnimatedVisibility(
-                    visible = visible,
-                    enter = fadeIn(tween(500)) + scaleIn(tween(500), initialScale = 0.8f)
-                ) {
+                AnimatedVisibility(visible = visible, enter = fadeIn(tween(500)) + scaleIn(tween(500), initialScale = 0.8f)) {
                     FileItem(file, onClick = { onFileClick(file) })
                 }
             }
@@ -483,28 +415,13 @@ fun FileCategoryList(category: FileCategory, files: List<com.geovault.model.Vaul
     }
 }
 
-
-
-
 @Composable
 fun FileItem(file: com.geovault.model.VaultFile, onClick: () -> Unit) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant)
-            .clickable { onClick() }
-            .padding(8.dp)
+        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.surfaceVariant).clickable { onClick() }.padding(8.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .aspectRatio(1f)
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(8.dp))
-                .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)),
-            contentAlignment = Alignment.Center
-        ) {
+        Box(modifier = Modifier.aspectRatio(1f).fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)), contentAlignment = Alignment.Center) {
             if (file.category == FileCategory.PHOTO || file.category == FileCategory.INTRUDER) {
                 FileThumbnail(file)
             } else {
@@ -518,13 +435,7 @@ fun FileItem(file: com.geovault.model.VaultFile, onClick: () -> Unit) {
             }
         }
         Spacer(Modifier.height(4.dp))
-        Text(
-            file.originalName,
-            color = MaterialTheme.colorScheme.onSurface,
-            fontSize = 10.sp,
-            maxLines = 1,
-            fontWeight = FontWeight.Medium
-        )
+        Text(file.originalName, color = MaterialTheme.colorScheme.onSurface, fontSize = 10.sp, maxLines = 1, fontWeight = FontWeight.Medium)
     }
 }
 
@@ -535,16 +446,10 @@ fun FileThumbnail(file: com.geovault.model.VaultFile) {
     val cryptoManager = remember { CryptoManager() }
 
     LaunchedEffect(file.id) {
-        // 1. Check for pre-generated instant thumbnail
         if (file.thumbnailPath != null) {
             val thumbFile = File(file.thumbnailPath)
-            if (thumbFile.exists()) {
-                thumbnailPath = thumbFile
-                return@LaunchedEffect
-            }
+            if (thumbFile.exists()) { thumbnailPath = thumbFile; return@LaunchedEffect }
         }
-
-        // 2. Fallback to slow decryption (legacy or non-media)
         val tempFile = File(context.cacheDir, "thumb_${file.id}.jpg")
         if (tempFile.exists()) {
             thumbnailPath = tempFile
@@ -556,94 +461,44 @@ fun FileThumbnail(file: com.geovault.model.VaultFile) {
                         cryptoManager.decryptToStream(encryptedFile.inputStream(), FileOutputStream(tempFile))
                         thumbnailPath = tempFile
                     }
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
+                } catch (e: Exception) { e.printStackTrace() }
             }
         }
     }
 
     if (thumbnailPath != null) {
-        AsyncImage(
-            model = thumbnailPath,
-            contentDescription = null,
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
-        )
+        AsyncImage(model = thumbnailPath, contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
     } else {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator(
-                modifier = Modifier.size(24.dp),
-                strokeWidth = 2.dp,
-                color = CyberBlue.copy(alpha = 0.5f)
-            )
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp, color = CyberBlue.copy(alpha = 0.5f))
         }
     }
 }
 
 @Composable
-fun AppLockManagement(
-    state: VaultState, 
-    onToggleAppLock: (String) -> Unit,
-    onHideApp: (String) -> Unit
-) {
+fun AppLockManagement(state: VaultState, onToggleAppLock: (String) -> Unit, onHideApp: (String) -> Unit) {
     val context = LocalContext.current
     val virtualAppManager = remember { VirtualAppManager(context) }
     val activeVault = state.vaults.find { it.id == state.activeVaultId }
     val lockedApps = activeVault?.hiddenApps ?: emptySet()
 
     Column(modifier = Modifier.fillMaxSize()) {
-        Text(
-            "Locked apps require Map-Gate to open. Hidden apps are cloned inside GeoVault and uninstalled from your system.",
-            style = MaterialTheme.typography.bodySmall,
-            color = TextSecondary,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
-        
+        Text(stringResource(R.string.app_lock_desc), style = MaterialTheme.typography.bodySmall, color = TextSecondary, modifier = Modifier.padding(bottom = 16.dp))
         LazyColumn(modifier = Modifier.weight(1f)) {
             val unhiddenApps = state.installedApps.filter { !virtualAppManager.isAppHidden(it.packageName) }
             items(unhiddenApps) { app ->
                 val isLocked = lockedApps.contains(app.packageName)
-                
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically) {
-                    app.icon?.let {
-                        Image(
-                            it.toBitmap().asImageBitmap(),
-                            contentDescription = null,
-                            modifier = Modifier.size(44.dp)
-                        )
-                    }
+                Row(modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    app.icon?.let { Image(it.toBitmap().asImageBitmap(), contentDescription = null, modifier = Modifier.size(44.dp)) }
                     Spacer(Modifier.width(16.dp))
                     Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            app.appName, 
-                            fontWeight = FontWeight.SemiBold, 
-                            fontSize = 16.sp,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
+                        Text(app.appName, fontWeight = FontWeight.SemiBold, fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface)
                     }
-                    
                     IconButton(onClick = { onHideApp(app.packageName) }) {
-                        Icon(Icons.Default.VisibilityOff, contentDescription = "Hide", tint = TextSecondary.copy(alpha = 0.5f))
+                        Icon(Icons.Default.VisibilityOff, contentDescription = stringResource(R.string.hide), tint = TextSecondary.copy(alpha = 0.5f))
                     }
                     Spacer(Modifier.width(8.dp))
-                    Switch(
-                        checked = isLocked,
-                        onCheckedChange = { onToggleAppLock(app.packageName) },
-                        colors = SwitchDefaults.colors(
-                            checkedThumbColor = Color.White,
-                            checkedTrackColor = CyberBlue,
-                            uncheckedThumbColor = Color.Gray,
-                            uncheckedTrackColor = Color.Gray.copy(alpha = 0.3f)
-                        )
-                    )
+                    Switch(checked = isLocked, onCheckedChange = { onToggleAppLock(app.packageName) }, colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = CyberBlue, uncheckedThumbColor = Color.Gray, uncheckedTrackColor = Color.Gray.copy(alpha = 0.3f)))
                 }
                 HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
             }
@@ -652,104 +507,31 @@ fun AppLockManagement(
 }
 
 @Composable
-fun DashboardCard(
-    title: String,
-    subtitle: String,
-    icon: ImageVector,
-    modifier: Modifier = Modifier,
-    iconContainerColor: Color,
-    iconColor: Color,
-    onClick: () -> Unit
-) {
-    Card(
-        modifier = modifier.height(140.dp),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
-            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-        ),
-        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        onClick = onClick
-    ) {
+fun DashboardCard(title: String, subtitle: String, icon: ImageVector, modifier: Modifier = Modifier, iconContainerColor: Color, iconColor: Color, onClick: () -> Unit) {
+    Card(modifier = modifier.height(140.dp), shape = RoundedCornerShape(24.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f), contentColor = MaterialTheme.colorScheme.onSurfaceVariant), border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f)), elevation = CardDefaults.cardElevation(defaultElevation = 0.dp), onClick = onClick) {
         Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-            Box(
-                modifier = Modifier
-                    .size(44.dp)
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(
-                        androidx.compose.ui.graphics.Brush.linearGradient(
-                            colors = listOf(iconContainerColor, iconContainerColor.copy(alpha = 0.6f))
-                        )
-                    )
-                    .border(BorderStroke(1.dp, Color.White.copy(alpha = 0.2f)), RoundedCornerShape(14.dp)),
-                contentAlignment = Alignment.Center
-            ) {
+            Box(modifier = Modifier.size(44.dp).clip(RoundedCornerShape(14.dp)).background(androidx.compose.ui.graphics.Brush.linearGradient(colors = listOf(iconContainerColor, iconContainerColor.copy(alpha = 0.6f)))).border(BorderStroke(1.dp, Color.White.copy(alpha = 0.2f)), RoundedCornerShape(14.dp)), contentAlignment = Alignment.Center) {
                 Icon(icon, contentDescription = null, tint = iconColor, modifier = Modifier.size(24.dp))
             }
             Spacer(modifier = Modifier.weight(1f))
-            Text(
-                title, 
-                fontWeight = FontWeight.Black, 
-                fontSize = 18.sp, 
-                color = MaterialTheme.colorScheme.onSurface,
-                letterSpacing = (-0.5).sp
-            )
-            Text(
-                subtitle, 
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f), 
-                fontSize = 11.sp, 
-                lineHeight = 14.sp,
-                fontWeight = FontWeight.Medium
-            )
+            Text(title, fontWeight = FontWeight.Black, fontSize = 18.sp, color = MaterialTheme.colorScheme.onSurface, letterSpacing = (-0.5).sp)
+            Text(subtitle, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f), fontSize = 11.sp, lineHeight = 14.sp, fontWeight = FontWeight.Medium)
         }
     }
 }
 
 @Composable
 fun CategoryItem(title: String, count: Int, icon: ImageVector, color: Color, onClick: () -> Unit) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
-            .border(BorderStroke(0.5.dp, Color.White.copy(alpha = 0.1f)), RoundedCornerShape(20.dp))
-            .clickable { onClick() }
-            .padding(12.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .size(48.dp)
-                .clip(RoundedCornerShape(14.dp))
-                .background(color.copy(alpha = 0.12f))
-                .border(BorderStroke(1.dp, color.copy(alpha = 0.2f)), RoundedCornerShape(14.dp)),
-            contentAlignment = Alignment.Center
-        ) {
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)).border(BorderStroke(0.5.dp, Color.White.copy(alpha = 0.1f)), RoundedCornerShape(20.dp)).clickable { onClick() }.padding(12.dp)) {
+        Box(modifier = Modifier.size(48.dp).clip(RoundedCornerShape(14.dp)).background(color.copy(alpha = 0.12f)).border(BorderStroke(1.dp, color.copy(alpha = 0.2f)), RoundedCornerShape(14.dp)), contentAlignment = Alignment.Center) {
             Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(24.dp))
         }
         Spacer(modifier = Modifier.width(16.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(
-                title, 
-                fontWeight = FontWeight.ExtraBold, 
-                fontSize = 17.sp, 
-                color = MaterialTheme.colorScheme.onSurface,
-                letterSpacing = (-0.3).sp
-            )
-            Text(
-                stringResource(R.string.items_count, count),
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f), 
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Medium
-            )
+            Text(title, fontWeight = FontWeight.ExtraBold, fontSize = 17.sp, color = MaterialTheme.colorScheme.onSurface, letterSpacing = (-0.3).sp)
+            Text(stringResource(R.string.items_count, count), color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f), fontSize = 13.sp, fontWeight = FontWeight.Medium)
         }
-        Icon(
-            Icons.Default.ChevronRight,
-            contentDescription = null, 
-            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
-            modifier = Modifier.size(20.dp)
-        )
+        Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f), modifier = Modifier.size(20.dp))
     }
 }
 
@@ -773,20 +555,10 @@ fun SettingsSection(
     val isFingerprintSupported = remember {
         biometricManager.canAuthenticate(androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG) == androidx.biometric.BiometricManager.BIOMETRIC_SUCCESS
     }
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .verticalScroll(rememberScrollState())
-            .padding(top = 16.dp, bottom = 100.dp), 
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        Text(
-            stringResource(R.string.system_permissions), 
-            style = MaterialTheme.typography.titleSmall, 
-            fontWeight = FontWeight.Bold, 
-            color = MaterialTheme.colorScheme.primary
-        )
-        
+
+    Column(modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(top = 16.dp, bottom = 100.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Text(stringResource(R.string.system_permissions), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+
         PermissionItem(stringResource(R.string.permission_app_detection), stringResource(R.string.permission_app_detection_desc), state.hasUsageStatsPermission, onOpenUsageSettings)
         PermissionItem(stringResource(R.string.permission_lock_window), stringResource(R.string.permission_lock_window_desc), state.hasOverlayPermission, onOpenOverlaySettings)
         PermissionItem(stringResource(R.string.permission_camera), stringResource(R.string.permission_camera_desc), state.hasCameraPermission, onGrantCamera)
@@ -794,327 +566,124 @@ fun SettingsSection(
 
         HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
 
-        Text(
-            stringResource(R.string.lock_options), 
-            style = MaterialTheme.typography.titleSmall, 
-            fontWeight = FontWeight.Bold, 
-            color = MaterialTheme.colorScheme.primary
-        )
+        Text(stringResource(R.string.lock_options), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
 
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-        ) {
+        Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
             Column {
                 Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        Icons.Default.Screenshot,
-                        contentDescription = null,
-                        tint = if (state.isScreenshotRestricted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                    )
+                    Icon(Icons.Default.Screenshot, contentDescription = null, tint = if (state.isScreenshotRestricted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
                     Spacer(Modifier.width(16.dp))
                     Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            stringResource(R.string.screenshot_restriction), 
-                            style = MaterialTheme.typography.bodyLarge, 
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            stringResource(R.string.screenshot_restriction_desc),
-                            style = MaterialTheme.typography.bodySmall, 
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                        )
+                        Text(stringResource(R.string.screenshot_restriction), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(stringResource(R.string.screenshot_restriction_desc), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
                     }
-                    Switch(
-                        checked = state.isScreenshotRestricted,
-                        onCheckedChange = { onToggleScreenshotRestriction() },
-                        colors = SwitchDefaults.colors(
-                            checkedThumbColor = Color.White,
-                            checkedTrackColor = CyberBlue,
-                            uncheckedThumbColor = Color.Gray,
-                            uncheckedTrackColor = Color.Gray.copy(alpha = 0.3f)
-                        )
-                    )
+                    Switch(checked = state.isScreenshotRestricted, onCheckedChange = { onToggleScreenshotRestriction() }, colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = CyberBlue, uncheckedThumbColor = Color.Gray, uncheckedTrackColor = Color.Gray.copy(alpha = 0.3f)))
                 }
 
                 if (isFingerprintSupported) {
                     HorizontalDivider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.1f), modifier = Modifier.padding(horizontal = 16.dp))
-                    
                     Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            Icons.Default.Fingerprint,
-                            contentDescription = null,
-                            tint = if (state.isFingerprintEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                        )
+                        Icon(Icons.Default.Fingerprint, contentDescription = null, tint = if (state.isFingerprintEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
                         Spacer(Modifier.width(16.dp))
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                "Fingerprint Unlock", 
-                                style = MaterialTheme.typography.bodyLarge, 
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Text(
-                                "Use biometric to unlock hidden apps",
-                                style = MaterialTheme.typography.bodySmall, 
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                            )
+                            Text(stringResource(R.string.fingerprint_unlock), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(stringResource(R.string.fingerprint_unlock_desc), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
                         }
-                        Switch(
-                            checked = state.isFingerprintEnabled,
-                            onCheckedChange = { onToggleFingerprint() },
-                            colors = SwitchDefaults.colors(
-                                checkedThumbColor = Color.White,
-                                checkedTrackColor = CyberBlue,
-                                uncheckedThumbColor = Color.Gray,
-                                uncheckedTrackColor = Color.Gray.copy(alpha = 0.3f)
-                            )
-                        )
+                        Switch(checked = state.isFingerprintEnabled, onCheckedChange = { onToggleFingerprint() }, colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = CyberBlue, uncheckedThumbColor = Color.Gray, uncheckedTrackColor = Color.Gray.copy(alpha = 0.3f)))
                     }
                 }
 
                 HorizontalDivider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.1f), modifier = Modifier.padding(horizontal = 16.dp))
-                
                 Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        if (state.isDarkMode) Icons.Default.DarkMode else Icons.Default.LightMode,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
-                    )
+                    Icon(if (state.isDarkMode) Icons.Default.DarkMode else Icons.Default.LightMode, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                     Spacer(Modifier.width(16.dp))
                     Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            stringResource(R.string.dark_mode), 
-                            style = MaterialTheme.typography.bodyLarge, 
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            stringResource(R.string.dark_mode_desc), 
-                            style = MaterialTheme.typography.bodySmall, 
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                        )
+                        Text(stringResource(R.string.dark_mode), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(stringResource(R.string.dark_mode_desc), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
                     }
-                    Switch(
-                        checked = state.isDarkMode,
-                        onCheckedChange = { onToggleDarkMode() },
-                        colors = SwitchDefaults.colors(
-                            checkedThumbColor = Color.White,
-                            checkedTrackColor = CyberBlue,
-                            uncheckedThumbColor = Color.Gray,
-                            uncheckedTrackColor = Color.Gray.copy(alpha = 0.3f)
-                        )
-                    )
+                    Switch(checked = state.isDarkMode, onCheckedChange = { onToggleDarkMode() }, colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = CyberBlue, uncheckedThumbColor = Color.Gray, uncheckedTrackColor = Color.Gray.copy(alpha = 0.3f)))
                 }
 
                 HorizontalDivider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.1f), modifier = Modifier.padding(horizontal = 16.dp))
-
-                Row(
-                    modifier = Modifier
-                        .clickable { onOpenLanguageSelection() }
-                        .padding(16.dp), 
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        Icons.Default.Language,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
-                    )
+                Row(modifier = Modifier.clickable { onOpenLanguageSelection() }.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Language, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                     Spacer(Modifier.width(16.dp))
                     Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            stringResource(R.string.language),
-                            style = MaterialTheme.typography.bodyLarge, 
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        Text(stringResource(R.string.language), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         val currentLang = remember(state.currentLanguage) {
                             com.geovault.model.supportedLanguages.find { it.code == state.currentLanguage }?.nativeName ?: "English"
                         }
-                        Text(
-                            currentLang, 
-                            style = MaterialTheme.typography.bodySmall, 
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                        )
+                        Text(currentLang, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
                     }
-                    
-                    Icon(
-                        Icons.Default.ChevronRight,
-                        contentDescription = null, 
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                    )
+                    Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
                 }
             }
         }
 
         HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
 
-        Text(
-            stringResource(R.string.support_links), 
-            style = MaterialTheme.typography.titleSmall, 
-            fontWeight = FontWeight.Bold, 
-            color = MaterialTheme.colorScheme.primary
-        )
+        Text(stringResource(R.string.support_links), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
 
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-        ) {
+        Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
             Column {
-                SettingsLinkItem(stringResource(R.string.feedback), Icons.Default.Feedback) {
-                    // Handle Feedback
-                }
+                SettingsLinkItem(stringResource(R.string.feedback), Icons.Default.Feedback) { }
                 HorizontalDivider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.1f), modifier = Modifier.padding(horizontal = 16.dp))
-                SettingsLinkItem(stringResource(R.string.faq), Icons.Default.Help) {
-                    // Handle FAQ
-                }
+                SettingsLinkItem(stringResource(R.string.faq), Icons.Default.Help) { }
                 HorizontalDivider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.1f), modifier = Modifier.padding(horizontal = 16.dp))
-                SettingsLinkItem(stringResource(R.string.terms_of_use), Icons.Default.Description) {
-                    // Handle Terms
-                }
+                SettingsLinkItem(stringResource(R.string.terms_of_use), Icons.Default.Description) { }
                 HorizontalDivider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.1f), modifier = Modifier.padding(horizontal = 16.dp))
-                SettingsLinkItem(stringResource(R.string.privacy_policy), Icons.Default.PrivacyTip) {
-                    // Handle Privacy
-                }
+                SettingsLinkItem(stringResource(R.string.privacy_policy), Icons.Default.PrivacyTip) { }
             }
         }
     }
 }
-
-
-
 
 @Composable
 fun PermissionItem(title: String, description: String, granted: Boolean, onClick: () -> Unit) {
-    Card(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-        ),
-        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f))
-    ) {
+    Card(onClick = onClick, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)), border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f))) {
         Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(if (granted) Color(0xFF4CAF50).copy(alpha = 0.1f) else Color(0xFFFF5252).copy(alpha = 0.1f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    if (granted) Icons.Default.CheckCircle else Icons.Default.Info,
-                    contentDescription = null,
-                    tint = if (granted) Color(0xFF4CAF50) else Color(0xFFFF5252),
-                    modifier = Modifier.size(24.dp)
-                )
+            Box(modifier = Modifier.size(40.dp).clip(CircleShape).background(if (granted) Color(0xFF4CAF50).copy(alpha = 0.1f) else Color(0xFFFF5252).copy(alpha = 0.1f)), contentAlignment = Alignment.Center) {
+                Icon(if (granted) Icons.Default.CheckCircle else Icons.Default.Info, contentDescription = null, tint = if (granted) Color(0xFF4CAF50) else Color(0xFFFF5252), modifier = Modifier.size(24.dp))
             }
             Spacer(Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    title, 
-                    style = MaterialTheme.typography.bodyLarge, 
-                    fontWeight = FontWeight.Black,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    description, 
-                    style = MaterialTheme.typography.bodySmall, 
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                    fontWeight = FontWeight.Medium
-                )
+                Text(title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f), fontWeight = FontWeight.Medium)
             }
             if (!granted) {
-                Text(
-                    "GRANT", 
-                    color = Color(0xFFFF5252), 
-                    fontWeight = FontWeight.Black, 
-                    fontSize = 11.sp,
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(Color(0xFFFF5252).copy(alpha = 0.1f))
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
-                )
+                Text(stringResource(R.string.grant), color = Color(0xFFFF5252), fontWeight = FontWeight.Black, fontSize = 11.sp, modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(Color(0xFFFF5252).copy(alpha = 0.1f)).padding(horizontal = 8.dp, vertical = 4.dp))
             }
         }
     }
 }
 
 @Composable
-fun BackupManagementDialog(
-    state: VaultState,
-    onDismiss: () -> Unit,
-    onRemoveVault: (String) -> Unit,
-    onClearAll: () -> Unit
-) {
+fun BackupManagementDialog(state: VaultState, onDismiss: () -> Unit, onRemoveVault: (String) -> Unit, onClearAll: () -> Unit) {
     val context = LocalContext.current
-
     Dialog(onDismissRequest = onDismiss) {
-        Surface(
-            modifier = Modifier.fillMaxWidth().fillMaxHeight(0.85f),
-            shape = RoundedCornerShape(24.dp),
-            color = MaterialTheme.colorScheme.surface,
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
-        ) {
+        Surface(modifier = Modifier.fillMaxWidth().fillMaxHeight(0.85f), shape = RoundedCornerShape(24.dp), color = MaterialTheme.colorScheme.surface, border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))) {
             Column(modifier = Modifier.padding(24.dp)) {
-                Text(
-                    "HISTORY",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Black,
-                    letterSpacing = 2.sp
-                )
-                
+                Text(stringResource(R.string.history_title), style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Black, letterSpacing = 2.sp)
                 Spacer(Modifier.height(16.dp))
-                
-                Button(
-                    onClick = onClearAll,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF5252).copy(alpha = 0.2f)),
-                    border = BorderStroke(1.dp, Color(0xFFFF5252))
-                ) {
+                Button(onClick = onClearAll, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF5252).copy(alpha = 0.2f)), border = BorderStroke(1.dp, Color(0xFFFF5252))) {
                     Icon(Icons.Default.DeleteForever, null, tint = Color(0xFFFF5252))
                     Spacer(Modifier.width(8.dp))
-                    Text("CLEAR ALL HIDDEN APPS", color = Color(0xFFFF5252), fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.clear_all_hidden_apps), color = Color(0xFFFF5252), fontWeight = FontWeight.Bold)
                 }
-                
                 Spacer(Modifier.height(24.dp))
-                
-                Text(
-                    "ACTIVE VAULTS", 
-                    style = MaterialTheme.typography.labelLarge, 
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                
-                // NO LAZYCOLUMN HERE - It causes the intrinsic measurement crash when nested in Dialog with sub-lazy components
+                Text(stringResource(R.string.active_vaults), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+
                 Column(modifier = Modifier.weight(1f).verticalScroll(rememberScrollState())) {
                     state.vaults.forEach { vault ->
                         Box(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        "Vault ${vault.id.take(8)}", 
-                                        color = MaterialTheme.colorScheme.onSurface, 
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                    Text(
-                                        "${vault.hiddenApps.size} apps locked", 
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant, 
-                                        fontSize = 11.sp
-                                    )
+                                    Text(stringResource(R.string.vault_id_label, vault.id.take(8)), color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+                                    Text(stringResource(R.string.apps_locked, vault.hiddenApps.size), color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 11.sp)
                                     Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Text(
-                                            "(${String.format("%.4f", vault.location.latitude)}, ${String.format("%.4f", vault.location.longitude)})", 
-                                            color = MaterialTheme.colorScheme.primary, 
-                                            fontSize = 10.sp
-                                        )
+                                        Text("(${String.format("%.4f", vault.location.latitude)}, ${String.format("%.4f", vault.location.longitude)})", color = MaterialTheme.colorScheme.primary, fontSize = 10.sp)
                                         Spacer(Modifier.width(8.dp))
-                                        IconButton(
-                                            onClick = { copyToClipboard(context, vault.location.latitude, vault.location.longitude) },
-                                            modifier = Modifier.size(24.dp)
-                                        ) {
+                                        IconButton(onClick = { copyToClipboard(context, vault.location.latitude, vault.location.longitude) }, modifier = Modifier.size(24.dp)) {
                                             Icon(Icons.Default.ContentCopy, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(14.dp))
                                         }
                                     }
@@ -1126,100 +695,53 @@ fun BackupManagementDialog(
                         }
                         HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f))
                     }
-                    
+
                     if (state.vaultHistory.isNotEmpty()) {
                         Spacer(Modifier.height(16.dp))
-                        Text(
-                            "HISTORY", 
-                            style = MaterialTheme.typography.labelLarge, 
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        
+                        Text(stringResource(R.string.history_title), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         state.vaultHistory.forEach { hist ->
                             Box(modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp)) {
                                 Column {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Text(
-                                            "Vault Established", 
-                                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f), 
-                                            fontWeight = FontWeight.SemiBold
-                                        )
+                                        Text(stringResource(R.string.vault_established), color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f), fontWeight = FontWeight.SemiBold)
                                         Spacer(Modifier.weight(1f))
-                                        Text(
-                                            java.text.SimpleDateFormat("MMM dd, HH:mm", java.util.Locale.getDefault()).format(hist.timestamp),
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            fontSize = 10.sp
-                                        )
+                                        Text(java.text.SimpleDateFormat("MMM dd, HH:mm", LocalLocale.current.platformLocale).format(hist.timestamp), color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 10.sp)
                                         Spacer(Modifier.width(8.dp))
-                                        IconButton(
-                                            onClick = { copyToClipboard(context, hist.location.latitude, hist.location.longitude) },
-                                            modifier = Modifier.size(28.dp)
-                                        ) {
+                                        IconButton(onClick = { copyToClipboard(context, hist.location.latitude, hist.location.longitude) }, modifier = Modifier.size(28.dp)) {
                                             Icon(Icons.Default.Map, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
                                         }
                                     }
                                     Spacer(Modifier.height(4.dp))
-                                    Text(
-                                        "${hist.appsCount} apps hidden:", 
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant, 
-                                        fontSize = 11.sp
-                                    )
+                                    Text(stringResource(R.string.apps_hidden, hist.appsCount), color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 11.sp)
                                     Spacer(Modifier.height(4.dp))
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                    ) {
-                                        hist.hiddenAppPackages.forEach { pkg ->
-                                            AppMiniIcon(pkg)
-                                        }
+                                    Row(modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        hist.hiddenAppPackages.forEach { pkg -> AppMiniIcon(pkg) }
                                     }
                                     Spacer(Modifier.height(4.dp))
-                                    Text(
-                                        "Lat: ${hist.location.latitude}, Lon: ${hist.location.longitude}", 
-                                        color = MaterialTheme.colorScheme.primary, 
-                                        fontSize = 9.sp
-                                    )
+                                    Text("Lat: ${hist.location.latitude}, Lon: ${hist.location.longitude}", color = MaterialTheme.colorScheme.primary, fontSize = 9.sp)
                                 }
                             }
                             HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.05f))
                         }
                     }
                 }
-                
+
                 Spacer(Modifier.height(16.dp))
-                
                 TextButton(onClick = onDismiss, modifier = Modifier.align(Alignment.End)) {
-                    Text("CLOSE", color = MaterialTheme.colorScheme.primary)
+                    Text(stringResource(R.string.close), color = MaterialTheme.colorScheme.primary)
                 }
             }
         }
     }
 }
 
-
 @Composable
 fun SettingsLinkItem(text: String, icon: ImageVector, onClick: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() }
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
+    Row(modifier = Modifier.fillMaxWidth().clickable { onClick() }.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
         Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
         Spacer(Modifier.width(16.dp))
-        Text(
-            text,
-            modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Icon(
-            Icons.Default.OpenInNew,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f),
-            modifier = Modifier.size(18.dp)
-        )
+        Text(text, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Icon(Icons.Default.OpenInNew, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f), modifier = Modifier.size(18.dp))
     }
 }
 
@@ -1228,22 +750,10 @@ fun AppMiniIcon(packageName: String) {
     val context = LocalContext.current
     val pm = context.packageManager
     val icon = remember(packageName) {
-        try {
-            pm.getApplicationIcon(packageName).toBitmap().asImageBitmap()
-        } catch (e: Exception) {
-            null
-        }
+        try { pm.getApplicationIcon(packageName).toBitmap().asImageBitmap() } catch (e: Exception) { null }
     }
-    
     if (icon != null) {
-        Image(
-            bitmap = icon,
-            contentDescription = null,
-            modifier = Modifier
-                .size(24.dp)
-                .clip(CircleShape)
-                .background(Color.White.copy(alpha = 0.1f))
-        )
+        Image(bitmap = icon, contentDescription = null, modifier = Modifier.size(24.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.1f)))
     }
 }
 

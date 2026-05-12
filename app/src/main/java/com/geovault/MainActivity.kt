@@ -25,6 +25,7 @@ import com.geovault.ui.VaultViewModel
 import com.geovault.ui.OnboardingScreen
 import com.geovault.ui.PermissionScreen
 import com.geovault.ui.IntroScreen
+import com.geovault.ui.StartupLangScreen
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -154,9 +155,11 @@ class MainActivity : AppCompatActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
+                    var showLanguageSelection by remember { mutableStateOf(uiState.isFirstRun) }
                     AnimatedContent(
                         targetState = when {
                             showSplash -> "intro"
+                            showLanguageSelection -> "language"
                             uiState.isFirstRun -> "onboarding"
                             !uiState.hasUsageStatsPermission || !uiState.hasOverlayPermission || !uiState.hasLocationPermission || !uiState.hasBatteryOptimizationPermission -> "permissions"
                             else -> "vault"
@@ -174,6 +177,14 @@ class MainActivity : AppCompatActivity() {
                     ) { target ->
                         when (target) {
                             "intro" -> IntroScreen()
+                            "language" -> {
+                                StartupLangScreen(
+                                    onLanguageSelected = { languageCode ->
+                                        viewModel.setLanguage(languageCode)
+                                        showLanguageSelection = false
+                                    }
+                                )
+                            }
                             "onboarding" -> {
                                 OnboardingScreen(onFinished = { viewModel.completeOnboarding() })
                             }

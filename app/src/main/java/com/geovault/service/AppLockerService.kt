@@ -32,7 +32,7 @@ import androidx.savedstate.SavedStateRegistryController
 import androidx.savedstate.SavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import com.geovault.security.IntruderManager
-import com.geovault.ui.AuthSelectionScreen
+import com.geovault.ui.AuthUI
 import com.geovault.ui.theme.CyberBlack
 import com.geovault.ui.theme.GeoVaultTheme
 import kotlinx.coroutines.*

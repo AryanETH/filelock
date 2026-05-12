@@ -31,6 +31,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -48,6 +49,7 @@ import com.geovault.ui.getCenterForIndex
 import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import com.geovault.R
 import com.geovault.map.MapStyleHelper
 import com.geovault.model.AppInfo
 import com.geovault.model.GeoPoint
@@ -78,10 +80,10 @@ fun MapSelectionScreen(
     var showSetupDialog by remember { mutableStateOf(false) }
     var selectedVaultId by remember { mutableStateOf<String?>(null) }
     var selectedLatLng by remember { mutableStateOf<LatLng?>(null) }
-    
+
     val isDarkTheme = state.isDarkMode
     var isSatelliteMode by remember { mutableStateOf(state.isSatelliteMode) }
-    
+
     val currentStyleUrl = remember(isSatelliteMode, isDarkTheme) {
         if (isSatelliteMode) {
             MapStyleHelper.getSatelliteStyle(isHybrid = true)
@@ -89,12 +91,13 @@ fun MapSelectionScreen(
             if (isDarkTheme) MapStyleHelper.DARK else MapStyleHelper.BRIGHT
         }
     }
-    
+
     LaunchedEffect(currentStyleUrl) {
         mapLibreMap?.setStyle(currentStyleUrl)
     }
 
     val mapView = remember { MapView(context) }
+    val zoomInHint = stringResource(R.string.zoom_in_hint)
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -129,15 +132,14 @@ fun MapSelectionScreen(
                         getMapAsync { map ->
                             mapLibreMap = map
                             map.setStyle(currentStyleUrl)
-                            
+
                             map.addOnMapLongClickListener { point ->
                                 if (map.cameraPosition.zoom < 16.0) {
-                                    android.widget.Toast.makeText(context, "Zoom in closer to set vault (100m scale)", android.widget.Toast.LENGTH_SHORT).show()
+                                    android.widget.Toast.makeText(context, zoomInHint, android.widget.Toast.LENGTH_SHORT).show()
                                     return@addOnMapLongClickListener true
                                 }
                                 selectedLatLng = point
                                 map.clear()
-                                // Removed: markers are no longer shown for stealth
                                 showSetupDialog = true
                                 true
                             }
@@ -151,11 +153,9 @@ fun MapSelectionScreen(
                                 }
                                 true
                             }
-                            
+
                             map.clear()
-                            // Removed: vault markers are hidden for "perfect hide"
-                            
-                            // Hide MapLibre UI for stealth/minimalism
+
                             map.uiSettings.isLogoEnabled = false
                             map.uiSettings.isAttributionEnabled = false
                         }
@@ -173,7 +173,7 @@ fun MapSelectionScreen(
                     drawLine(Color.Cyan, start = androidx.compose.ui.geometry.Offset(0f, y.toFloat()), end = androidx.compose.ui.geometry.Offset(size.width, y.toFloat()))
                 }
             }
-            
+
             // Style Selector (Floating)
             Column(
                 modifier = Modifier.align(Alignment.TopEnd).padding(16.dp),
@@ -262,14 +262,14 @@ fun SecurityStatusPanel(isNear: Boolean, modifier: Modifier = Modifier) {
             Spacer(Modifier.width(16.dp))
             Column {
                 Text(
-                    if (isNear) "ACCESS GRANTED" else "ZONE RESTRICTED",
+                    stringResource(if (isNear) R.string.access_granted else R.string.zone_restricted),
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Black,
                     letterSpacing = 2.sp,
                     color = if (isNear) CyberNeonGreen else CyberNeonRed
                 )
                 Text(
-                    if (isNear) "Double-tap radar to bypass security" else "Move to secure coordinates to unlock",
+                    stringResource(if (isNear) R.string.access_granted_desc else R.string.zone_restricted_desc),
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.White.copy(alpha = 0.6f)
                 )
@@ -316,14 +316,14 @@ fun CyberSetupOverlay() {
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                "SYSTEM INITIALIZATION",
+                stringResource(R.string.system_initialization),
                 style = MaterialTheme.typography.labelLarge,
                 color = CyberBlue,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 3.sp
             )
             Text(
-                "Long-press target area to establish vault zone",
+                stringResource(R.string.system_initialization_desc),
                 style = MaterialTheme.typography.bodySmall,
                 color = Color.White.copy(alpha = 0.5f)
             )
@@ -345,25 +345,25 @@ fun CyberSetupDialog(apps: List<AppInfo>, onDismiss: () -> Unit, onConfirm: (Str
             border = BorderStroke(1.dp, CyberBlue.copy(alpha = 0.3f))
         ) {
             Column(modifier = Modifier.padding(24.dp)) {
-                Text("VAULT ENCRYPTION", style = MaterialTheme.typography.headlineSmall, color = CyberBlue, fontWeight = FontWeight.Black)
-                
+                Text(stringResource(R.string.vault_encryption), style = MaterialTheme.typography.headlineSmall, color = CyberBlue, fontWeight = FontWeight.Black)
+
                 Spacer(Modifier.height(16.dp))
-                
+
                 Row(modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    LockTypeButton("PIN", lockType == LockType.PIN) { 
-                        lockType = LockType.PIN 
-                        pin = "" 
-                    }
-                    LockTypeButton("PATTERN", lockType == LockType.PATTERN) { 
-                        lockType = LockType.PATTERN 
+                    LockTypeButton(stringResource(R.string.lock_type_pin), lockType == LockType.PIN) {
+                        lockType = LockType.PIN
                         pin = ""
                     }
-                    LockTypeButton("BIO", lockType == LockType.FINGERPRINT) { lockType = LockType.FINGERPRINT }
-                    LockTypeButton("MAP", lockType == LockType.MAP) { lockType = LockType.MAP }
+                    LockTypeButton(stringResource(R.string.lock_type_pattern), lockType == LockType.PATTERN) {
+                        lockType = LockType.PATTERN
+                        pin = ""
+                    }
+                    LockTypeButton(stringResource(R.string.lock_type_bio), lockType == LockType.FINGERPRINT) { lockType = LockType.FINGERPRINT }
+                    LockTypeButton(stringResource(R.string.lock_type_map), lockType == LockType.MAP) { lockType = LockType.MAP }
                 }
 
                 Spacer(Modifier.height(16.dp))
-                
+
                 Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                     when (lockType) {
                         LockType.PIN -> {
@@ -373,19 +373,19 @@ fun CyberSetupDialog(apps: List<AppInfo>, onDismiss: () -> Unit, onConfirm: (Str
                             CompactPatternGrid(onPatternComplete = { pin = it })
                         }
                         LockType.FINGERPRINT -> {
-                            Text("Biometric required on unlock", color = CyberBlue)
+                            Text(stringResource(R.string.biometric_required), color = CyberBlue)
                             pin = "BIO"
                         }
                         LockType.MAP -> {
-                            Text("Map location set by long-press", color = CyberBlue)
+                            Text(stringResource(R.string.map_location_hint), color = CyberBlue)
                             pin = "MAP"
                         }
                     }
                 }
-                
+
                 Spacer(Modifier.height(16.dp))
-                Text("PACKAGE VISIBILITY", style = MaterialTheme.typography.titleSmall)
-                
+                Text(stringResource(R.string.package_visibility), style = MaterialTheme.typography.titleSmall)
+
                 LazyColumn(modifier = Modifier.weight(1f)) {
                     items(apps) { app ->
                         ListItem(
@@ -407,13 +407,13 @@ fun CyberSetupDialog(apps: List<AppInfo>, onDismiss: () -> Unit, onConfirm: (Str
                         )
                     }
                 }
-                
+
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                    TextButton(onClick = onDismiss) { Text("ABORT") }
+                    TextButton(onClick = onDismiss) { Text(stringResource(R.string.abort)) }
                     Button(
                         onClick = { onConfirm(pin, selectedApps.value, lockType) },
                         enabled = pin.isNotEmpty() && selectedApps.value.isNotEmpty()
-                    ) { Text("INITIALIZE") }
+                    ) { Text(stringResource(R.string.initialize)) }
                 }
             }
         }
@@ -446,9 +446,9 @@ fun CyberUnlockDialog(lockType: LockType, onDismiss: () -> Unit, onConfirm: (Str
             color = CyberDarkBlue
         ) {
             Column(modifier = Modifier.padding(32.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("BYPASS SECURITY", style = MaterialTheme.typography.titleMedium, color = Color.White)
+                Text(stringResource(R.string.bypass_security), style = MaterialTheme.typography.titleMedium, color = Color.White)
                 Spacer(Modifier.height(24.dp))
-                
+
                 when (lockType) {
                     LockType.PIN -> {
                         CompactPinPad(onPinComplete = { onConfirm(it) })
@@ -463,22 +463,20 @@ fun CyberUnlockDialog(lockType: LockType, onDismiss: () -> Unit, onConfirm: (Str
                         ) {
                             Icon(Icons.Default.Fingerprint, null, tint = CyberBlue, modifier = Modifier.size(32.dp))
                         }
-                        Text("Use Fingerprint", color = CyberBlue, style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(top = 8.dp))
+                        Text(stringResource(R.string.use_fingerprint), color = CyberBlue, style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(top = 8.dp))
                     }
                     LockType.MAP -> {
-                        Text("Tap target on map to unlock", color = Color.Gray, textAlign = TextAlign.Center)
+                        Text(stringResource(R.string.tap_map_to_unlock), color = Color.Gray, textAlign = TextAlign.Center)
                         Spacer(Modifier.height(16.dp))
                         Button(onClick = { onConfirm("MAP") }) {
-                            Text("OPEN MAP INTERFACE")
+                            Text(stringResource(R.string.open_map_interface))
                         }
                     }
                 }
-                
+
                 Spacer(Modifier.height(24.dp))
-                TextButton(onClick = onDismiss) { Text("CANCEL", color = Color.Gray) }
+                TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel), color = Color.Gray) }
             }
         }
     }
 }
-
-
