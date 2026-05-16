@@ -15,11 +15,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.res.stringResource
 import com.geovault.R
 import com.geovault.ui.theme.CyberBlack
 import com.geovault.ui.theme.CyberBlue
@@ -28,33 +28,39 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun OnboardingScreen(onFinished: () -> Unit) {
+
     val slides = listOf(
         OnboardingSlide(
-            stringResource(R.string.onboarding_1_title),
-            stringResource(R.string.onboarding_1_desc),
-            CyberBlue
+            title = stringResource(R.string.onboarding_1_title),
+            description = stringResource(R.string.onboarding_1_desc),
+            color = CyberBlue
         ),
         OnboardingSlide(
-            stringResource(R.string.onboarding_2_title),
-            stringResource(R.string.onboarding_2_desc),
-            Color(0xFF00E676)
+            title = stringResource(R.string.onboarding_2_title),
+            description = stringResource(R.string.onboarding_2_desc),
+            color = Color(0xFF00E676)
         ),
         OnboardingSlide(
-            stringResource(R.string.onboarding_3_title),
-            stringResource(R.string.onboarding_3_desc),
-            Color(0xFFFFC107)
+            title = stringResource(R.string.onboarding_3_title),
+            description = stringResource(R.string.onboarding_3_desc),
+            color = Color(0xFFFFC107)
         ),
         OnboardingSlide(
-            stringResource(R.string.onboarding_4_title),
-            stringResource(R.string.onboarding_4_desc),
-            Color(0xFFFF5252)
+            title = stringResource(R.string.onboarding_4_title),
+            description = stringResource(R.string.onboarding_4_desc),
+            color = Color(0xFFFF5252)
         )
     )
 
     val pagerState = rememberPagerState(pageCount = { slides.size })
     val scope = rememberCoroutineScope()
 
-    Box(modifier = Modifier.fillMaxSize().background(CyberBlack)) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(CyberBlack)
+    ) {
+
         HorizontalPager(
             state = pagerState,
             modifier = Modifier.fillMaxSize()
@@ -64,22 +70,36 @@ fun OnboardingScreen(onFinished: () -> Unit) {
 
         // Bottom Controls
         Column(
-            modifier = Modifier.align(Alignment.BottomCenter).padding(32.dp),
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(32.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+
             // Indicators
             Row(
-                Modifier.height(8.dp).fillMaxWidth(),
+                modifier = Modifier
+                    .height(8.dp)
+                    .fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
             ) {
                 repeat(slides.size) { iteration ->
-                    val color = if (pagerState.currentPage == iteration) CyberBlue else Color.Gray.copy(alpha = 0.3f)
+
+                    val color =
+                        if (pagerState.currentPage == iteration)
+                            CyberBlue
+                        else
+                            Color.Gray.copy(alpha = 0.3f)
+
                     Box(
                         modifier = Modifier
                             .padding(horizontal = 4.dp)
                             .clip(CircleShape)
                             .background(color)
-                            .size(if (pagerState.currentPage == iteration) 24.dp else 8.dp, 8.dp)
+                            .size(
+                                width = if (pagerState.currentPage == iteration) 24.dp else 8.dp,
+                                height = 8.dp
+                            )
                     )
                 }
             }
@@ -89,22 +109,41 @@ fun OnboardingScreen(onFinished: () -> Unit) {
             Button(
                 onClick = {
                     if (pagerState.currentPage < slides.size - 1) {
-                        scope.launch { pagerState.animateScrollToPage(pagerState.currentPage + 1) }
+                        scope.launch {
+                            pagerState.animateScrollToPage(
+                                pagerState.currentPage + 1
+                            )
+                        }
                     } else {
                         onFinished()
                     }
                 },
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = CyberBlue),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = CyberBlue
+                ),
                 shape = CircleShape
             ) {
+
                 Text(
-                    if (pagerState.currentPage == slides.size - 1) stringResource(R.string.initialize_system) else stringResource(R.string.next),
+                    text =
+                        if (pagerState.currentPage == slides.size - 1)
+                            stringResource(R.string.initialize_system)
+                        else
+                            stringResource(R.string.next),
                     color = Color.Black,
                     fontWeight = FontWeight.Bold
                 )
+
                 if (pagerState.currentPage < slides.size - 1) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowForward, null, tint = Color.Black, modifier = Modifier.padding(start = 8.dp))
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = stringResource(R.string.next),
+                        tint = Color.Black,
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
                 }
             }
         }
@@ -113,29 +152,44 @@ fun OnboardingScreen(onFinished: () -> Unit) {
 
 @Composable
 fun OnboardingSlideContent(slide: OnboardingSlide) {
+
     Column(
-        modifier = Modifier.fillMaxSize().padding(32.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+
         Box(
             modifier = Modifier
                 .size(200.dp)
                 .background(
-                    Brush.radialGradient(listOf(slide.color.copy(alpha = 0.2f), Color.Transparent)),
-                    CircleShape
+                    brush = Brush.radialGradient(
+                        listOf(
+                            slide.color.copy(alpha = 0.2f),
+                            Color.Transparent
+                        )
+                    ),
+                    shape = CircleShape
                 ),
             contentAlignment = Alignment.Center
         ) {
+
             Surface(
                 modifier = Modifier.size(120.dp),
                 shape = CircleShape,
                 color = CyberDarkBlue,
-                border = androidx.compose.foundation.BorderStroke(2.dp, slide.color)
+                border = androidx.compose.foundation.BorderStroke(
+                    2.dp,
+                    slide.color
+                )
             ) {
+
                 Box(contentAlignment = Alignment.Center) {
+
                     Text(
-                        slide.title.take(1),
+                        text = slide.title.take(1),
                         fontSize = 64.sp,
                         fontWeight = FontWeight.Black,
                         color = slide.color
@@ -147,7 +201,7 @@ fun OnboardingSlideContent(slide: OnboardingSlide) {
         Spacer(modifier = Modifier.height(48.dp))
 
         Text(
-            slide.title,
+            text = slide.title,
             style = MaterialTheme.typography.headlineLarge,
             fontWeight = FontWeight.Black,
             color = Color.White,
@@ -157,7 +211,7 @@ fun OnboardingSlideContent(slide: OnboardingSlide) {
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            slide.description,
+            text = slide.description,
             style = MaterialTheme.typography.bodyLarge,
             color = Color.Gray,
             textAlign = TextAlign.Center,
@@ -166,4 +220,8 @@ fun OnboardingSlideContent(slide: OnboardingSlide) {
     }
 }
 
-data class OnboardingSlide(val title: String, val description: String, val color: Color)
+data class OnboardingSlide(
+    val title: String,
+    val description: String,
+    val color: Color
+)

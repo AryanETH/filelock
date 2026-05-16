@@ -41,13 +41,13 @@ data class TourStep(
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun AppTourOverlay(
+fun AppTour(
     steps: List<TourStep>,
     onCompleted: () -> Unit
 ) {
     var currentStepIdx by remember { mutableIntStateOf(0) }
     val currentStep = steps[currentStepIdx]
-    
+
     val infiniteTransition = rememberInfiniteTransition(label = "HolePulse")
     val pulseScale by infiniteTransition.animateFloat(
         initialValue = 1f,
@@ -76,10 +76,10 @@ fun AppTourOverlay(
         Canvas(modifier = Modifier.fillMaxSize()) {
             with(drawContext.canvas.nativeCanvas) {
                 val checkPoint = saveLayer(null, null)
-                
+
                 // Draw dark overlay
                 drawRect(Color.Black.copy(alpha = 0.85f))
-                
+
                 if (animatedRect != Rect.Zero) {
                     val padding = 20.dp.toPx()
                     val holeRect = Rect(
@@ -88,7 +88,7 @@ fun AppTourOverlay(
                         right = animatedRect.right + padding,
                         bottom = animatedRect.bottom + padding
                     )
-                    
+
                     val center = holeRect.center
                     val size = holeRect.size * pulseScale
 
@@ -100,7 +100,7 @@ fun AppTourOverlay(
                         blendMode = BlendMode.Clear
                     )
                 }
-                
+
                 restoreToCount(checkPoint)
             }
         }
@@ -118,9 +118,9 @@ fun AppTourOverlay(
             val step = steps[stepIdx]
             val configuration = LocalConfiguration.current
             val screenHeight = configuration.screenHeightDp.dp
-            
-            val isTargetInBottomHalf = step.targetRect?.let { 
-                it.center.y > (configuration.screenHeightDp * 2).toFloat() // simplistic check
+
+            val isTargetInBottomHalf = step.targetRect?.let {
+                it.center.y > (configuration.screenHeightDp * 2).toFloat()
             } ?: false
 
             Box(modifier = Modifier.fillMaxSize()) {
@@ -149,9 +149,9 @@ fun AppTourOverlay(
                             )
                         }
                     }
-                    
+
                     Spacer(modifier = Modifier.height(24.dp))
-                    
+
                     Text(
                         text = stringResource(step.textResId),
                         style = MaterialTheme.typography.titleMedium,
@@ -160,9 +160,9 @@ fun AppTourOverlay(
                         fontWeight = FontWeight.Bold,
                         lineHeight = 28.sp
                     )
-                    
+
                     Spacer(modifier = Modifier.height(32.dp))
-                    
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -171,7 +171,7 @@ fun AppTourOverlay(
                         TextButton(onClick = onCompleted) {
                             Text(stringResource(R.string.tour_skip), color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.SemiBold)
                         }
-                        
+
                         Button(
                             onClick = {
                                 if (currentStepIdx < steps.size - 1) {
@@ -186,7 +186,7 @@ fun AppTourOverlay(
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
-                                    if (currentStepIdx < steps.size - 1) stringResource(R.string.tour_next) else "GET STARTED",
+                                    if (currentStepIdx < steps.size - 1) stringResource(R.string.tour_next) else stringResource(R.string.get_started),
                                     color = Color.Black,
                                     fontWeight = FontWeight.Black,
                                     letterSpacing = 1.sp

@@ -30,7 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.geovault.ui.theme.GeoVaultTheme
 import com.geovault.ui.theme.CyberBlack
-import com.geovault.ui.AuthSelectionScreen
+import com.geovault.ui.AuthUI
 import com.geovault.security.IntruderManager
 import android.content.Context
 import android.content.Intent
@@ -111,7 +111,7 @@ class LockActivity : AppCompatActivity() {
                         }
                     }
 
-                    AuthSelectionScreen(
+                    AuthUI(
                         context = this,
                         targetPackage = targetPackage,
                         autoRequestBiometric = requestBiometric,

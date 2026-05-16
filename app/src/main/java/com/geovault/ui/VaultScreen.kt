@@ -633,7 +633,7 @@ fun VaultScreen(
                     }
 
                     if (state.showTour) {
-                        AppTourOverlay(
+                        AppTour(
                             steps = listOf(
                                 TourStep(R.string.tour_welcome),
                                 TourStep(R.string.tour_step1),

@@ -33,13 +33,14 @@ fun LanguageSelectionScreen(
     onBack: () -> Unit
 ) {
     var searchQuery by remember { mutableStateOf("") }
+
     val filteredLanguages = remember(searchQuery) {
         if (searchQuery.isEmpty()) {
             supportedLanguages
         } else {
             supportedLanguages.filter {
                 it.name.contains(searchQuery, ignoreCase = true) ||
-                it.nativeName.contains(searchQuery, ignoreCase = true)
+                        it.nativeName.contains(searchQuery, ignoreCase = true)
             }
         }
     }
@@ -49,6 +50,7 @@ fun LanguageSelectionScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
+
         TopAppBar(
             title = {
                 Text(
@@ -57,32 +59,62 @@ fun LanguageSelectionScreen(
                     color = CyberBlue
                 )
             },
+
             navigationIcon = {
                 IconButton(onClick = onBack) {
-                    Icon(Icons.Default.Close, contentDescription = "Close")
+                    Icon(
+                        Icons.Default.Close,
+                        contentDescription = stringResource(R.string.close)
+                    )
                 }
             },
-            colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
+
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = Color.Transparent
+            )
         )
 
-        // Search Bar
         OutlinedTextField(
             value = searchQuery,
-            onValueChange = { searchQuery = it },
+
+            onValueChange = {
+                searchQuery = it
+            },
+
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            placeholder = { Text(stringResource(R.string.search_languages)) },
-            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+
+            placeholder = {
+                Text(stringResource(R.string.search_languages))
+            },
+
+            leadingIcon = {
+                Icon(
+                    Icons.Default.Search,
+                    contentDescription = null
+                )
+            },
+
             trailingIcon = {
                 if (searchQuery.isNotEmpty()) {
-                    IconButton(onClick = { searchQuery = "" }) {
-                        Icon(Icons.Default.Close, contentDescription = null)
+                    IconButton(
+                        onClick = {
+                            searchQuery = ""
+                        }
+                    ) {
+                        Icon(
+                            Icons.Default.Close,
+                            contentDescription = stringResource(R.string.close)
+                        )
                     }
                 }
             },
+
             shape = RoundedCornerShape(12.dp),
+
             singleLine = true,
+
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = CyberBlue,
                 unfocusedBorderColor = MaterialTheme.colorScheme.outline
@@ -93,14 +125,20 @@ fun LanguageSelectionScreen(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(bottom = 16.dp)
         ) {
+
             items(filteredLanguages) { language ->
+
                 LanguageItem(
                     language = language,
                     isSelected = language.code == currentLanguageCode,
-                    onClick = { onLanguageSelected(language.code) }
+                    onClick = {
+                        onLanguageSelected(language.code)
+                    }
                 )
+
                 HorizontalDivider(
                     modifier = Modifier.padding(horizontal = 16.dp),
+
                     color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
                 )
             }
@@ -114,32 +152,61 @@ fun LanguageItem(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() }
-            .padding(vertical = 16.dp, horizontal = 24.dp),
+            .clickable {
+                onClick()
+            }
+            .padding(
+                vertical = 16.dp,
+                horizontal = 24.dp
+            ),
+
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(modifier = Modifier.weight(1f)) {
+
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
+
             Text(
                 text = language.name,
+
                 fontSize = 16.sp,
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                color = if (isSelected) CyberBlue else MaterialTheme.colorScheme.onSurface
+
+                fontWeight = if (isSelected) {
+                    FontWeight.Bold
+                } else {
+                    FontWeight.Medium
+                },
+
+                color = if (isSelected) {
+                    CyberBlue
+                } else {
+                    MaterialTheme.colorScheme.onSurface
+                }
             )
+
             Text(
                 text = language.nativeName,
+
                 fontSize = 14.sp,
+
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
 
         if (isSelected) {
+
             Icon(
                 imageVector = Icons.Default.Check,
-                contentDescription = "Selected",
+
+                contentDescription = stringResource(R.string.selected),
+
                 tint = CyberBlue,
+
                 modifier = Modifier.size(24.dp)
             )
         }
