@@ -7,6 +7,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.compose.BackHandler
 import androidx.compose.ui.draw.rotate
 import androidx.compose.material.icons.filled.Explore
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -34,6 +35,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -59,6 +61,7 @@ import com.geovault.ui.theme.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.withContext
 import org.maplibre.android.MapLibre
 import org.maplibre.android.camera.CameraUpdateFactory
@@ -75,6 +78,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.draw.blur
 import androidx.biometric.BiometricManager
 import android.widget.Toast
+import androidx.media3.common.util.UnstableApi
 import com.geovault.security.IntruderManager
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -82,10 +86,12 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import android.view.HapticFeedbackConstants
 import androidx.compose.animation.core.AnimationVector1D
 
+@OptIn(UnstableApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun VaultScreen(
     state: VaultState,
     onUnlockAttempt: (Double, Double, String) -> Unit,
+    onIntruderCaptured: (android.net.Uri, String?) -> Unit,
     onSaveConfig: (GeoPoint, String, Set<String>, LockType, Float) -> Unit,
     onLockClick: () -> Unit,
     onAppClick: (String) -> Unit,
@@ -101,14 +107,20 @@ fun VaultScreen(
     onClearAllVaults: () -> Unit,
     onGrantCamera: () -> Unit,
     onGrantStorage: () -> Unit,
+    onGrantFullStorage: () -> Unit,
     onDeleteFile: (String) -> Unit,
     onRestoreFile: (String) -> Unit,
+    onFetchGalleryItems: (com.geovault.model.FileCategory) -> Unit,
     onToggleDarkMode: () -> Unit,
     onToggleFingerprint: () -> Unit,
     onToggleSatellite: () -> Unit,
     onSetLanguage: (String) -> Unit,
     onCompleteTour: () -> Unit,
-    onToggleScreenshotRestriction: () -> Unit
+    onToggleScreenshotRestriction: () -> Unit,
+    onCreateFolder: (String) -> Unit = {},
+    onAddFilesToFolder: (List<android.net.Uri>, String) -> Unit = { _, _ -> },
+    onStartAction: () -> Unit = {},
+    onEndAction: () -> Unit = {}
 ) {
     val currentVaults by rememberUpdatedState(state.vaults)
     val currentInstalledApps by rememberUpdatedState(state.installedApps)
@@ -118,12 +130,14 @@ fun VaultScreen(
     var showSetupDialog by remember { mutableStateOf(false) }
     var setupLatLng by remember { mutableStateOf<LatLng?>(null) }
     var isNativeEligible by remember { mutableStateOf(false) }
+    val isDark = state.isDarkMode
     
-    val currentStyleUrl = remember(state.isSatelliteMode, state.isDarkMode) {
+    val currentStyleUrl = remember(state.isSatelliteMode) {
         if (state.isSatelliteMode) {
             MapStyleHelper.getSatelliteStyle(isHybrid = true)
         } else {
-            if (state.isDarkMode) MapStyleHelper.DARK else MapStyleHelper.BRIGHT
+            // Force bright style even in dark mode for creamy feel
+            MapStyleHelper.BRIGHT
         }
     }
 
@@ -143,7 +157,7 @@ fun VaultScreen(
     // Search suggestions logic
     LaunchedEffect(searchQuery) {
         if (searchQuery.length > 2) {
-            delay(500) // Debounce
+            delay(200) // Reduced debounce for faster live suggestions
             if (state.isNetworkAvailable) {
                 searchSuggestions = getSearchSuggestions(searchQuery)
             } else {
@@ -156,6 +170,10 @@ fun VaultScreen(
 
     // Dynamic Gyro Rotation
     var isCenteredOnUser by remember { mutableStateOf(false) }
+    
+    val sensorManager = remember { context.getSystemService(android.content.Context.SENSOR_SERVICE) as android.hardware.SensorManager }
+    val rotationSensor = remember { sensorManager.getDefaultSensor(android.hardware.Sensor.TYPE_ROTATION_VECTOR) }
+    
     LaunchedEffect(isCenteredOnUser) {
         mapLibreMap?.let { map ->
             if (isCenteredOnUser) {
@@ -184,6 +202,7 @@ fun VaultScreen(
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
+        onEndAction()
         if (permissions[android.Manifest.permission.ACCESS_FINE_LOCATION] == true) {
             // Permission granted, will be reflected in state
         }
@@ -333,7 +352,14 @@ fun VaultScreen(
                                         try {
                                             val locationComponent = map.locationComponent
                                             locationComponent.activateLocationComponent(
-                                                org.maplibre.android.location.LocationComponentActivationOptions.builder(ctx, style).build()
+                                                org.maplibre.android.location.LocationComponentActivationOptions.builder(ctx, style)
+                                                    .locationComponentOptions(
+                                                        org.maplibre.android.location.LocationComponentOptions.builder(ctx)
+                                                            .compassAnimationEnabled(true)
+                                                            .accuracyAlpha(0.2f)
+                                                            .build()
+                                                    )
+                                                    .build()
                                             )
                                             locationComponent.isLocationComponentEnabled = true
                                             
@@ -388,7 +414,8 @@ fun VaultScreen(
                                         }
                                     }
                                 }
-                            }
+                            },
+                            isDark = isDark
                         )
                         
                         if (searchSuggestions.isNotEmpty()) {
@@ -397,7 +424,7 @@ fun VaultScreen(
                                     .fillMaxWidth()
                                     .padding(top = 4.dp),
                                 shape = RoundedCornerShape(12.dp),
-                                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
+                                color = (if (isDark) CyberDarkBlue else MaterialTheme.colorScheme.surface).copy(alpha = 0.95f),
                                 shadowElevation = 4.dp
                             ) {
                                 Column {
@@ -417,9 +444,9 @@ fun VaultScreen(
                                                 }
                                                 .padding(16.dp),
                                             style = MaterialTheme.typography.bodyMedium,
-                                            color = MaterialTheme.colorScheme.onSurface
+                                            color = if (isDark) Color.White else MaterialTheme.colorScheme.onSurface
                                         )
-                                        HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
+                                        HorizontalDivider(color = (if (isDark) Color.White else MaterialTheme.colorScheme.onSurface).copy(alpha = 0.05f))
                                     }
                                 }
                             }
@@ -459,16 +486,6 @@ fun VaultScreen(
                         }
                     }
 
-                    Canvas(modifier = Modifier.fillMaxSize().alpha(0.08f)) {
-                        val step = 100.dp.toPx()
-                        for (x in 0..size.width.toInt() step step.toInt()) {
-                            drawLine(Color.Cyan, start = Offset(x.toFloat(), 0f), end = Offset(x.toFloat(), size.height))
-                        }
-                        for (y in 0..size.height.toInt() step step.toInt()) {
-                            drawLine(Color.Cyan, start = Offset(0f, y.toFloat()), end = Offset(size.width, y.toFloat()))
-                        }
-                    }
-
                     // Unified Controls Column (Bottom Right)
                     AnimatedVisibility(
                         visible = state.isLocked,
@@ -486,37 +503,40 @@ fun VaultScreen(
                             SmallMapFab(
                                 icon = Icons.Default.Explore, 
                                 active = false,
+                                isDark = isDark,
                                 modifier = Modifier.rotate(-mapBearing)
                             ) {
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                HapticHelper.vibrate(context, 1)
                                 mapLibreMap?.animateCamera(CameraUpdateFactory.bearingTo(0.0))
                             }
 
                             // Zoom Controls
-                            SmallMapFab(icon = Icons.Default.Add, active = false) {
-                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            SmallMapFab(icon = Icons.Default.Add, active = false, isDark = isDark) {
+                                HapticHelper.vibrate(context, 1)
                                 mapLibreMap?.animateCamera(CameraUpdateFactory.zoomIn())
                             }
 
-                            SmallMapFab(icon = Icons.Default.Remove, active = false) {
-                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            SmallMapFab(icon = Icons.Default.Remove, active = false, isDark = isDark) {
+                                HapticHelper.vibrate(context, 1)
                                 mapLibreMap?.animateCamera(CameraUpdateFactory.zoomOut())
                             }
 
-                            SmallMapFab(icon = Icons.Default.MyLocation, active = isCenteredOnUser) {
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            SmallMapFab(icon = Icons.Default.MyLocation, active = isCenteredOnUser, isDark = isDark) {
+                                HapticHelper.vibrate(context, 2)
                                 if (state.hasLocationPermission) {
+                                    isCenteredOnUser = true
                                     try {
                                         fusedLocationClient.lastLocation.addOnSuccessListener { location ->
                                             location?.let {
-                                                isCenteredOnUser = true
                                                 mapLibreMap?.animateCamera(
-                                                    CameraUpdateFactory.newLatLngZoom(LatLng(it.latitude, it.longitude), 15.0)
+                                                    CameraUpdateFactory.newLatLngZoom(LatLng(it.latitude, it.longitude), 18.0),
+                                                    600
                                                 )
                                             }
                                         }
                                     } catch (e: SecurityException) {}
                                 } else {
+                                    onStartAction()
                                     locationPermissionLauncher.launch(
                                         arrayOf(
                                             android.Manifest.permission.ACCESS_FINE_LOCATION,
@@ -582,11 +602,13 @@ fun VaultScreen(
                         ) {
                             VaultUnlockDialog(
                                 vault = selectedVaultForUnlock!!,
+                                isDark = isDark,
                                 onDismiss = { showUnlockPrompt = false },
                                 onConfirm = { secret ->
                                     onUnlockAttempt(selectedVaultForUnlock!!.location.latitude, selectedVaultForUnlock!!.location.longitude, secret)
                                     showUnlockPrompt = false
-                                }
+                                },
+                                onIntruderCaptured = onIntruderCaptured
                             )
                         }
                     }
@@ -600,6 +622,7 @@ fun VaultScreen(
                             VaultSetupDialog(
                                 apps = currentInstalledApps,
                                 isNativeEligible = isNativeEligible,
+                                isDark = isDark,
                                 onDismiss = { showSetupDialog = false },
                                 onConfirm = { secret, selectedApps, lockType, radius ->
                                     onSaveConfig(GeoPoint(setupLatLng!!.latitude, setupLatLng!!.longitude), secret, selectedApps, lockType, radius)
@@ -638,12 +661,19 @@ fun VaultScreen(
                     onClearAllVaults = onClearAllVaults,
                     onGrantCamera = onGrantCamera,
                     onGrantStorage = onGrantStorage,
+                    onGrantFullStorage = onGrantFullStorage,
                     onDeleteFile = onDeleteFile,
                     onRestoreFile = onRestoreFile,
                     onToggleDarkMode = onToggleDarkMode,
                     onToggleFingerprint = onToggleFingerprint,
                     onSetLanguage = onSetLanguage,
-                    onToggleScreenshotRestriction = onToggleScreenshotRestriction
+                    onCompleteTour = onCompleteTour,
+                    onToggleScreenshotRestriction = onToggleScreenshotRestriction,
+                    onFetchGalleryItems = onFetchGalleryItems,
+                    onCreateFolder = onCreateFolder,
+                    onAddFilesToFolder = onAddFilesToFolder,
+                    onStartAction = onStartAction,
+                    onEndAction = onEndAction
                 )
             }
         }
@@ -653,29 +683,33 @@ fun VaultScreen(
 @Composable
 fun VaultUnlockDialog(
     vault: com.geovault.model.VaultConfig,
+    isDark: Boolean,
     onDismiss: () -> Unit,
-    onConfirm: (String) -> Unit
+    onConfirm: (String) -> Unit,
+    onIntruderCaptured: (android.net.Uri, String?) -> Unit
 ) {
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
+    var failedAttempts by remember { mutableIntStateOf(0) }
+    
     Dialog(onDismissRequest = onDismiss) {
         Surface(
-            shape = RoundedCornerShape(28.dp),
-            color = MaterialTheme.colorScheme.surface,
-            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)),
-            shadowElevation = 8.dp,
-            modifier = Modifier.width(320.dp)
+            shape = RoundedCornerShape(32.dp),
+            color = if (isDark) CyberDarkBlue else CreamWhite,
+            border = null,
+            shadowElevation = 12.dp,
+            modifier = Modifier.width(320.dp).blur(if (failedAttempts > 0) 1.dp else 0.dp)
         ) {
             Column(
                 modifier = Modifier.padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    if (vault.lockType == LockType.PIN) stringResource(R.string.verify_pin) else stringResource(R.string.verify_pattern),
-                    color = MaterialTheme.colorScheme.primary,
+                    if (vault.lockType == LockType.PIN) "ENTER SECURE PIN" else "DRAW SECURE PATTERN",
+                    color = if (isDark) CyberBlue else AppBlue,
                     fontWeight = FontWeight.Black,
-                    letterSpacing = 2.sp,
-                    style = MaterialTheme.typography.titleMedium
+                    letterSpacing = 1.sp,
+                    style = MaterialTheme.typography.titleSmall
                 )
                 
                 Spacer(Modifier.height(24.dp))
@@ -683,20 +717,30 @@ fun VaultUnlockDialog(
                 if (vault.lockType == LockType.PIN) {
                     CompactPinPad(
                         correctPin = vault.secret, 
-                        onPinComplete = onConfirm,
+                        isLightTheme = !isDark,
+                        onPinComplete = {
+                            failedAttempts = 0
+                            onConfirm(it)
+                        },
                         onError = {
-                            IntruderManager.getInstance(context).captureIntruder { _, _ ->
-                                // Image captured
+                            failedAttempts++
+                            if (failedAttempts >= 3) {
+                                IntruderManager.getInstance(context).captureIntruder(onIntruderCaptured)
                             }
                         }
                     )
                 } else {
                     CompactPatternGrid(
                         correctPattern = vault.secret, 
-                        onPatternComplete = onConfirm,
+                        isLightTheme = !isDark,
+                        onPatternComplete = {
+                            failedAttempts = 0
+                            onConfirm(it)
+                        },
                         onError = {
-                            IntruderManager.getInstance(context).captureIntruder { _, _ ->
-                                // Image captured
+                            failedAttempts++
+                            if (failedAttempts >= 3) {
+                                IntruderManager.getInstance(context).captureIntruder(onIntruderCaptured)
                             }
                         }
                     )
@@ -707,7 +751,7 @@ fun VaultUnlockDialog(
                 TextButton(onClick = onDismiss) {
                     Text(
                         stringResource(R.string.cancel), 
-                        color = MaterialTheme.colorScheme.onSurfaceVariant, 
+                        color = Color.Gray, 
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -720,9 +764,11 @@ fun VaultUnlockDialog(
 fun VaultSetupDialog(
     apps: List<AppInfo>, 
     isNativeEligible: Boolean,
+    isDark: Boolean,
     onDismiss: () -> Unit, 
     onConfirm: (String, Set<String>, LockType, Float) -> Unit
 ) {
+    val context = LocalContext.current
     var secret by remember { mutableStateOf("") }
     var lockType by remember { mutableStateOf(LockType.PIN) }
     val selectedApps = remember { mutableStateOf(setOf<String>()) }
@@ -735,19 +781,19 @@ fun VaultSetupDialog(
     Dialog(onDismissRequest = onDismiss) {
         Surface(
             modifier = Modifier.fillMaxWidth().wrapContentHeight(),
-            shape = RoundedCornerShape(28.dp),
-            color = MaterialTheme.colorScheme.surface,
-            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)),
-            shadowElevation = 8.dp
+            shape = RoundedCornerShape(32.dp),
+            color = if (isDark) CyberDarkBlue else CreamWhite,
+            border = null,
+            shadowElevation = 12.dp
         ) {
             Column(
                 modifier = Modifier.padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    if (!showApps) stringResource(R.string.setup_lock) else stringResource(R.string.select_apps),
+                    if (!showApps) "INITIALIZE VAULT" else "SECURE PACKAGES",
                     style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.primary,
+                    color = if (isDark) CyberBlue else AppBlue,
                     fontWeight = FontWeight.Black,
                     letterSpacing = 1.sp
                 )
@@ -758,16 +804,16 @@ fun VaultSetupDialog(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.05f))
-                                .padding(12.dp),
+                                .clip(RoundedCornerShape(16.dp))
+                                .background((if (isDark) CyberBlue else AppBlue).copy(alpha = 0.08f))
+                                .padding(16.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                "Native", 
+                                "Native Mode", 
                                 style = MaterialTheme.typography.bodyLarge, 
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary,
+                                color = if (isDark) CyberBlue else AppBlue,
                                 modifier = Modifier.weight(1f)
                             )
                             Switch(
@@ -775,7 +821,7 @@ fun VaultSetupDialog(
                                 onCheckedChange = { isNativeEnabled = it },
                                 colors = SwitchDefaults.colors(
                                     checkedThumbColor = Color.White,
-                                    checkedTrackColor = CyberBlue
+                                    checkedTrackColor = if (isDark) CyberBlue else AppBlue
                                 )
                             )
                         }
@@ -787,12 +833,12 @@ fun VaultSetupDialog(
                                         "Lock Radius", 
                                         style = MaterialTheme.typography.bodySmall,
                                         fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        color = if (isDark) Color.LightGray else Color.Gray
                                     )
                                     Spacer(Modifier.weight(1f))
                                     Text(
                                         "${radius.toInt()}m", 
-                                        color = CyberBlue,
+                                        color = if (isDark) CyberBlue else AppBlue,
                                         fontWeight = FontWeight.Black
                                     )
                                 }
@@ -800,15 +846,15 @@ fun VaultSetupDialog(
                                     value = radius,
                                     onValueChange = { 
                                         if (it.toInt() != radius.toInt()) {
-                                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                            HapticHelper.vibrate(context, 0)
                                         }
                                         radius = it 
                                     },
                                     valueRange = 100f..2000f,
                                     steps = 19,
                                     colors = SliderDefaults.colors(
-                                        thumbColor = CyberBlue,
-                                        activeTrackColor = CyberBlue
+                                        thumbColor = if (isDark) CyberBlue else AppBlue,
+                                        activeTrackColor = if (isDark) CyberBlue else AppBlue
                                     )
                                 )
                             }
@@ -821,11 +867,11 @@ fun VaultSetupDialog(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        VaultLockTypeButton("PIN", lockType == LockType.PIN) { 
+                        VaultLockTypeButton("PIN", lockType == LockType.PIN, isDark) { 
                             lockType = LockType.PIN 
                             secret = ""
                         }
-                        VaultLockTypeButton("PATTERN", lockType == LockType.PATTERN) { 
+                        VaultLockTypeButton("PATTERN", lockType == LockType.PATTERN, isDark) { 
                             lockType = LockType.PATTERN 
                             secret = ""
                         }
@@ -834,16 +880,22 @@ fun VaultSetupDialog(
                     Spacer(Modifier.height(24.dp))
 
                     if (lockType == LockType.PIN) {
-                        CompactPinPad(onPinComplete = {
-                            secret = it
-                            showApps = true
-                        })
-                    } else {
-                        Box(modifier = Modifier.align(Alignment.CenterHorizontally)) {
-                            CompactPatternGrid(onPatternComplete = {
+                        CompactPinPad(
+                            isLightTheme = !isDark,
+                            onPinComplete = {
                                 secret = it
                                 showApps = true
-                            })
+                            }
+                        )
+                    } else {
+                        Box(modifier = Modifier.align(Alignment.CenterHorizontally)) {
+                            CompactPatternGrid(
+                                isLightTheme = !isDark,
+                                onPatternComplete = {
+                                    secret = it
+                                    showApps = true
+                                }
+                            )
                         }
                     }
                 } else {
@@ -853,25 +905,26 @@ fun VaultSetupDialog(
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clip(RoundedCornerShape(12.dp))
+                                    .clip(RoundedCornerShape(16.dp))
                                     .clickable {
                                         if (selectedApps.value.contains(app.packageName)) selectedApps.value -= app.packageName
                                         else selectedApps.value += app.packageName
                                     }
-                                    .padding(vertical = 10.dp, horizontal = 8.dp)
+                                    .padding(vertical = 12.dp, horizontal = 12.dp)
                             ) {
-                                app.icon?.let { Image(it.toBitmap().asImageBitmap(), contentDescription = null, modifier = Modifier.size(32.dp).clip(CircleShape)) }
+                                app.icon?.let { Image(it.toBitmap().asImageBitmap(), contentDescription = null, modifier = Modifier.size(36.dp).clip(CircleShape)) }
                                 Spacer(Modifier.width(12.dp))
                                 Text(
                                     app.appName, 
-                                    color = MaterialTheme.colorScheme.onSurface, 
+                                    color = (if (isDark) Color.White else Color.Black).copy(alpha = 0.8f), 
                                     modifier = Modifier.weight(1f), 
-                                    fontSize = 15.sp
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.Medium
                                 )
                                 Checkbox(
                                     checked = selectedApps.value.contains(app.packageName),
                                     onCheckedChange = null,
-                                    colors = CheckboxDefaults.colors(checkedColor = CyberBlue)
+                                    colors = CheckboxDefaults.colors(checkedColor = if (isDark) CyberBlue else AppBlue)
                                 )
                             }
                         }
@@ -881,15 +934,15 @@ fun VaultSetupDialog(
                     
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                         TextButton(onClick = { showApps = false }) { 
-                            Text(stringResource(R.string.back), color = MaterialTheme.colorScheme.onSurfaceVariant) 
+                            Text(stringResource(R.string.back), color = Color.Gray) 
                         }
                         Button(
                             onClick = { 
                                 val finalRadius = if (isNativeEnabled) radius else 0f
                                 onConfirm(secret, selectedApps.value, lockType, finalRadius) 
                             },
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                            shape = RoundedCornerShape(12.dp)
+                            colors = ButtonDefaults.buttonColors(containerColor = if (isDark) CyberBlue else AppBlue),
+                            shape = RoundedCornerShape(16.dp)
                         ) {
                             Text(stringResource(R.string.save_lock), color = Color.White, fontWeight = FontWeight.Bold)
                         }
@@ -901,14 +954,14 @@ fun VaultSetupDialog(
 }
 
 @Composable
-fun RowScope.VaultLockTypeButton(text: String, selected: Boolean, onClick: () -> Unit) {
+fun RowScope.VaultLockTypeButton(text: String, selected: Boolean, isDark: Boolean, onClick: () -> Unit) {
     Button(
         onClick = onClick,
         colors = ButtonDefaults.buttonColors(
-            containerColor = if (selected) CyberBlue.copy(alpha = 0.15f) else Color.Transparent,
-            contentColor = if (selected) CyberBlue else Color.Gray
+            containerColor = if (selected) (if (isDark) CyberBlue else AppBlue).copy(alpha = 0.15f) else Color.Transparent,
+            contentColor = if (selected) (if (isDark) CyberBlue else AppBlue) else Color.Gray
         ),
-        border = androidx.compose.foundation.BorderStroke(1.dp, if (selected) CyberBlue else Color.White.copy(alpha = 0.1f)),
+        border = androidx.compose.foundation.BorderStroke(1.dp, if (selected) (if (isDark) CyberBlue else AppBlue) else (if (isDark) Color.White else Color.Black).copy(alpha = 0.1f)),
         modifier = Modifier.height(40.dp).weight(1f),
         shape = RoundedCornerShape(12.dp),
         contentPadding = PaddingValues(horizontal = 12.dp)
@@ -918,20 +971,23 @@ fun RowScope.VaultLockTypeButton(text: String, selected: Boolean, onClick: () ->
 }
 
 @Composable
-fun SmallMapFab(icon: ImageVector, active: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
+fun SmallMapFab(icon: ImageVector, active: Boolean, isDark: Boolean = false, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    val interactionSource = remember { MutableInteractionSource() }
     Surface(
-        modifier = modifier.size(40.dp).clickable { onClick() },
+        modifier = modifier
+            .size(44.dp) // Slightly larger for better touch target
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null // Removes the subtle faded black square shadow
+            ) { onClick() },
         shape = CircleShape,
-        color = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
-        contentColor = if (active) Color.White else MaterialTheme.colorScheme.onSurface,
-        shadowElevation = 4.dp,
-        border = androidx.compose.foundation.BorderStroke(
-            width = 1.dp, 
-            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
-        )
+        color = if (active) (if (isDark) CyberBlue else AppBlue) else (if (isDark) CyberDarkBlue else CreamWhite).copy(alpha = 0.9f),
+        contentColor = if (active) Color.White else (if (isDark) Color.White else Color.Black).copy(alpha = 0.7f),
+        shadowElevation = 6.dp,
+        border = null
     ) {
         Box(contentAlignment = Alignment.Center) {
-            Icon(icon, contentDescription = null, modifier = Modifier.size(20.dp))
+            Icon(icon, contentDescription = null, modifier = Modifier.size(22.dp))
         }
     }
 }
@@ -940,49 +996,50 @@ suspend fun searchLocation(query: String): LatLng? = getSearchSuggestions(query)
 
 suspend fun getSearchSuggestions(query: String): List<Pair<String, LatLng>> = withContext(Dispatchers.IO) {
     try {
-        val url = URL("https://nominatim.openstreetmap.org/search?q=${java.net.URLEncoder.encode(query, "UTF-8")}&format=json&limit=5")
+        // Optimized: Only fetch what we need and parse immediately
+        val url = URL("https://nominatim.openstreetmap.org/search?q=${java.net.URLEncoder.encode(query, "UTF-8")}&format=json&limit=5&addressdetails=0")
         val connection = url.openConnection()
         connection.setRequestProperty("User-Agent", "GeoVault-App")
+        connection.connectTimeout = 3000
+        connection.readTimeout = 3000
         val response = connection.getInputStream().bufferedReader().use { it.readText() }
         val jsonArray = JSONArray(response)
         val suggestions = mutableListOf<Pair<String, LatLng>>()
         for (i in 0 until jsonArray.length()) {
             val item = jsonArray.getJSONObject(i)
-            val name = item.getString("display_name")
-            val lat = item.getDouble("lat")
-            val lon = item.getDouble("lon")
-            suggestions.add(name to LatLng(lat, lon))
+            val name = item.optString("display_name", "Unknown Location")
+            val lat = item.optDouble("lat", 0.0)
+            val lon = item.optDouble("lon", 0.0)
+            if (lat != 0.0) suggestions.add(name to LatLng(lat, lon))
         }
         suggestions
     } catch (e: Exception) {
-        e.printStackTrace()
         emptyList()
     }
 }
 
-@OptIn(androidx.compose.ui.ExperimentalComposeUiApi::class)
 @Composable
-fun MapSearchBar(query: String, onQueryChange: (String) -> Unit, onSearch: (String) -> Unit, modifier: Modifier = Modifier) {
-    val keyboardController = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
+fun MapSearchBar(query: String, onQueryChange: (String) -> Unit, onSearch: (String) -> Unit, isDark: Boolean, modifier: Modifier = Modifier) {
+    val keyboardController = LocalSoftwareKeyboardController.current
     Surface(
         modifier = modifier.fillMaxWidth().height(56.dp),
         shape = RoundedCornerShape(28.dp),
-        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
-        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)),
+        color = (if (isDark) CyberDarkBlue else CreamWhite).copy(alpha = 0.9f),
+        border = null,
         shadowElevation = 6.dp
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(horizontal = 16.dp)
+            modifier = Modifier.padding(horizontal = 20.dp)
         ) {
-            Icon(Icons.Default.Search, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+            Icon(Icons.Default.Search, contentDescription = null, tint = if (isDark) CyberBlue else AppBlue)
             Spacer(Modifier.width(12.dp))
             androidx.compose.foundation.text.BasicTextField(
                 value = query,
                 onValueChange = onQueryChange,
                 modifier = Modifier.weight(1f),
                 textStyle = androidx.compose.ui.text.TextStyle(
-                    color = MaterialTheme.colorScheme.onSurface, 
+                    color = (if (isDark) Color.White else Color.Black).copy(alpha = 0.8f), 
                     fontSize = 16.sp
                 ),
                 singleLine = true,
@@ -991,12 +1048,12 @@ fun MapSearchBar(query: String, onQueryChange: (String) -> Unit, onSearch: (Stri
                     onSearch(query)
                     keyboardController?.hide()
                 }),
-                cursorBrush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.primary),
+                cursorBrush = androidx.compose.ui.graphics.SolidColor(if (isDark) CyberBlue else AppBlue),
                 decorationBox = { innerTextField ->
                     if (query.isEmpty()) {
                         Text(
                             stringResource(R.string.search_places),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant, 
+                            color = Color.Gray, 
                             fontSize = 16.sp
                         )
                     }
@@ -1008,7 +1065,7 @@ fun MapSearchBar(query: String, onQueryChange: (String) -> Unit, onSearch: (Stri
                     Icon(
                         Icons.Default.Close, 
                         contentDescription = null, 
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        tint = Color.Gray
                     )
                 }
             }

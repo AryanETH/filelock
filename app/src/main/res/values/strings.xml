@@ -13,6 +13,41 @@
     <string name="global_lock">Global Lock</string>
     <string name="stealth_entry">Private Entry</string>
 
+    <!-- Language Screen -->
+    <string name="select_language">Select Language</string>
+    <string name="english">English</string>
+    <string name="hindi">Hindi</string>
+    <string name="close_btn">Close</string>
+    <string name="selected_text">Selected</string>
+    <string name="language">Language</string>
+    <string name="search_languages">Search languages...</string>
+
+    <!-- Permission Screen -->
+    <string name="security_clearance">Security Clearance</string>
+    <string name="security_clearance_desc">Mandatory permissions required for system operation. Access denied until authorization complete.</string>
+    <string name="permission_usage_access">Usage Access</string>
+    <string name="permission_usage_access_desc">Monitor app launches for stealth mode.</string>
+    <string name="permission_overlay_access">Overlay Access</string>
+    <string name="permission_overlay_access_desc">Required to show security interface.</string>
+    <string name="permission_camera_access">Camera Access</string>
+    <string name="permission_camera_access_desc">Capture intruder images on failed attempts.</string>
+    <string name="permission_location_access">Location Access</string>
+    <string name="permission_location_access_desc">Detect vault proximity for auto-locking.</string>
+    <string name="permission_storage_access">Storage Access</string>
+    <string name="permission_storage_access_desc">Securely store and retrieve encrypted files.</string>
+    <string name="permission_background_activity">Background Activity</string>
+    <string name="permission_background_activity_desc">Required for 24/7 background security monitoring.</string>
+    <string name="system_ready">System Ready</string>
+    <string name="authorize">Authorize</string>
+    <string name="usage_access">Usage Access</string>
+    <string name="usage_access_desc">Monitor app launches for stealth mode.</string>
+    <string name="overlay_access">Overlay Access</string>
+    <string name="overlay_access_desc">Required to show security interface.</string>
+    <string name="location_access">Location Access</string>
+    <string name="location_access_desc">Detect vault proximity for auto-locking.</string>
+    <string name="background_activity">Background Activity</string>
+    <string name="background_activity_desc">Required for 24/7 background security monitoring.</string>
+
     <!-- Onboarding -->
     <string name="onboarding_1_title">MAPP LOCK</string>
     <string name="onboarding_1_desc">Next-gen security hidden behind a real map interface.</string>
@@ -49,6 +84,23 @@
     <string name="recycle_bin">Recycle bin</string>
     <string name="items_count">%1$d items</string>
 
+    <!-- Media Viewer Screen -->
+    <string name="save_to_gallery">Save to Gallery</string>
+    <string name="open_in">Open In</string>
+    <string name="restore">Restore</string>
+    <string name="delete">Delete</string>
+    <string name="restore_file_title">Restore File?</string>
+    <string name="restore_file_message">This will move the file back to your gallery and it will be visible to other apps.</string>
+    <string name="delete_file_title">Delete File?</string>
+    <string name="delete_file_message">This action cannot be undone. File will be permanently removed.</string>
+    <string name="preview_unavailable">Internal preview unavailable:</string>
+    <string name="use_open_in_hint">Use \'Open In\' button above to view with another app.</string>
+    <string name="open_with">Open with...</string>
+    <string name="restore_confirm">RESTORE</string>
+    <string name="delete_confirm">DELETE</string>
+    <string name="no_preview">No preview for %1$s</string>
+    <string name="open_in_hint">Use \'Open In\' to view with another app.</string>
+
     <!-- Settings -->
     <string name="system_permissions">SYSTEM PERMISSIONS</string>
     <string name="permission_app_detection">App Detection</string>
@@ -67,9 +119,6 @@
     <string name="global_lock_desc">Lock all selected apps at once.</string>
     <string name="dark_mode">Dark Mode</string>
     <string name="dark_mode_desc">Switch between light and dark themes.</string>
-    <string name="language">Language</string>
-    <string name="select_language">Select Language</string>
-    <string name="search_languages">Search languages...</string>
 
     <!-- Tour -->
     <string name="tour_skip">Skip</string>
@@ -79,11 +128,71 @@
     <string name="tour_step2">Double-tap on your secret point to unlock your hidden files.</string>
     <string name="tour_step3">Use these buttons to find your location or change map style.</string>
     <string name="tour_step4">Your coordinate is your key. Remember it well!</string>
+    <string name="zoom_in_hint">Zoom in more to set secure location.</string>
+    <string name="access_granted_desc">Secure zone found. Vault access enabled.</string>
+    <string name="zone_restricted_desc">Outside secure perimeter. Access denied.</string>
+    <string name="system_initialization_desc">Long-press on map to create secure vault.</string>
+    <string name="lock_type_bio">Biometric</string>
+    <string name="biometric_required">Biometric authentication required.</string>
+    <string name="map_location_hint">Use your saved map location as unlock key.</string>
+    <string name="package_visibility">Select apps to secure</string>
+    <string name="tap_map_to_unlock">Tap below to open secure map interface.</string>
+    <string name="open_map_interface">Open Map</string>
     <string name="screenshot_restriction">Screenshot Restriction</string>
     <string name="screenshot_restriction_desc">Prevent screenshots and screen recording for privacy.</string>
+    <string name="fingerprint_unlock">Fingerprint Unlock</string>
+    <string name="fingerprint_unlock_desc">Use biometric for quick access.</string>
     <string name="support_links">SUPPORT &amp; LEGAL</string>
     <string name="feedback">Feedback</string>
     <string name="terms_of_use">Terms of Use</string>
     <string name="faq">FAQ</string>
     <string name="privacy_policy">Privacy Policy</string>
+
+    <!-- VaultContentScreen -->
+    <string name="settings">Settings</string>
+    <string name="lock">Lock</string>
+    <string name="add">Add</string>
+    <string name="sort">Sort</string>
+    <string name="hide">Hide</string>
+    <string name="vault_empty">No files in this category.</string>
+    <string name="vault_empty_hint">Add files using the + button.</string>
+    <string name="app_lock_desc">Map-gate is required to open locked apps. Hidden apps are cloned into GeoVault and removed from system.</string>
+    <string name="hide_app_dialog_title">Hide App (Clone &amp; Uninstall)</string>
+    <string name="cloning_in_progress">Cloning app to secure sandbox...</string>
+    <string name="hide_app_dialog_body">This will create a secure clone of the app inside GeoVault and ask you to uninstall the original app. App will only be accessible through GeoVault\'s map-gate.</string>
+    <string name="proceed">Proceed</string>
+    <string name="clone_success">App cloned successfully!</string>
+    <string name="clone_failed">Cloning failed. Please try again.</string>
+    <string name="clear_all_hidden_apps">Clear all hidden apps</string>
+    <string name="active_vaults">Active Vaults</string>
+    <string name="apps_locked">%1$d apps locked</string>
+    <string name="vault_established">Vault Established</string>
+    <string name="apps_hidden">%1$d apps hidden:</string>
+    <string name="close">Close</string>
+    <string name="fix">Fix</string>
+    <string name="get_started">Get Started</string>
+    <string name="grant">Grant</string>
+    <string name="vault_id_label">Vault %1$s</string>
+
+    <!-- MapSelectionScreen -->
+    <string name="access_granted">Access Granted</string>
+    <string name="zone_restricted">Zone Restricted</string>
+    <string name="system_initialization">System Initialization</string>
+    <string name="vault_encryption">Vault Encryption</string>
+    <string name="lock_type_pin">PIN</string>
+    <string name="lock_type_pattern">Pattern</string>
+    <string name="lock_type_map">Map</string>
+    <string name="abort">Abort</string>
+    <string name="initialize">Initialize</string>
+    <string name="bypass_security">Bypass Security</string>
+    <string name="use_fingerprint">Use Fingerprint</string>
+    <string name="location_locked">Location Locked</string>
+    <string name="enter_pin">Enter PIN</string>
+    <string name="draw_pattern">Draw Pattern</string>
+    <string name="tap_coordinates">Tap Coordinates</string>
+    <string name="verify_identity">Verify Identity</string>
+    <string name="outside_radius">You are outside allowed radius</string>
+    <string name="biometric_unavailable">Biometric authentication unavailable</string>
+    <string name="fingerprint">Fingerprint</string>
+    <string name="tap_target_coordinates">Tap target coordinates</string>
 </resources>

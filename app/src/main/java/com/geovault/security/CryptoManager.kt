@@ -8,8 +8,12 @@ import java.security.KeyStore
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
-import javax.crypto.spec.IvParameterSpec
+import javax.crypto.spec.GCMParameterSpec
 
+/**
+ * Professional-grade Encryption Manager using AES-256 GCM.
+ * This implementation provides both confidentiality and integrity.
+ */
 class CryptoManager {
 
     private val keyStore = KeyStore.getInstance("AndroidKeyStore").apply {
@@ -37,18 +41,20 @@ class CryptoManager {
         }.generateKey()
     }
 
-    private val encryptCipher get() = Cipher.getInstance(TRANSFORMATION).apply {
-        init(Cipher.ENCRYPT_MODE, getKey())
+    private fun getEncryptCipher(): Cipher {
+        return Cipher.getInstance(TRANSFORMATION).apply {
+            init(Cipher.ENCRYPT_MODE, getKey())
+        }
     }
 
     private fun getDecryptCipherForIv(iv: ByteArray): Cipher {
         return Cipher.getInstance(TRANSFORMATION).apply {
-            init(Cipher.DECRYPT_MODE, getKey(), IvParameterSpec(iv))
+            init(Cipher.DECRYPT_MODE, getKey(), GCMParameterSpec(128, iv))
         }
     }
 
     fun encrypt(bytes: ByteArray, outputStream: OutputStream) {
-        val cipher = encryptCipher
+        val cipher = getEncryptCipher()
         val iv = cipher.iv
         outputStream.write(iv.size)
         outputStream.write(iv)
@@ -60,13 +66,13 @@ class CryptoManager {
     }
 
     fun encryptStream(inputStream: InputStream, outputStream: OutputStream): Long {
-        val cipher = encryptCipher
+        val cipher = getEncryptCipher()
         val iv = cipher.iv
         outputStream.write(iv.size)
         outputStream.write(iv)
 
         val cipherOutputStream = javax.crypto.CipherOutputStream(outputStream, cipher)
-        val buffer = ByteArray(8192)
+        val buffer = ByteArray(16384)
         var bytesRead: Int
         var totalBytes: Long = 0
         
@@ -75,7 +81,6 @@ class CryptoManager {
             totalBytes += bytesRead
         }
         cipherOutputStream.close()
-        // Note: cipherOutputStream closes the underlying outputStream
         return totalBytes
     }
 
@@ -97,11 +102,10 @@ class CryptoManager {
         inputStream.read(iv)
 
         val cipher = getDecryptCipherForIv(iv)
-        val buffer = ByteArray(8192)
+        val cipherInputStream = javax.crypto.CipherInputStream(inputStream, cipher)
+        val buffer = ByteArray(16384)
         var bytesRead: Int
         
-        // This is tricky with doFinal, so we use CipherInputStream or process in blocks
-        val cipherInputStream = javax.crypto.CipherInputStream(inputStream, cipher)
         while (cipherInputStream.read(buffer).also { bytesRead = it } != -1) {
             outputStream.write(buffer, 0, bytesRead)
         }
@@ -111,10 +115,10 @@ class CryptoManager {
     }
 
     companion object {
-        private const val ALIAS = "secret"
+        private const val ALIAS = "geovault_professional_key"
         private const val ALGORITHM = KeyProperties.KEY_ALGORITHM_AES
-        private const val BLOCK_MODE = KeyProperties.BLOCK_MODE_CBC
-        private const val PADDING = KeyProperties.ENCRYPTION_PADDING_PKCS7
+        private const val BLOCK_MODE = KeyProperties.BLOCK_MODE_GCM
+        private const val PADDING = KeyProperties.ENCRYPTION_PADDING_NONE
         private const val TRANSFORMATION = "$ALGORITHM/$BLOCK_MODE/$PADDING"
     }
 }

@@ -1,7 +1,7 @@
 package com.geovault.model
 
 enum class FileCategory {
-    PHOTO, VIDEO, AUDIO, DOCUMENT, INTRUDER, OTHER
+    PHOTO, VIDEO, AUDIO, DOCUMENT, INTRUDER, RECYCLE_BIN, OTHER
 }
 
 data class VaultFile(
@@ -11,5 +11,6 @@ data class VaultFile(
     val category: FileCategory,
     val size: Long,
     val addedTimestamp: Long,
-    val thumbnailPath: String? = null
+    val thumbnailPath: String? = null,
+    val folderName: String? = null
 )

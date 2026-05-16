@@ -25,6 +25,7 @@ import com.geovault.ui.VaultViewModel
 import com.geovault.ui.OnboardingScreen
 import com.geovault.ui.PermissionScreen
 import com.geovault.ui.IntroScreen
+import com.geovault.ui.LanguageOnboardingScreen
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -58,12 +59,22 @@ import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
 
 import androidx.appcompat.app.AppCompatActivity
+import com.geovault.security.SecurityUtils
+import android.widget.Toast
 
 class MainActivity : AppCompatActivity() {
     private val viewModel: VaultViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Professional Security: Prevent screenshots and recent app previews
+        window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
+
+        // Root Detection
+        if (SecurityUtils.isDeviceRooted()) {
+            Toast.makeText(this, "Security Alert: Rooted device detected. Some features may be disabled.", Toast.LENGTH_LONG).show()
+        }
 
         WindowCompat.setDecorFitsSystemWindows(window, false)
         MapLibre.getInstance(this)
@@ -89,11 +100,14 @@ class MainActivity : AppCompatActivity() {
 
                 val permissionLauncher = rememberLauncherForActivityResult(
                     contract = ActivityResultContracts.RequestMultiplePermissions()
-                ) { /* handle results */ }
+                ) { 
+                    viewModel.setPerformingAction(false)
+                }
 
                 val deleteLauncher = rememberLauncherForActivityResult(
                     contract = ActivityResultContracts.StartIntentSenderForResult()
                 ) { result ->
+                    viewModel.setPerformingAction(false)
                     if (result.resultCode == android.app.Activity.RESULT_OK) {
                         // Deletion confirmed
                     }
@@ -103,6 +117,7 @@ class MainActivity : AppCompatActivity() {
                 LaunchedEffect(uiState.pendingDeleteIntent) {
                     uiState.pendingDeleteIntent?.let {
                         val intentSenderRequest = androidx.activity.result.IntentSenderRequest.Builder(it.intentSender).build()
+                        viewModel.setPerformingAction(true)
                         deleteLauncher.launch(intentSenderRequest)
                     }
                 }
@@ -157,6 +172,7 @@ class MainActivity : AppCompatActivity() {
                     AnimatedContent(
                         targetState = when {
                             showSplash -> "intro"
+                            uiState.isFirstRun && !uiState.isLanguageSelected -> "language_selection"
                             uiState.isFirstRun -> "onboarding"
                             !uiState.hasUsageStatsPermission || !uiState.hasOverlayPermission || !uiState.hasLocationPermission || !uiState.hasBatteryOptimizationPermission -> "permissions"
                             else -> "vault"
@@ -166,7 +182,7 @@ class MainActivity : AppCompatActivity() {
                             if (targetState == "vault" || initialState == "intro") {
                                 fadeIn(animationSpec = tween(duration)).togetherWith(fadeOut(animationSpec = tween(duration)))
                             } else {
-                                (fadeIn(animationSpec = tween(duration)) + slideInVertically(animationSpec = tween(duration), initialOffsetY = { 100 }))
+                                (fadeIn(animationSpec = tween(duration)) + slideInHorizontally(animationSpec = tween(duration), initialOffsetX = { 100 }))
                                     .togetherWith(fadeOut(animationSpec = tween(duration / 2)))
                             }
                         },
@@ -174,6 +190,9 @@ class MainActivity : AppCompatActivity() {
                     ) { target ->
                         when (target) {
                             "intro" -> IntroScreen()
+                            "language_selection" -> {
+                                LanguageOnboardingScreen(onLanguageSelected = { viewModel.setLanguage(it) })
+                            }
                             "onboarding" -> {
                                 OnboardingScreen(onFinished = { viewModel.completeOnboarding() })
                             }
@@ -183,6 +202,7 @@ class MainActivity : AppCompatActivity() {
                                     onGrantUsage = { viewModel.openUsageStatsSettings() },
                                     onGrantOverlay = { viewModel.openOverlaySettings() },
                                     onGrantLocation = {
+                                        viewModel.setPerformingAction(true)
                                         permissionLauncher.launch(
                                             arrayOf(
                                                 Manifest.permission.ACCESS_FINE_LOCATION,
@@ -204,6 +224,9 @@ class MainActivity : AppCompatActivity() {
                                     onUnlockAttempt = { lat, lon, pin -> 
                                         viewModel.attemptUnlockAtLocation(lat, lon, pin)
                                     },
+                                    onIntruderCaptured = { uri, thumb ->
+                                        viewModel.addIntruderFile(uri, thumb)
+                                    },
                                     onSaveConfig = { point, secret, apps, lockType, radius ->
                                         viewModel.saveVaultConfiguration(point, secret, apps, lockType, radius)
                                     },
@@ -220,23 +243,33 @@ class MainActivity : AppCompatActivity() {
                                     onRemoveVault = { id -> viewModel.removeVault(id) },
                                     onClearAllVaults = { viewModel.clearAllVaults() },
                                     onGrantCamera = {
+                                        viewModel.setPerformingAction(true)
                                         permissionLauncher.launch(arrayOf(Manifest.permission.CAMERA))
                                     },
                                     onGrantStorage = {
+                                        viewModel.setPerformingAction(true)
                                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                                             permissionLauncher.launch(arrayOf(Manifest.permission.READ_MEDIA_IMAGES))
                                         } else {
                                             permissionLauncher.launch(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE))
                                         }
                                     },
+                                    onGrantFullStorage = {
+                                        viewModel.openFullStorageSettings()
+                                    },
                                     onDeleteFile = { fileId -> viewModel.removeFileFromVault(fileId) },
                                     onRestoreFile = { fileId -> viewModel.restoreFileToGallery(fileId) },
+                                    onFetchGalleryItems = { cat -> viewModel.fetchGalleryItems(cat) },
                                     onToggleDarkMode = { viewModel.toggleDarkMode() },
                                     onToggleFingerprint = { viewModel.toggleFingerprint() },
                                     onToggleSatellite = { viewModel.toggleSatelliteMode() },
                                     onSetLanguage = { lang -> viewModel.setLanguage(lang) },
                                     onCompleteTour = { viewModel.completeTour() },
-                                    onToggleScreenshotRestriction = { viewModel.toggleScreenshotRestriction() }
+                                    onToggleScreenshotRestriction = { viewModel.toggleScreenshotRestriction() },
+                                    onCreateFolder = { viewModel.createFolder(it) },
+                                    onAddFilesToFolder = { uris, folder -> viewModel.addFilesToVault(uris, com.geovault.model.FileCategory.OTHER, folder) },
+                                    onStartAction = { viewModel.setPerformingAction(true) },
+                                    onEndAction = { viewModel.setPerformingAction(false) }
                                 )
                             }
                         }
@@ -250,11 +283,18 @@ class MainActivity : AppCompatActivity() {
         super.onPause()
         // Clear any bypass token when user leaves the main app
         com.geovault.security.SecureManager.getInstance(this).prefs.edit().remove("bypass_package").apply()
+        
+        // Force lock when leaving the app to ensure it opens on map next time
+        // BUG FIX: Only lock if we are NOT performing an internal action (like picking files)
+        if (!viewModel.isPerformingAction()) {
+            viewModel.lock()
+        }
     }
 
     override fun onResume() {
         super.onResume()
         viewModel.checkPermissions()
+        viewModel.setPerformingAction(false)
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
