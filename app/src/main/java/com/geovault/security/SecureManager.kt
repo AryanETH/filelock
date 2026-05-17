@@ -20,7 +20,7 @@ class SecureManager(context: Context) {
         EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
     )
 
-    fun saveFileInfo(id: String, name: String, path: String, category: FileCategory, size: Long, thumbPath: String? = null) {
+    fun saveFileInfo(id: String, name: String, path: String, category: FileCategory, size: Long, thumbPath: String? = null, folderName: String? = null) {
         val fileIds = (prefs.getStringSet("vault_file_ids", emptySet()) ?: emptySet()).toMutableSet()
         fileIds.add(id)
         prefs.edit().apply {
@@ -31,6 +31,7 @@ class SecureManager(context: Context) {
             putLong("file_${id}_size", size)
             putLong("file_${id}_timestamp", System.currentTimeMillis())
             thumbPath?.let { putString("file_${id}_thumb", it) }
+            folderName?.let { putString("file_${id}_folder", it) }
             apply()
         }
     }
@@ -55,6 +56,8 @@ class SecureManager(context: Context) {
                 remove("file_${id}_category")
                 remove("file_${id}_size")
                 remove("file_${id}_timestamp")
+                remove("file_${id}_thumb")
+                remove("file_${id}_folder")
                 apply()
             }
         }

@@ -50,6 +50,9 @@ import android.graphics.Color as AndroidColor
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Build
 
+import com.geovault.security.SecurityUtils
+import android.widget.Toast
+
 class LockActivity : AppCompatActivity() {
 
     private var isUnlocked = false
@@ -57,6 +60,14 @@ class LockActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        
+        // Professional Security: Prevent screenshots and recent app previews
+        window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
+
+        // Root Detection
+        if (SecurityUtils.isDeviceRooted()) {
+            Toast.makeText(this, "Security Alert: Rooted device detected.", Toast.LENGTH_SHORT).show()
+        }
         
         val targetPackage = intent.getStringExtra("target_package") ?: ""
         val isSilentCover = intent.getBooleanExtra("is_silent_cover", false)

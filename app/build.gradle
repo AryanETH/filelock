@@ -15,7 +15,7 @@ android {
         versionCode 1
         versionName "1.0"
 
-        resConfigs "en" , "hi"
+        resConfigs "en", "hi"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -88,6 +88,7 @@ dependencies {
     implementation 'io.coil-kt:coil-compose:2.7.0'
     implementation 'io.coil-kt:coil-svg:2.7.0'
     implementation 'io.coil-kt:coil-gif:2.7.0'
+    implementation 'io.coil-kt:coil-video:2.7.0'
 
     // Security (Encryption Engine)
     implementation "androidx.security:security-crypto:1.1.0"

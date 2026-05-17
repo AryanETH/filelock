@@ -163,7 +163,7 @@ class AppLockerService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedSt
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = android.app.NotificationChannel(
                 channelId, "Security Monitoring",
-                android.app.NotificationManager.IMPORTANCE_HIGH
+                android.app.NotificationManager.IMPORTANCE_LOW
             ).apply {
                 description = "Keeps the app lock active in the background"
             }
@@ -172,10 +172,10 @@ class AppLockerService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedSt
         }
 
         return androidx.core.app.NotificationCompat.Builder(this, channelId)
-            .setContentTitle("Mapp Lock is Active")
-            .setContentText("Protecting your privacy")
+            .setContentTitle("Security Monitoring Active")
+            .setContentText("Privacy protection is running")
             .setSmallIcon(com.geovault.R.drawable.ic_calculator)
-            .setPriority(androidx.core.app.NotificationCompat.PRIORITY_MAX)
+            .setPriority(androidx.core.app.NotificationCompat.PRIORITY_LOW)
             .setCategory(androidx.core.app.NotificationCompat.CATEGORY_SERVICE)
             .setOngoing(true)
             .build()

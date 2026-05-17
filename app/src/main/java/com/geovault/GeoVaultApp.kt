@@ -6,6 +6,7 @@ import coil.ImageLoaderFactory
 import coil.decode.GifDecoder
 import coil.decode.ImageDecoderDecoder
 import coil.decode.SvgDecoder
+import coil.decode.VideoFrameDecoder
 import android.os.Build
 
 class GeoVaultApp : Application(), ImageLoaderFactory {
@@ -13,6 +14,7 @@ class GeoVaultApp : Application(), ImageLoaderFactory {
         return ImageLoader.Builder(this)
             .components {
                 add(SvgDecoder.Factory())
+                add(VideoFrameDecoder.Factory())
                 if (Build.VERSION.SDK_INT >= 28) {
                     add(ImageDecoderDecoder.Factory())
                 } else {

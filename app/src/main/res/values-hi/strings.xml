@@ -1,212 +1,187 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">मैप लॉक</string>
-    <string name="accessibility_description">सुरक्षा प्रदान करने के लिए लॉक किए गए ऐप्स खुलने पर पहचान करने के लिए उपयोग किया जाता है।</string>
-
-    <!-- Simplified Jargon -->
-    <string name="vault">छिपा क्षेत्र</string>
-    <string name="vault_plural">छिपे क्षेत्र</string>
-    <string name="hidden_files">छिपी फाइलें</string>
-    <string name="hide_app">ऐप छिपाएं</string>
-    <string name="wrong_unlock_alert">गलत अनलॉक अलर्ट</string>
-    <string name="wrong_unlock">गलत अनलॉक</string>
-    <string name="global_lock">ग्लोबल लॉक</string>
-    <string name="stealth_entry">निजी प्रवेश</string>
-
-    <!-- Language Screen -->
-    <string name="select_language">भाषा चुनें</string>
-    <string name="english">अंग्रेज़ी</string>
-    <string name="hindi">हिन्दी</string>
-    <string name="close1">बंद करें</string>
-    <string name="selected">चयनित</string>
-    <string name="language">भाषा</string>
-    <string name="search_languages">भाषाएँ खोजें...</string>
-
-    <!-- Permission Screen -->
-    <string name="security_clearance">सुरक्षा अनुमति</string>
-    <string name="security_clearance_desc">सिस्टम संचालन के लिए अनिवार्य अनुमतियाँ आवश्यक हैं। प्राधिकरण पूर्ण होने तक पहुँच अस्वीकृत है।</string>
-
-    <string name="permission_usage_access">उपयोग पहुँच</string>
-    <string name="permission_usage_access_desc">स्टेल्थ मोड के लिए ऐप लॉन्च की निगरानी करें।</string>
-
-    <string name="permission_overlay_access">ओवरले पहुँच</string>
-    <string name="permission_overlay_access_desc">सुरक्षा इंटरफ़ेस दिखाने के लिए आवश्यक।</string>
-
-    <string name="permission_camera_access">कैमरा पहुँच</string>
-    <string name="permission_camera_access_desc">विफल प्रयासों पर घुसपैठियों की छवियाँ लें।</string>
-
-    <string name="permission_location_access">स्थान पहुँच</string>
-    <string name="permission_location_access_desc">ऑटो-लॉकिंग के लिए वॉल्ट की निकटता का पता लगाएं।</string>
-
-    <string name="permission_storage_access">स्टोरेज पहुँच</string>
-    <string name="permission_storage_access_desc">एन्क्रिप्टेड फाइलें सुरक्षित रूप से संग्रहीत और पुनः प्राप्त करें।</string>
-
-    <string name="permission_background_activity">बैकग्राउंड गतिविधि</string>
-    <string name="permission_background_activity_desc">24/7 बैकग्राउंड सुरक्षा निगरानी के लिए आवश्यक।</string>
-
-    <string name="system_ready">सिस्टम तैयार</string>
-    <string name="authorize">अधिकृत करें</string>
-
-    <string name="usage_access">उपयोग एक्सेस</string>
-    <string name="usage_access_desc">स्टेल्थ मोड के लिए ऐप लॉन्च मॉनिटर करें।</string>
-
-    <string name="overlay_access">ओवरले एक्सेस</string>
-    <string name="overlay_access_desc">सुरक्षा इंटरफ़ेस दिखाने के लिए आवश्यक।</string>
-
-    <string name="location_access">लोकेशन एक्सेस</string>
-    <string name="location_access_desc">ऑटो-लॉकिंग के लिए वॉल्ट की निकटता पहचानें।</string>
-
-    <string name="background_activity">बैकग्राउंड गतिविधि</string>
-    <string name="background_activity_desc">24/7 बैकग्राउंड सुरक्षा मॉनिटरिंग के लिए आवश्यक।</string>
-
-
-    <!-- Onboarding -->
-    <string name="onboarding_1_title">MAPP LOCK</string>
-    <string name="onboarding_1_desc">एक वास्तविक मैप इंटरफ़ेस के पीछे छिपी अगली पीढ़ी की सुरक्षा।</string>
-    <string name="onboarding_2_title">PRIVATE ENTRY</string>
-    <string name="onboarding_2_desc">कोई आइकन नहीं, कोई पासवर्ड नहीं। अपनी फाइलें दिखाने के लिए अपने गुप्त मैप निर्देशांक पर लंबे समय तक दबाएं।</string>
-    <string name="onboarding_3_title">HIDE APPS</string>
-    <string name="onboarding_3_desc">संवेदनशील ऐप्स को तुरंत ब्लॉक करें। वे तब तक दृश्य से गायब हो जाते हैं जब तक आप उन्हें अनलॉक नहीं करते।</string>
-    <string name="onboarding_4_title">FILE SECURITY</string>
-    <string name="onboarding_4_desc">फ़ोटो और वीडियो एन्क्रिप्ट किए जाते हैं और आपकी गैलरी से स्वचालित रूप से हटा दिए जाते हैं।</string>
-    <string name="initialize_system">सिस्टम शुरू करें</string>
-    <string name="next">अगला</string>
-
-    <!-- Map Screen -->
-    <string name="verify_pin">पिन सत्यापित करें</string>
-    <string name="verify_pattern">पैटर्न सत्यापित करें</string>
-    <string name="cancel">रद्द करें</string>
-    <string name="setup_lock">लॉक सेटअप करें</string>
-    <string name="select_apps">ऐप्स चुनें</string>
-    <string name="save_lock">लॉक सहेजें</string>
-    <string name="back">वापस</string>
-    <string name="search_places">स्थान खोजें...</string>
-
-    <!-- Dashboard -->
-    <string name="app_lock_title">ऐप्स छिपाएं</string>
-    <string name="app_lock_subtitle">दूसरों से ऐप्स छिपाएं</string>
-    <string name="history_title">इतिहास</string>
-    <string name="history_subtitle">छिपे ऐप्स देखें</string>
-    <string name="categories">श्रेणियाँ</string>
-    <string name="photos">फ़ोटो</string>
-    <string name="videos">वीडियो</string>
-    <string name="audio">ऑडियो</string>
-    <string name="documents">दस्तावेज़</string>
-    <string name="wrong_unlocks">गलत अनलॉक</string>
-    <string name="recycle_bin">रीसायकल बिन</string>
-    <string name="items_count">%1$d आइटम</string>
-
-    <!--media viewer screen-->
-    <string name="save_to_gallery">गैलरी में सेव करें</string>
-    <string name="open_in">ओपन इन</string>
-    <string name="restore">रीस्टोर</string>
-    <string name="delete">डिलीट</string>
-    <string name="restore_file_title">फ़ाइल रीस्टोर करें?</string>
-    <string name="restore_file_message">यह फ़ाइल को वापस आपकी गैलरी में ले जाएगा और अन्य ऐप्स को दिखाई देगा।</string>
-    <string name="delete_file_title">फ़ाइल डिलीट करें?</string>
-    <string name="delete_file_message">यह कार्रवाई वापस नहीं की जा सकती। फ़ाइल हमेशा के लिए हट जाएगी।</string>
-    <string name="preview_unavailable">इंटरनल प्रीव्यू उपलब्ध नहीं है:</string>
-    <string name="use_open_in_hint">दूसरे ऐप से देखने के लिए ऊपर \'Open In\' बटन का उपयोग करें।</string>
-    <string name="open_with">इसके साथ खोलें...</string>
-    <string name="restore_confirm">RESTORE</string>
-    <string name="delete_confirm">DELETE</string>
-    <string name="no_preview">No preview for %1$s</string>
-    <string name="open_in_hint">Use \'Open In\' to view with another app.</string>
-
-    <!-- Settings -->
-    <string name="system_permissions">सिस्टम अनुमतियाँ</string>
-    <string name="permission_app_detection">ऐप पहचान</string>
-    <string name="permission_app_detection_desc">लॉक किए गए ऐप्स खुलने पर देखने के लिए आवश्यक।</string>
-    <string name="permission_lock_window">लॉक विंडो</string>
-    <string name="permission_lock_window_desc">लॉक स्क्रीन दिखाने के लिए आवश्यक।</string>
-    <string name="permission_camera">कैमरा</string>
-    <string name="permission_camera_desc">गलत अनलॉक अलर्ट सुविधा के लिए आवश्यक।</string>
-    <string name="permission_storage">स्टोरेज</string>
-    <string name="permission_storage_desc">आपकी फाइलें एन्क्रिप्ट और संग्रहीत करने के लिए आवश्यक।</string>
-    <string name="advanced_security">उन्नत सुरक्षा</string>
-    <string name="uninstall_protection">अनइंस्टॉल सुरक्षा</string>
-    <string name="uninstall_protection_desc">ऐप हटाने के लिए पहचान सत्यापन आवश्यक है।</string>
-    <string name="lock_options">लॉक विकल्प</string>
-    <string name="global_lock_title">ग्लोबल लॉक</string>
-    <string name="global_lock_desc">सभी चुने गए ऐप्स को एक साथ लॉक करें।</string>
-    <string name="dark_mode">डार्क मोड</string>
-    <string name="dark_mode_desc">लाइट और डार्क थीम के बीच स्विच करें।</string>
-
-    <!-- Tour -->
-    <string name="tour_skip">छोड़ें</string>
-    <string name="tour_next">अगला</string>
-    <string name="tour_welcome">मैप लॉक में आपका स्वागत है। आपकी गोपनीयता सादे दृश्य में छिपी है।</string>
-    <string name="tour_step1">अपना गुप्त प्रवेश बिंदु सेट करने के लिए मैप पर कहीं भी लंबे समय तक दबाएं।</string>
-    <string name="tour_step2">अपनी छिपी फाइलें अनलॉक करने के लिए अपने गुप्त बिंदु पर डबल-टैप करें।</string>
-    <string name="tour_step3">अपना स्थान खोजने या मैप शैली बदलने के लिए इन बटनों का उपयोग करें।</string>
-    <string name="tour_step4">आपका निर्देशांक आपकी चाबी है। इसे अच्छी तरह याद रखें!</string>
-    <string name="zoom_in_hint">सुरक्षित स्थान सेट करने के लिए और ज़ूम इन करें।</string>
-    <string name="access_granted_desc">सुरक्षित क्षेत्र मिला। वॉल्ट पहुँच सक्षम है।</string>
-    <string name="zone_restricted_desc">सुरक्षित परिधि के बाहर। पहुँच अस्वीकृत।</string>
-    <string name="system_initialization_desc">सुरक्षित वॉल्ट बनाने के लिए मैप पर लंबे समय तक दबाएं।</string>
-    <string name="lock_type_bio">बायोमेट्रिक</string>
-    <string name="biometric_required">बायोमेट्रिक प्रमाणीकरण आवश्यक है।</string>
-    <string name="map_location_hint">अनलॉक कुंजी के रूप में अपना सहेजा गया मैप स्थान उपयोग करें।</string>
-    <string name="package_visibility">सुरक्षित करने के लिए ऐप्स चुनें</string>
-    <string name="tap_map_to_unlock">सुरक्षित मैप इंटरफ़ेस खोलने के लिए नीचे टैप करें।</string>
-    <string name="open_map_interface">मैप खोलें</string>
-    <string name="screenshot_restriction_desc">गोपनीयता के लिए स्क्रीनशॉट और स्क्रीन रिकॉर्डिंग रोकें।</string>
-    <string name="support_links">सहायता और कानूनी</string>
-    <string name="feedback">प्रतिक्रिया</string>
-    <string name="terms_of_use">उपयोग की शर्तें</string>
-    <string name="faq">सामान्य प्रश्न</string>
-    <string name="privacy_policy">गोपनीयता नीति</string>
-
-    <!-- VaultContentScreen -->
-    <string name="settings">सेटिंग्स</string>
-    <string name="lock">लॉक</string>
-    <string name="add">जोड़ें</string>
-    <string name="sort">क्रमबद्ध करें</string>
-    <string name="hide">छिपाएं</string>
-    <string name="vault_empty">इस श्रेणी में कोई फाइल नहीं है।</string>
-    <string name="vault_empty_hint">+ बटन से फाइलें जोड़ें।</string>
-    <string name="app_lock_desc">लॉक ऐप्स खोलने के लिए मैप-गेट जरूरी है। छिपे ऐप्स GeoVault में क्लोन होकर सिस्टम से हटा दिए जाते हैं।</string>
-    <string name="hide_app_dialog_title">ऐप छिपाएं (क्लोन और अनइंस्टॉल)</string>
-    <string name="cloning_in_progress">ऐप को सुरक्षित सैंडबॉक्स में क्लोन किया जा रहा है...</string>
-    <string name="hide_app_dialog_body">यह GeoVault में ऐप का सुरक्षित क्लोन बनाएगा और मूल ऐप को अनइंस्टॉल करने के लिए कहेगा। ऐप केवल GeoVault के मैप-गेट से ही खोला जा सकेगा।</string>
-    <string name="proceed">आगे बढ़ें</string>
-    <string name="clone_success">ऐप सफलतापूर्वक क्लोन हो गया!</string>
-    <string name="clone_failed">क्लोनिंग विफल हुई। कृपया पुनः प्रयास करें।</string>
-    <string name="clear_all_hidden_apps">सभी छिपे ऐप्स हटाएं</string>
-    <string name="active_vaults">सक्रिय वॉल्ट</string>
-    <string name="apps_locked">%1$d ऐप्स लॉक</string>
-    <string name="vault_established">वॉल्ट स्थापित</string>
-    <string name="apps_hidden">%1$d ऐप्स छिपे:</string>
-    <string name="close">बंद करें</string>
-    <string name="fix">ठीक करें</string>
-    <string name="get_started">शुरू करें</string>
-    <string name="screenshot_restriction">स्क्रीनशॉट प्रतिबंध</string>
-    <string name="fingerprint_unlock">फिंगरप्रिंट अनलॉक</string>
-    <string name="fingerprint_unlock_desc">छिपे हुए ऐप्स को अनलॉक करने के लिए बायोमेट्रिक का उपयोग करें</string>
-    <string name="grant">अनुमति दें</string>
-    <string name="vault_id_label">वॉल्ट %1$s</string>
-
-    <!-- MapSelectionScreen -->
-    <string name="access_granted">पहुँच मिली</string>
-    <string name="zone_restricted">क्षेत्र प्रतिबंधित</string>
-    <string name="system_initialization">सिस्टम आरंभीकरण</string>
-    <string name="vault_encryption">वॉल्ट एन्क्रिप्शन</string>
-    <string name="lock_type_pin">पिन</string>
-    <string name="lock_type_pattern">पैटर्न</string>
-    <string name="lock_type_map">मैप</string>
-    <string name="abort">रद्द करें</string>
-    <string name="initialize">आरंभ करें</string>
-    <string name="bypass_security">सुरक्षा बायपास</string>
-    <string name="use_fingerprint">फिंगरप्रिंट उपयोग करें</string>
-    <string name="location_locked">लोकेशन लॉक</string>
-    <string name="enter_pin">पिन दर्ज करें</string>
-    <string name="draw_pattern">पैटर्न बनाएं</string>
-    <string name="tap_coordinates">कोऑर्डिनेट्स पर टैप करें</string>
-    <string name="verify_identity">पहचान सत्यापित करें</string>
-    <string name="outside_radius">आप अनुमत क्षेत्र से बाहर हैं</string>
-    <string name="biometric_unavailable">बायोमेट्रिक प्रमाणीकरण उपलब्ध नहीं है</string>
-    <string name="fingerprint">फिंगरप्रिंट</string>
-    <string name="tap_target_coordinates">लक्षित कोऑर्डिनेट्स पर टैप करें</string>
-
-
+<string name="app_name">मैप लॉक</string>
+<string name="accessibility_description">सुरक्षा प्रदान करने के लिए लॉक किए गए ऐप्स खुलने पर पहचान करने के लिए उपयोग किया जाता है।</string>
+<!--  Simplified Jargon  -->
+<string name="vault">छिपा क्षेत्र</string>
+<string name="vault_plural">छिपे क्षेत्र</string>
+<string name="hidden_files">छिपी फाइलें</string>
+<string name="hide_app">ऐप छिपाएं</string>
+<string name="wrong_unlock_alert">उसका फोटो खींचे</string>
+<string name="wrong_unlock">गलत अनलॉक</string>
+<string name="global_lock">ग्लोबल लॉक</string>
+<string name="stealth_entry">निजी प्रवेश</string>
+<!--  Language Screen  -->
+<string name="select_language">भाषा चुनें</string>
+<string name="english">अंग्रेज़ी</string>
+<string name="hindi">हिन्दी</string>
+<string name="close_btn">बंद करें</string>
+<string name="selected_text">चयनित</string>
+<string name="language">भाषा</string>
+<string name="search_languages">भाषाएँ खोजें...</string>
+<!--  Permission Screen  -->
+<string name="security_clearance">सुरक्षा अनुमति</string>
+<string name="security_clearance_desc">सिस्टम संचालन के लिए अनिवार्य अनुमतियाँ आवश्यक हैं। प्राधिकरण पूर्ण होने तक पहुँच अस्वीकृत है।</string>
+<string name="permission_usage_access">उपयोग पहुँच</string>
+<string name="permission_usage_access_desc">स्टेल्थ मोड के लिए ऐप लॉन्च की निगरानी करें।</string>
+<string name="permission_overlay_access">ओवरले पहुँच</string>
+<string name="permission_overlay_access_desc">सुरक्षा इंटरफ़ेस दिखाने के लिए आवश्यक।</string>
+<string name="permission_camera_access">कैमरा पहुँच</string>
+<string name="permission_camera_access_desc">विफल प्रयासों पर घुसपैठियों की छवियाँ लें।</string>
+<string name="permission_location_access">स्थान पहुँच</string>
+<string name="permission_location_access_desc">ऑटो-लॉकिंग के लिए वॉल्ट की निकटता का पता लगाएं।</string>
+<string name="permission_storage_access">स्टोरेज पहुँच</string>
+<string name="permission_storage_access_desc">एन्क्रिप्टेड फाइलें सुरक्षित रूप से संग्रहीत और पुनः प्राप्त करें।</string>
+<string name="permission_background_activity">बैकग्राउंड गतिविधि</string>
+<string name="permission_background_activity_desc">24/7 बैकग्राउंड सुरक्षा निगरानी के लिए आवश्यक।</string>
+<string name="system_ready">सिस्टम तैयार</string>
+<string name="authorize">अधिकृत करें</string>
+<string name="usage_access">उपयोग एक्सेस</string>
+<string name="usage_access_desc">स्टेल्थ मोड के लिए ऐप लॉन्च मॉनिटर करें।</string>
+<string name="overlay_access">ओवरले एक्सेस</string>
+<string name="overlay_access_desc">सुरक्षा इंटरफ़ेस दिखाने के लिए आवश्यक।</string>
+<string name="location_access">लोकेशन एक्सेस</string>
+<string name="location_access_desc">ऑटो-लॉकिंग के लिए वॉल्ट की निकटता पहचानें।</string>
+<string name="background_activity">बैकग्राउंड गतिविधि</string>
+<string name="background_activity_desc">24/7 बैकग्राउंड सुरक्षा मॉनिटरिंग के लिए आवश्यक।</string>
+<!--  Onboarding  -->
+<string name="onboarding_1_title">MAPP LOCK</string>
+<string name="onboarding_1_desc">एक वास्तविक मैप इंटरफ़ेस के पीछे छिपी अगली पीढ़ी की सुरक्षा।</string>
+<string name="onboarding_2_title">PRIVATE ENTRY</string>
+<string name="onboarding_2_desc">कोई आइकन नहीं, कोई पासवर्ड नहीं। अपनी फाइलें दिखाने के लिए अपने गुप्त मैप निर्देशांक पर लंबे समय तक दबाएं।</string>
+<string name="onboarding_3_title">HIDE APPS</string>
+<string name="onboarding_3_desc">संवेदनशील ऐप्स को तुरंत ब्लॉक करें। वे तब तक दृश्य से गायब हो जाते हैं जब तक आप उन्हें अनलॉक नहीं करते।</string>
+<string name="onboarding_4_title">FILE SECURITY</string>
+<string name="onboarding_4_desc">फ़ोटो और वीडियो एन्क्रिप्ट किए जाते हैं और आपकी गैलरी से स्वचालित रूप से हटा दिए जाते हैं।</string>
+<string name="initialize_system">सिस्टम शुरू करें</string>
+<string name="next">अगला</string>
+<!--  Map Screen  -->
+<string name="verify_pin">पिन सत्यापित करें</string>
+<string name="verify_pattern">पैटर्न सत्यापित करें</string>
+<string name="cancel">रद्द करें</string>
+<string name="setup_lock">लॉक सेटअप करें</string>
+<string name="select_apps">ऐप्स चुनें</string>
+<string name="save_lock">लॉक सहेजें</string>
+<string name="back">वापस</string>
+<string name="search_places">स्थान खोजें...</string>
+<!--  Dashboard  -->
+<string name="app_lock_title">ऐप्स छिपाएं</string>
+<string name="app_lock_subtitle">दूसरों से ऐप्स छिपाएं</string>
+<string name="history_title">इतिहास</string>
+<string name="history_subtitle">छिपे ऐप्स देखें</string>
+<string name="categories">श्रेणियाँ</string>
+<string name="photos">फ़ोटो</string>
+<string name="videos">वीडियो</string>
+<string name="audio">ऑडियो</string>
+<string name="documents">दस्तावेज़</string>
+<string name="wrong_unlocks">गलत अनलॉक</string>
+<string name="recycle_bin">रीसायकल बिन</string>
+<string name="items_count">%1$d आइटम</string>
+<!-- media viewer screen -->
+<string name="save_to_gallery">गैलरी में सेव करें</string>
+<string name="open_in">ओपन इन</string>
+<string name="restore">रीस्टोर</string>
+<string name="delete">डिलीट</string>
+<string name="restore_file_title">फ़ाइल रीस्टोर करें?</string>
+<string name="restore_file_message">यह फ़ाइल को वापस आपकी गैलरी में ले जाएगा और अन्य ऐप्स को दिखाई देगा।</string>
+<string name="delete_file_title">फ़ाइल डिलीट करें?</string>
+<string name="delete_file_message">यह कार्रवाई वापस नहीं की जा सकती। फ़ाइल हमेशा के लिए हट जाएगी।</string>
+<string name="preview_unavailable">इंटरनल प्रीव्यू उपलब्ध नहीं है:</string>
+<string name="use_open_in_hint">दूसरे ऐप से देखने के लिए ऊपर \'Open In\' बटन का उपयोग करें।</string>
+<string name="open_with">इसके साथ खोलें...</string>
+<string name="restore_confirm">RESTORE</string>
+<string name="delete_confirm">DELETE</string>
+<string name="no_preview">No preview for %1$s</string>
+<string name="open_in_hint">Use \'Open In\' to view with another app.</string>
+<!--  Settings  -->
+<string name="system_permissions">सिस्टम अनुमतियाँ</string>
+<string name="permission_app_detection">ऐप पहचान</string>
+<string name="permission_app_detection_desc">लॉक किए गए ऐप्स खुलने पर देखने के लिए आवश्यक।</string>
+<string name="permission_lock_window">लॉक विंडो</string>
+<string name="permission_lock_window_desc">लॉक स्क्रीन दिखाने के लिए आवश्यक।</string>
+<string name="permission_camera">कैमरा</string>
+<string name="permission_camera_desc">गलत अनलॉक अलर्ट सुविधा के लिए आवश्यक।</string>
+<string name="permission_storage">स्टोरेज</string>
+<string name="permission_storage_desc">आपकी फाइलें एन्क्रिप्ट और संग्रहीत करने के लिए आवश्यक।</string>
+<string name="advanced_security">उन्नत सुरक्षा</string>
+<string name="uninstall_protection">अनइंस्टॉल सुरक्षा</string>
+<string name="uninstall_protection_desc">ऐप हटाने के लिए पहचान सत्यापन आवश्यक है।</string>
+<string name="lock_options">लॉक विकल्प</string>
+<string name="global_lock_title">ग्लोबल लॉक</string>
+<string name="global_lock_desc">सभी चुने गए ऐप्स को एक साथ लॉक करें।</string>
+<string name="dark_mode">डार्क मोड</string>
+<string name="dark_mode_desc">लाइट और डार्क थीम के बीच स्विच करें।</string>
+<!--  Tour  -->
+<string name="tour_skip">छोड़ें</string>
+<string name="tour_next">अगला</string>
+<string name="tour_welcome">मैप लॉक में आपका स्वागत है। आपकी गोपनीयता सादे दृश्य में छिपी है।</string>
+<string name="tour_step1">अपना गुप्त प्रवेश बिंदु सेट करने के लिए मैप पर कहीं भी लंबे समय तक दबाएं।</string>
+<string name="tour_step2">अपनी छिपी फाइलें अनलॉक करने के लिए अपने गुप्त बिंदु पर डबल-टैप करें।</string>
+<string name="tour_step3">अपना स्थान खोजने या मैप शैली बदलने के लिए इन बटनों का उपयोग करें।</string>
+<string name="tour_step4">आपका निर्देशांक आपकी चाबी है। इसे अच्छी तरह याद रखें!</string>
+<string name="zoom_in_hint">सुरक्षित स्थान सेट करने के लिए और ज़ूम इन करें।</string>
+<string name="access_granted_desc">सुरक्षित क्षेत्र मिला। वॉल्ट पहुँच सक्षम है।</string>
+<string name="zone_restricted_desc">सुरक्षित परिधि के बाहर। पहुँच अस्वीकृत।</string>
+<string name="system_initialization_desc">सुरक्षित वॉल्ट बनाने के लिए मैप पर लंबे समय तक दबाएं।</string>
+<string name="lock_type_bio">बायोमेट्रिक</string>
+<string name="biometric_required">बायोमेट्रिक प्रमाणीकरण आवश्यक है।</string>
+<string name="map_location_hint">अनलॉक कुंजी के रूप में अपना सहेजा गया मैप स्थान उपयोग करें।</string>
+<string name="package_visibility">सुरक्षित करने के लिए ऐप्स चुनें</string>
+<string name="tap_map_to_unlock">सुरक्षित मैप इंटरफ़ेस खोलने के लिए नीचे टैप करें।</string>
+<string name="open_map_interface">मैप खोलें</string>
+<string name="screenshot_restriction_desc">गोपनीयता के लिए स्क्रीनशॉट और स्क्रीन रिकॉर्डिंग रोकें।</string>
+<string name="support_links">सहायता और कानूनी</string>
+<string name="feedback">प्रतिक्रिया</string>
+<string name="terms_of_use">उपयोग की शर्तें</string>
+<string name="faq">सामान्य प्रश्न</string>
+<string name="privacy_policy">गोपनीयता नीति</string>
+<!--  VaultContentScreen  -->
+<string name="settings">सेटिंग्स</string>
+<string name="lock">लॉक</string>
+<string name="add">जोड़ें</string>
+<string name="sort">क्रमबद्ध करें</string>
+<string name="hide">छिपाएं</string>
+<string name="vault_empty">इस श्रेणी में कोई फाइल नहीं है।</string>
+<string name="vault_empty_hint">+ बटन से फाइलें जोड़ें।</string>
+<string name="app_lock_desc">लॉक ऐप्स खोलने के लिए मैप-गेट जरूरी है। छिपे ऐप्स GeoVault में क्लोन होकर सिस्टम से हटा दिए जाते हैं।</string>
+<string name="hide_app_dialog_title">ऐप छिपाएं (क्लोन और अनइंस्टॉल)</string>
+<string name="cloning_in_progress">ऐप को सुरक्षित सैंडबॉक्स में क्लोन किया जा रहा है...</string>
+<string name="hide_app_dialog_body">यह GeoVault में ऐप का सुरक्षित क्लोन बनाएगा और मूल ऐप को अनइंस्टॉल करने के लिए कहेगा। ऐप केवल GeoVault के मैप-गेट से ही खोला जा सकेगा।</string>
+<string name="proceed">आगे बढ़ें</string>
+<string name="clone_success">ऐप सफलतापूर्वक क्लोन हो गया!</string>
+<string name="clone_failed">क्लोनिंग विफल हुई। कृपया पुनः प्रयास करें।</string>
+<string name="clear_all_hidden_apps">सभी छिपे ऐप्स हटाएं</string>
+<string name="active_vaults">सक्रिय वॉल्ट</string>
+<string name="apps_locked">%1$d ऐप्स लॉक</string>
+<string name="vault_established">वॉल्ट स्थापित</string>
+<string name="apps_hidden">%1$d ऐप्स छिपे:</string>
+<string name="close">बंद करें</string>
+<string name="fix">ठीक करें</string>
+<string name="get_started">शुरू करें</string>
+<string name="screenshot_restriction">स्क्रीनशॉट प्रतिबंध</string>
+<string name="fingerprint_unlock">फिंगरप्रिंट अनलॉक</string>
+<string name="fingerprint_unlock_desc">छिपे हुए ऐप्स को अनलॉक करने के लिए बायोमेट्रिक का उपयोग करें</string>
+<string name="grant">अनुमति दें</string>
+<string name="vault_id_label">वॉल्ट %1$s</string>
+<!--  MapSelectionScreen  -->
+<string name="access_granted">पहुँच मिली</string>
+<string name="zone_restricted">क्षेत्र प्रतिबंधित</string>
+<string name="system_initialization">सिस्टम आरंभीकरण</string>
+<string name="vault_encryption">वॉल्ट एन्क्रिप्शन</string>
+<string name="lock_type_pin">पिन</string>
+<string name="lock_type_pattern">पैटर्न</string>
+<string name="lock_type_map">मैप</string>
+<string name="abort">रद्द करें</string>
+<string name="initialize">आरंभ करें</string>
+<string name="bypass_security">सुरक्षा बायपास</string>
+<string name="use_fingerprint">फिंगरप्रिंट उपयोग करें</string>
+<string name="location_locked">लोकेशन लॉक</string>
+<string name="enter_pin">पिन दर्ज करें</string>
+<string name="draw_pattern">पैटर्न बनाएं</string>
+<string name="tap_coordinates">कोऑर्डिनेट्स पर टैप करें</string>
+<string name="verify_identity">पहचान सत्यापित करें</string>
+<string name="outside_radius">आप अनुमत क्षेत्र से बाहर हैं</string>
+<string name="biometric_unavailable">बायोमेट्रिक प्रमाणीकरण उपलब्ध नहीं है</string>
+<string name="fingerprint">फिंगरप्रिंट</string>
+<string name="tap_target_coordinates">लक्षित कोऑर्डिनेट्स पर टैप करें</string>
 </resources>

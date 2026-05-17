@@ -1,5 +1,10 @@
 package com.geovault.ui
 
+import android.content.Context
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -94,6 +99,43 @@ fun MapSelectionScreen(
 
     LaunchedEffect(currentStyleUrl) {
         mapLibreMap?.setStyle(currentStyleUrl)
+    }
+
+    val sensorManager = remember { context.getSystemService(Context.SENSOR_SERVICE) as SensorManager }
+    val rotationVectorSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
+    
+    var deviceAzimuth by remember { mutableStateOf(0f) }
+    val animatedBearing by animateFloatAsState(
+        targetValue = deviceAzimuth,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioNoBouncy,
+            stiffness = Spring.StiffnessMediumLow
+        ),
+        label = "mapBearing"
+    )
+
+    DisposableEffect(Unit) {
+        val listener = object : SensorEventListener {
+            override fun onSensorChanged(event: SensorEvent) {
+                if (event.sensor.type == Sensor.TYPE_ROTATION_VECTOR) {
+                    val rotationMatrix = FloatArray(9)
+                    SensorManager.getRotationMatrixFromVector(rotationMatrix, event.values)
+                    val orientation = FloatArray(3)
+                    SensorManager.getOrientation(rotationMatrix, orientation)
+                    val azimuth = Math.toDegrees(orientation[0].toDouble()).toFloat()
+                    deviceAzimuth = -azimuth // Invert to align map to real world
+                }
+            }
+            override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
+        }
+        sensorManager.registerListener(listener, rotationVectorSensor, SensorManager.SENSOR_DELAY_GAME)
+        onDispose {
+            sensorManager.unregisterListener(listener)
+        }
+    }
+
+    LaunchedEffect(animatedBearing) {
+        mapLibreMap?.moveCamera(CameraUpdateFactory.bearingTo(animatedBearing.toDouble()))
     }
 
     val mapView = remember { MapView(context) }
@@ -192,7 +234,7 @@ fun MapSelectionScreen(
                         fusedLocationClient.lastLocation.addOnSuccessListener { location ->
                             location?.let {
                                 val latLng = LatLng(it.latitude, it.longitude)
-                                mapLibreMap?.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 16.0))
+                                mapLibreMap?.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 18.0), 1000, null)
                             }
                         }
                     } catch (e: SecurityException) {}

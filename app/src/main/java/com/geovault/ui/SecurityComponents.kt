@@ -11,6 +11,8 @@ import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Backspace
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,6 +23,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -29,6 +32,8 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import com.geovault.ui.theme.CyberBlue
 import com.geovault.ui.theme.CyberDarkBlue
 import com.geovault.ui.theme.CyberNeonRed
+import com.geovault.ui.theme.AppBlue
+import com.geovault.ui.theme.CreamWhite
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -37,7 +42,7 @@ fun CompactPinPad(
     correctPin: String? = null, 
     onPinComplete: (String) -> Unit, 
     onError: (() -> Unit)? = null,
-    isLightTheme: Boolean = false,
+    isLightTheme: Boolean = true, // Default to true as per request #6
     isFullPage: Boolean = false
 ) {
     var pin by remember { mutableStateOf("") }
@@ -45,10 +50,12 @@ fun CompactPinPad(
     val haptic = LocalHapticFeedback.current
     val scope = rememberCoroutineScope()
     
-    val primaryColor = if (isLightTheme) Color.Black else MaterialTheme.colorScheme.primary
-    val onPrimaryColor = if (isLightTheme) Color.White else MaterialTheme.colorScheme.onPrimary
-    val surfaceColor = if (isLightTheme) Color.Black.copy(alpha = 0.03f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)
-    val textColor = if (isLightTheme) Color.Black else MaterialTheme.colorScheme.onSurface
+    // Glassmorphic Creamy Theme Colors
+    val primaryColor = if (isLightTheme) AppBlue else MaterialTheme.colorScheme.primary
+    val onPrimaryColor = Color.White
+    val surfaceColor = if (isLightTheme) com.geovault.ui.theme.CreamWhite.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)
+    val textColor = if (isLightTheme) Color.Black.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurface
+    val borderColor = if (isLightTheme) Color.Black.copy(alpha = 0.05f) else textColor.copy(alpha = 0.1f)
 
     val dotSize = if (isFullPage) 52.dp else 44.dp
     val keySize = if (isFullPage) 72.dp else 60.dp
@@ -92,7 +99,7 @@ fun CompactPinPad(
                 val filled = index < pin.length
                 
                 val scale by animateFloatAsState(
-                    targetValue = if (filled) 1.1f else 0.9f,
+                    targetValue = if (filled) 1.1f else 1.0f,
                     animationSpec = spring(dampingRatio = 0.5f, stiffness = 300f),
                     label = "PinScale"
                 )
@@ -102,7 +109,7 @@ fun CompactPinPad(
                         .padding(horizontal = 8.dp)
                         .size(dotSize)
                         .scale(scale)
-                        .clip(RoundedCornerShape(16.dp))
+                        .clip(CircleShape)
                         .background(
                             when {
                                 isError -> Color.Red.copy(alpha = 0.1f)
@@ -112,15 +119,15 @@ fun CompactPinPad(
                         )
                         .border(
                             1.dp, 
-                            if (isError) Color.Red else if (filled) primaryColor else textColor.copy(alpha = 0.1f), 
-                            RoundedCornerShape(16.dp)
+                            if (isError) Color.Red else if (filled) primaryColor else borderColor, 
+                            CircleShape
                         ),
                     contentAlignment = Alignment.Center
                 ) {
                     if (filled) {
                         Text(
                             pin[index].toString(), 
-                            color = if (isError) Color.Red else onPrimaryColor, 
+                            color = onPrimaryColor, 
                             fontWeight = FontWeight.Bold, 
                             fontSize = if (isFullPage) 22.sp else 18.sp
                         )
@@ -131,7 +138,7 @@ fun CompactPinPad(
         
         Spacer(Modifier.height(spacing))
         
-        val keys = listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "C", "0", "OK")
+        val keys = listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "DEL", "0", "OK")
         keys.chunked(3).forEach { row ->
             Row(
                 horizontalArrangement = Arrangement.Center,
@@ -143,9 +150,9 @@ fun CompactPinPad(
                             .padding(horizontal = keyPadding)
                             .size(keySize)
                             .clickable(enabled = !isError) {
-                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             when (key) {
-                                "C" -> if (pin.isNotEmpty()) pin = pin.dropLast(1)
+                                "DEL" -> if (pin.isNotEmpty()) pin = pin.dropLast(1)
                                 "OK" -> if (pin.length == 4) {
                                     if (correctPin != null && pin != correctPin) {
                                         isError = true
@@ -164,10 +171,15 @@ fun CompactPinPad(
                         },
                         shape = CircleShape,
                         color = surfaceColor,
-                        border = androidx.compose.foundation.BorderStroke(1.dp, if (isError) Color.Red.copy(alpha = 0.3f) else textColor.copy(alpha = 0.05f))
+                        border = androidx.compose.foundation.BorderStroke(1.dp, if (isError) Color.Red.copy(alpha = 0.3f) else borderColor),
+                        shadowElevation = 2.dp
                     ) {
                         Box(contentAlignment = Alignment.Center) {
-                            Text(key, color = if (isError) Color.Red else textColor, fontSize = if (isFullPage) 24.sp else 20.sp, fontWeight = FontWeight.Medium)
+                            if (key == "DEL") {
+                                Icon(Icons.AutoMirrored.Filled.Backspace, contentDescription = null, tint = textColor, modifier = Modifier.size(24.dp))
+                            } else {
+                                Text(key, color = if (isError) Color.Red else textColor, fontSize = if (isFullPage) 24.sp else 20.sp, fontWeight = FontWeight.Medium)
+                            }
                         }
                     }
                 }
@@ -207,7 +219,7 @@ fun CompactPatternGrid(
                         onDrag = { change, _ ->
                             val dotIndex = getDotIndexAt(change.position, size.width.toFloat())
                             if (dotIndex != -1 && !secret.contains(dotIndex.toString())) {
-                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 secret += dotIndex.toString()
                             }
                         },
