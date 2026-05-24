@@ -72,7 +72,7 @@ class CryptoManager {
         outputStream.write(iv)
 
         val cipherOutputStream = javax.crypto.CipherOutputStream(outputStream, cipher)
-        val buffer = ByteArray(16384)
+        val buffer = ByteArray(131072) // 128KB buffer for faster IO
         var bytesRead: Int
         var totalBytes: Long = 0
         
@@ -103,7 +103,7 @@ class CryptoManager {
 
         val cipher = getDecryptCipherForIv(iv)
         val cipherInputStream = javax.crypto.CipherInputStream(inputStream, cipher)
-        val buffer = ByteArray(16384)
+        val buffer = ByteArray(131072) // 128KB buffer for faster IO
         var bytesRead: Int
         
         while (cipherInputStream.read(buffer).also { bytesRead = it } != -1) {

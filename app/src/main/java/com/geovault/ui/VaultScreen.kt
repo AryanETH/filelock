@@ -124,6 +124,8 @@ fun VaultScreen(
     val currentInstalledApps by rememberUpdatedState(state.installedApps)
     
     var mapLibreMap by remember { mutableStateOf<MapLibreMap?>(null) }
+    var currentMapZoom by remember { mutableDoubleStateOf(0.0) }
+    var currentMapLat by remember { mutableDoubleStateOf(0.0) }
     
     var showSetupDialog by remember { mutableStateOf(false) }
     var setupLatLng by remember { mutableStateOf<LatLng?>(null) }
@@ -259,12 +261,14 @@ fun VaultScreen(
                                     map.uiSettings.isLogoEnabled = false
                                     map.uiSettings.isAttributionEnabled = false
                                     map.uiSettings.isCompassEnabled = false
-                                    map.uiSettings.isDoubleTapGesturesEnabled = false // Reverted: Disable native double tap zoom
+                                    map.uiSettings.isDoubleTapGesturesEnabled = false
                                     map.uiSettings.isTiltGesturesEnabled = true // Enable 3D tilt gestures
                                     map.uiSettings.isRotateGesturesEnabled = true // Enable rotation gestures
 
                                     map.addOnCameraMoveListener {
                                         mapBearing = map.cameraPosition.bearing.toFloat()
+                                        currentMapZoom = map.cameraPosition.zoom
+                                        map.cameraPosition.target?.let { currentMapLat = it.latitude }
                                     }
 
                                     // Custom Gesture Detector to prioritize vault actions over map engine
@@ -389,6 +393,15 @@ fun VaultScreen(
                             }
                         }
                     )
+
+                    // Scale Bar (Bottom Left)
+                    if (state.isLocked && currentMapZoom > 0) {
+                        MapScaleBar(
+                            zoom = currentMapZoom,
+                            latitude = currentMapLat,
+                            modifier = Modifier.align(Alignment.BottomStart)
+                        )
+                    }
 
                     // Map Search Bar
                     Column(
@@ -526,9 +539,10 @@ fun VaultScreen(
                                     try {
                                         fusedLocationClient.lastLocation.addOnSuccessListener { location ->
                                             location?.let {
+                                                // Google Earth style: Dramatic smooth descent animation
                                                 mapLibreMap?.animateCamera(
                                                     CameraUpdateFactory.newLatLngZoom(LatLng(it.latitude, it.longitude), 18.0),
-                                                    600
+                                                    2500 // 2.5s for that premium "Earth" feel
                                                 )
                                             }
                                         }
@@ -968,6 +982,50 @@ suspend fun getSearchSuggestions(query: String): List<Pair<String, LatLng>> = wi
         suggestions
     } catch (e: Exception) {
         emptyList()
+    }
+}
+
+@Composable
+fun MapScaleBar(zoom: Double, latitude: Double, modifier: Modifier = Modifier) {
+    val density = androidx.compose.ui.platform.LocalDensity.current
+    
+    // Meters per pixel at target latitude/zoom
+    val metersPerPixel = (Math.cos(latitude * Math.PI / 180) * 2 * Math.PI * 6378137) / (256 * Math.pow(2.0, zoom))
+    
+    // Find a "nice" distance to display (e.g. 100m, 200m, 500m, 1km)
+    val maxBarWidthPx = with(density) { 100.dp.toPx() }
+    val maxMeters = maxBarWidthPx * metersPerPixel
+    
+    val niceDistances = listOf(
+        1.0, 2.0, 5.0, 10.0, 20.0, 50.0, 100.0, 200.0, 500.0, 
+        1000.0, 2000.0, 5000.0, 10000.0, 20000.0, 50000.0, 100000.0, 200000.0, 500000.0
+    )
+    
+    val displayMeters = niceDistances.lastOrNull { it <= maxMeters } ?: 1.0
+    val barWidthDp = with(density) { (displayMeters / metersPerPixel).toFloat().toDp() }
+    
+    val label = if (displayMeters >= 1000) "${(displayMeters / 1000).toInt()} km" else "${displayMeters.toInt()} m"
+
+    Column(
+        modifier = modifier
+            .padding(start = 16.dp, bottom = 64.dp)
+            .width(IntrinsicSize.Min),
+        horizontalAlignment = Alignment.Start
+    ) {
+        Text(
+            text = label,
+            color = Color.Black,
+            fontSize = 10.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(bottom = 2.dp)
+        )
+        Box(
+            modifier = Modifier
+                .width(barWidthDp)
+                .height(4.dp)
+                .background(Color.White, RoundedCornerShape(2.dp))
+                .border(1.dp, Color.Black.copy(alpha = 0.6f), RoundedCornerShape(2.dp))
+        )
     }
 }
 

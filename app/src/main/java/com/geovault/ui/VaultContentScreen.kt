@@ -157,7 +157,10 @@ fun LocalFilePicker(
             if (selectedUris.isNotEmpty()) {
                 Surface(
                     color = CyberBlack,
-                    modifier = Modifier.fillMaxWidth().padding(16.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .navigationBarsPadding() // FIX: Add padding for system navigation buttons
+                        .padding(16.dp)
                 ) {
                     Button(
                         onClick = { showPreviewSheet = true },
@@ -1334,19 +1337,6 @@ fun SettingsSection(
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         Spacer(Modifier.height(8.dp))
-
-            PermissionItem(stringResource(R.string.permission_camera), stringResource(R.string.permission_camera_desc), state.hasCameraPermission, isDark, onGrantCamera)
-            PermissionItem(stringResource(R.string.permission_storage), stringResource(R.string.permission_storage_desc), state.hasStoragePermission, isDark, onGrantStorage)
-            
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                PermissionItem(
-                    "Automated Hiding Mode", 
-                    "Skip system 'Delete' prompts by granting All Files Access.", 
-                    state.hasFullStoragePermission, 
-                    isDark, 
-                    onGrantFullStorage
-                )
-            }
 
             // Other necessary permissions hidden in screenshots but needed
             if (!state.hasUsageStatsPermission || !state.hasOverlayPermission) {

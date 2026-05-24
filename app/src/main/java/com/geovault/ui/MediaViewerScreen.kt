@@ -15,6 +15,7 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Shadow
@@ -207,7 +208,18 @@ fun MediaViewerScreen(
                             else -> ExternalViewer(currentFile.originalName)
                         }
                     } else {
-                        CircularProgressIndicator(color = CyberBlue)
+                        // Show thumbnail as placeholder for instant visual feedback
+                        Box(contentAlignment = Alignment.Center) {
+                            if (currentFile.thumbnailPath != null && File(currentFile.thumbnailPath).exists()) {
+                                AsyncImage(
+                                    model = File(currentFile.thumbnailPath),
+                                    contentDescription = null,
+                                    modifier = Modifier.fillMaxSize().blur(8.dp),
+                                    contentScale = ContentScale.Fit
+                                )
+                            }
+                            CircularProgressIndicator(color = CyberBlue)
+                        }
                     }
                 }
             }
@@ -379,7 +391,6 @@ fun VideoViewer(file: File, isVisible: Boolean) {
                         if (isLeft) {
                             brightness = (brightness - dragAmount / size.height).coerceIn(0f, 1f)
                             showBrightnessOverlay = true
-                            // In a real app, you'd use WindowManager.LayoutParams to set screen brightness
                         } else {
                             volume = (volume - dragAmount / size.height).coerceIn(0f, 1f)
                             exoPlayer.volume = volume
@@ -390,11 +401,35 @@ fun VideoViewer(file: File, isVisible: Boolean) {
             }
     ) {
         val window = (context as? android.app.Activity)?.window
+        
+        // Handle brightness changes
         LaunchedEffect(brightness, showBrightnessOverlay) {
             if (showBrightnessOverlay && window != null) {
                 val params = window.attributes
                 params.screenBrightness = brightness.coerceIn(0.01f, 1f)
                 window.attributes = params
+            }
+        }
+
+        // Reset brightness when leaving or not visible
+        DisposableEffect(Unit) {
+            onDispose {
+                window?.let { w ->
+                    val params = w.attributes
+                    params.screenBrightness = -1f // Revert to system brightness
+                    w.attributes = params
+                }
+            }
+        }
+
+        // Also reset when page is no longer the active one
+        LaunchedEffect(isVisible) {
+            if (!isVisible) {
+                window?.let { w ->
+                    val params = w.attributes
+                    params.screenBrightness = -1f 
+                    w.attributes = params
+                }
             }
         }
 

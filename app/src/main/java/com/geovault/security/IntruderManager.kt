@@ -50,14 +50,22 @@ class IntruderManager private constructor(context: Context) {
                             cryptoManager.encrypt(bytes, fos)
                             fos.close()
 
-                            // Generate Thumbnail for instant loading
+                            // Generate Thumbnail for instant loading - Optimized with inSampleSize
                             val thumbFile = File(intruderDir, "thumb_${photoFile.nameWithoutExtension}.jpg")
                             try {
-                                val bitmap = android.graphics.BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-                                val thumbBitmap = android.media.ThumbnailUtils.extractThumbnail(bitmap, 300, 300)
-                                val thumbOut = FileOutputStream(thumbFile)
-                                thumbBitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 70, thumbOut)
-                                thumbOut.close()
+                                val options = android.graphics.BitmapFactory.Options().apply {
+                                    inJustDecodeBounds = true
+                                    android.graphics.BitmapFactory.decodeByteArray(bytes, 0, bytes.size, this)
+                                    inSampleSize = calculateInSampleSize(this, 300, 300)
+                                    inJustDecodeBounds = false
+                                }
+                                val bitmap = android.graphics.BitmapFactory.decodeByteArray(bytes, 0, bytes.size, options)
+                                if (bitmap != null) {
+                                    val thumbBitmap = android.media.ThumbnailUtils.extractThumbnail(bitmap, 300, 300)
+                                    val thumbOut = FileOutputStream(thumbFile)
+                                    thumbBitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 70, thumbOut)
+                                    thumbOut.close()
+                                }
                             } catch (e: Exception) {
                                 Log.e("IntruderManager", "Failed to generate thumbnail", e)
                             }
@@ -118,6 +126,19 @@ class IntruderManager private constructor(context: Context) {
                 Log.e("IntruderManager", "Error stopping session", e)
             }
         }, ContextCompat.getMainExecutor(appContext))
+    }
+
+    private fun calculateInSampleSize(options: android.graphics.BitmapFactory.Options, reqWidth: Int, reqHeight: Int): Int {
+        val (height: Int, width: Int) = options.outHeight to options.outWidth
+        var inSampleSize = 1
+        if (height > reqHeight || width > reqWidth) {
+            val halfHeight: Int = height / 2
+            val halfWidth: Int = width / 2
+            while (halfHeight / inSampleSize >= reqHeight && halfWidth / inSampleSize >= reqWidth) {
+                inSampleSize *= 2
+            }
+        }
+        return inSampleSize
     }
 
     companion object {
