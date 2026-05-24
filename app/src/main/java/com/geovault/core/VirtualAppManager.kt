@@ -15,7 +15,7 @@ import android.net.Uri
  */
 class VirtualAppManager(private val context: Context) {
 
-    private val sandboxDir = File(context.filesDir, "sandbox")
+    private val sandboxDir = com.geovault.security.StorageManager.getSandboxDir(context)
     private val prefs = context.getSharedPreferences("virtual_apps", Context.MODE_PRIVATE)
 
     init {

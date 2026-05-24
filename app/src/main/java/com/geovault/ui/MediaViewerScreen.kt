@@ -246,30 +246,56 @@ fun MediaViewerScreen(
 fun PhotoViewer(file: File) {
     var scale by remember { mutableFloatStateOf(1f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
-    val state = rememberTransformableState { zoomChange, offsetChange, _ ->
-        scale = (scale * zoomChange).coerceIn(1f, 5f)
-        offset += offsetChange
-    }
-
-    Box(
-        modifier = Modifier.fillMaxSize().pointerInput(Unit) {
-            detectTapGestures(onDoubleTap = {
-                scale = if (scale > 1f) 1f else 3f
-                offset = Offset.Zero
-            })
-        }.transformable(state = state)
+    
+    BoxWithConstraints(
+        modifier = Modifier.fillMaxSize()
     ) {
-        AsyncImage(
-            model = Uri.fromFile(file),
-            contentDescription = null,
-            modifier = Modifier.fillMaxSize().graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-                translationX = offset.x
-                translationY = offset.y
-            },
-            contentScale = ContentScale.Fit
-        )
+        val state = rememberTransformableState { zoomChange, offsetChange, _ ->
+            val newScale = (scale * zoomChange).coerceIn(1f, 5f)
+            
+            // Calculate boundaries for the offset based on scale
+            val extraWidth = (newScale - 1) * constraints.maxWidth
+            val extraHeight = (newScale - 1) * constraints.maxHeight
+            
+            val maxX = extraWidth / 2
+            val maxY = extraHeight / 2
+            
+            scale = newScale
+            offset = Offset(
+                x = (offset.x + offsetChange.x).coerceIn(-maxX, maxX),
+                y = (offset.y + offsetChange.y).coerceIn(-maxY, maxY)
+            )
+        }
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .pointerInput(Unit) {
+                    detectTapGestures(onDoubleTap = {
+                        if (scale > 1f) {
+                            scale = 1f
+                            offset = Offset.Zero
+                        } else {
+                            scale = 3f
+                        }
+                    })
+                }
+                .transformable(state = state)
+        ) {
+            AsyncImage(
+                model = Uri.fromFile(file),
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer {
+                        scaleX = scale
+                        scaleY = scale
+                        translationX = offset.x
+                        translationY = offset.y
+                    },
+                contentScale = ContentScale.Fit
+            )
+        }
     }
 }
 

@@ -11,6 +11,7 @@ import android.view.accessibility.AccessibilityEvent
 class WindowChangeDetector : AccessibilityService() {
 
     private var lockedPackages = emptySet<String>()
+    private var isMasterStealthEnabled = false
     private var lastPackage = ""
 
     override fun onServiceConnected() {
@@ -23,9 +24,13 @@ class WindowChangeDetector : AccessibilityService() {
         val allVaultIds = prefs.getStringSet("vault_ids", emptySet()) ?: emptySet()
         val apps = mutableSetOf<String>()
         allVaultIds.forEach { id ->
-            apps.addAll(prefs.getStringSet("vault_${id}_apps", emptySet()) ?: emptySet())
+            val vaultApps = prefs.getStringSet("vault_${id}_apps", emptySet()) ?: emptySet()
+            apps.addAll(vaultApps)
+            android.util.Log.d("WindowChangeDetector", "Vault $id has ${vaultApps.size} apps: $vaultApps")
         }
         lockedPackages = apps
+        android.util.Log.d("WindowChangeDetector", "Total locked apps updated: ${lockedPackages.size} -> $lockedPackages")
+        isMasterStealthEnabled = prefs.getBoolean("master_stealth_enabled", false)
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
@@ -42,13 +47,18 @@ class WindowChangeDetector : AccessibilityService() {
                 prefs.edit().remove("bypass_package").commit() // commit() for instant synchronous update
             }
 
+            val isSystemTarget = packageName == "com.android.packageinstaller" || 
+                                 packageName == "com.google.android.packageinstaller"
+            
+            val shouldLock = lockedPackages.contains(packageName) || 
+                             (isMasterStealthEnabled && isSystemTarget)
+
             // 2. High-Speed Detection & Trigger
-            // If the package is in the locked list and NOT currently bypassed, trigger lock.
-            // This works even if LockActivity was cleared from Recents because the event is 
-            // re-triggered when the user clicks the app from Recents.
-            if (lockedPackages.contains(packageName) && packageName != bypassPackage && packageName != myPackage) {
+            if (shouldLock && packageName != bypassPackage && packageName != myPackage) {
+                val isFingerprintEnabled = prefs.getBoolean("fingerprint_enabled", false)
                 val lockIntent = Intent(this, com.geovault.LockActivity::class.java).apply {
                     putExtra("target_package", packageName)
+                    putExtra("request_biometric", isFingerprintEnabled)
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or 
                              Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or 
                              Intent.FLAG_ACTIVITY_NO_ANIMATION)

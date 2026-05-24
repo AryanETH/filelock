@@ -55,8 +55,7 @@ import android.content.Intent
 import android.os.Build
 import android.view.WindowManager
 import androidx.core.view.WindowCompat
-import androidx.biometric.BiometricPrompt
-import androidx.core.content.ContextCompat
+import androidx.core.content.edit
 
 import androidx.appcompat.app.AppCompatActivity
 import com.geovault.security.SecurityUtils
@@ -102,15 +101,16 @@ class MainActivity : AppCompatActivity() {
                     contract = ActivityResultContracts.RequestMultiplePermissions()
                 ) { 
                     viewModel.setPerformingAction(false)
+                    viewModel.checkPermissions()
                 }
 
                 val deleteLauncher = rememberLauncherForActivityResult(
                     contract = ActivityResultContracts.StartIntentSenderForResult()
-                ) { result ->
+                ) { _ ->
                     viewModel.setPerformingAction(false)
-                    if (result.resultCode == android.app.Activity.RESULT_OK) {
-                        // Deletion confirmed
-                    }
+                    // if (result.resultCode == RESULT_OK) {
+                    //     // Deletion confirmed
+                    // }
                     viewModel.clearPendingDelete()
                 }
 
@@ -162,7 +162,7 @@ class MainActivity : AppCompatActivity() {
                     
                     try {
                         fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, null)
-                    } catch (e: SecurityException) {}
+                    } catch (_: SecurityException) {}
                 }
                 
                 Surface(
@@ -233,7 +233,6 @@ class MainActivity : AppCompatActivity() {
                                     onLockClick = { viewModel.lock() },
                                     onAppClick = { packageName -> viewModel.launchApp(packageName) },
                                     onRemoveApp = { packageName -> viewModel.removeAppFromVault(packageName) },
-                                    onSimulateArrive = { viewModel.updateProximity(true) },
                                     onOpenUsageSettings = { viewModel.openUsageStatsSettings() },
                                     onOpenOverlaySettings = { viewModel.openOverlaySettings() },
                                     onOpenProtectedApps = { viewModel.openProtectedAppsSettings() },
@@ -259,10 +258,10 @@ class MainActivity : AppCompatActivity() {
                                     },
                                     onDeleteFile = { fileId -> viewModel.removeFileFromVault(fileId) },
                                     onRestoreFile = { fileId -> viewModel.restoreFileToGallery(fileId) },
+                                    onRemoveAppFromVault = { vaultId, pkg -> viewModel.removeAppFromSpecificVault(vaultId, pkg) },
                                     onFetchGalleryItems = { cat -> viewModel.fetchGalleryItems(cat) },
                                     onToggleDarkMode = { viewModel.toggleDarkMode() },
                                     onToggleFingerprint = { viewModel.toggleFingerprint() },
-                                    onToggleSatellite = { viewModel.toggleSatelliteMode() },
                                     onSetLanguage = { lang -> viewModel.setLanguage(lang) },
                                     onCompleteTour = { viewModel.completeTour() },
                                     onToggleScreenshotRestriction = { viewModel.toggleScreenshotRestriction() },
@@ -282,7 +281,9 @@ class MainActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
         // Clear any bypass token when user leaves the main app
-        com.geovault.security.SecureManager.getInstance(this).prefs.edit().remove("bypass_package").apply()
+        com.geovault.security.SecureManager.getInstance(this).prefs.edit {
+            remove("bypass_package")
+        }
         
         // Force lock when leaving the app to ensure it opens on map next time
         // BUG FIX: Only lock if we are NOT performing an internal action (like picking files)

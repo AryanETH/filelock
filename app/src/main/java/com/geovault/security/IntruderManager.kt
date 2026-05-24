@@ -29,7 +29,7 @@ class IntruderManager private constructor(context: Context) {
         
         Log.d("IntruderManager", "Attempting to capture intruder...")
         val name = SimpleDateFormat("yyyy-MM-dd-HH-mm-ss-SSS", Locale.US).format(System.currentTimeMillis())
-        val intruderDir = File(appContext.filesDir, "intruder_files")
+        val intruderDir = StorageManager.getIntruderDir(appContext)
         if (!intruderDir.exists()) intruderDir.mkdirs()
         
         val photoFile = File(intruderDir, "$name.bin")

@@ -55,7 +55,7 @@ data class VaultState(
     val isMapDownloading: Boolean = false,
     val isFirstRun: Boolean = true,
     val isNetworkAvailable: Boolean = true,
-    val isMapLoaded: Boolean = false,
+    val isMapLoaded: Boolean = true,
 
     val hasUsageStatsPermission: Boolean = false,
     val hasOverlayPermission: Boolean = false,

@@ -14,7 +14,7 @@ import java.io.InputStream
  */
 class AppCloner(private val context: Context) {
 
-    private val sandboxDir = File(context.filesDir, "sandbox")
+    private val sandboxDir = com.geovault.security.StorageManager.getSandboxDir(context)
 
     fun cloneApp(packageName: String): Boolean {
         try {

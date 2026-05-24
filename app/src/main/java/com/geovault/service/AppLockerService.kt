@@ -66,6 +66,12 @@ class AppLockerService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedSt
 
     private val screenReceiver = object : android.content.BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action == "com.geovault.HIDE_OVERLAY") {
+                serviceScope.launch(Dispatchers.Main) {
+                    hideOverlayImmediate()
+                }
+                return
+            }
             serviceScope.launch(Dispatchers.Main) {
                 val prefs = com.geovault.security.SecureManager.getInstance(this@AppLockerService).prefs
                 prefs.edit().remove("bypass_package").commit()
@@ -95,8 +101,14 @@ class AppLockerService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedSt
         val filter = android.content.IntentFilter().apply {
             addAction(android.content.Intent.ACTION_SCREEN_OFF)
             addAction(android.content.Intent.ACTION_USER_PRESENT)
+            addAction("com.geovault.HIDE_OVERLAY")
         }
-        registerReceiver(screenReceiver, filter)
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(screenReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            registerReceiver(screenReceiver, filter)
+        }
         
         // 5. High-Frequency Stability: Set thread priority to maximum
         Thread.currentThread().priority = Thread.MAX_PRIORITY
@@ -222,9 +234,12 @@ class AppLockerService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedSt
             val allVaultIds = prefs.getStringSet("vault_ids", emptySet()) ?: emptySet()
             val apps = mutableSetOf<String>()
             allVaultIds.forEach { id ->
-                apps.addAll(prefs.getStringSet("vault_${id}_apps", emptySet()) ?: emptySet())
+                val vaultApps = prefs.getStringSet("vault_${id}_apps", emptySet()) ?: emptySet()
+                apps.addAll(vaultApps)
+                android.util.Log.d("AppLockerService", "Vault $id has ${vaultApps.size} apps: $vaultApps")
             }
             lockedPackages = apps
+            android.util.Log.d("AppLockerService", "Total locked apps updated: ${lockedPackages.size} -> $lockedPackages")
             
             isMasterStealthEnabled = prefs.getBoolean("master_stealth_enabled", false)
         }
@@ -273,7 +288,7 @@ class AppLockerService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedSt
                 val delayMs = when {
                     lockedPackages.contains(lastForegroundPackage) -> 100L // Fast for locked apps
                     lastForegroundPackage == "com.android.systemui" -> 50L  // Ultra-fast for Recents
-                    else -> 300L // Slower for idle/safe apps
+                    else -> 200L // Faster polling for better responsiveness
                 }
                 delay(delayMs)
             }
@@ -288,7 +303,7 @@ class AppLockerService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedSt
             withContext(Dispatchers.Main) {
                 prefs.edit().remove("bypass_package").apply()
             }
-            return
+            // Do NOT return here. We need to update lastForegroundPackage to avoid bypass bugs.
         }
 
         val bypassPackage = prefs.getString("bypass_package", null)
@@ -308,15 +323,13 @@ class AppLockerService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedSt
             // Refresh bypass after potential clear
             val updatedBypass = prefs.getString("bypass_package", null)
 
-            val isSystemTarget = currentPackage == "com.android.settings" || 
-                                 currentPackage == "com.android.packageinstaller" || 
-                                 currentPackage == "com.google.android.packageinstaller" ||
-                                 currentPackage == "com.android.vending"
+            val isSystemTarget = currentPackage == "com.android.packageinstaller" || 
+                                 currentPackage == "com.google.android.packageinstaller"
 
             val shouldLock = lockedPackages.contains(currentPackage) || 
                              (isMasterStealthEnabled && isSystemTarget)
 
-            if (shouldLock && currentPackage != updatedBypass) {
+            if (shouldLock && currentPackage != updatedBypass && currentPackage != this.packageName) {
                 withContext(Dispatchers.Main) {
                     targetPackageState.value = currentPackage
                     showOverlayImmediate()
@@ -338,9 +351,8 @@ class AppLockerService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedSt
                     WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY 
                 else 
                     @Suppress("DEPRECATION") WindowManager.LayoutParams.TYPE_PHONE,
-                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or 
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
                 WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or 
-                @Suppress("DEPRECATION") WindowManager.LayoutParams.FLAG_FULLSCREEN or
                 WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS or
                 WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
                 PixelFormat.TRANSLUCENT
@@ -360,9 +372,12 @@ class AppLockerService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedSt
                 // Launch LockActivity to provide the actual PIN UI
                 val isFingerprintEnabled = prefs.getBoolean("fingerprint_enabled", false)
                 val lockIntent = Intent(this, com.geovault.LockActivity::class.java).apply {
-                    putExtra("target_package", targetPackageState.value)
+                    val target = targetPackageState.value
+                    putExtra("target_package", target)
                     putExtra("request_biometric", isFingerprintEnabled)
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NO_ANIMATION)
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or 
+                             Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or
+                             Intent.FLAG_ACTIVITY_NO_ANIMATION)
                 }
                 startActivity(lockIntent)
             } catch (e: Exception) {}
@@ -371,9 +386,12 @@ class AppLockerService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedSt
             // Re-trigger LockActivity to be safe (handles the case where user cleared it from Recents).
             val isFingerprintEnabled = prefs.getBoolean("fingerprint_enabled", false)
             val lockIntent = Intent(this, com.geovault.LockActivity::class.java).apply {
-                putExtra("target_package", targetPackageState.value)
+                val target = targetPackageState.value
+                putExtra("target_package", target)
                 putExtra("request_biometric", isFingerprintEnabled)
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NO_ANIMATION)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or 
+                         Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or
+                         Intent.FLAG_ACTIVITY_NO_ANIMATION)
             }
             startActivity(lockIntent)
         }

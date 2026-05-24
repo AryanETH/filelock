@@ -205,7 +205,8 @@ fun OnboardingSlideContent(slide: OnboardingSlide) {
             style = MaterialTheme.typography.headlineLarge,
             fontWeight = FontWeight.Black,
             color = Color.White,
-            letterSpacing = 4.sp
+            letterSpacing = 4.sp,
+            textAlign = TextAlign.Center
         )
 
         Spacer(modifier = Modifier.height(16.dp))

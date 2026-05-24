@@ -26,9 +26,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.*
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -352,6 +354,7 @@ fun VaultContentScreen(
     onFetchGalleryItems: (FileCategory) -> Unit,
     onDeleteFile: (String) -> Unit,
     onRestoreFile: (String) -> Unit,
+    onRemoveAppFromVault: (String, String) -> Unit = { _, _ -> }, // Added this
     onToggleDarkMode: () -> Unit,
     onToggleFingerprint: () -> Unit,
     onSetLanguage: (String) -> Unit,
@@ -386,8 +389,21 @@ fun VaultContentScreen(
 
     val mediaPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
-    ) { 
+    ) { results ->
         onEndAction()
+        if (results.values.any { it }) {
+            // Directly trigger the file picker if permission is granted
+            val cat = if (currentScreen is ContentScreen.CategoryView) (currentScreen as ContentScreen.CategoryView).category else FileCategory.PHOTO
+            val folder = if (currentScreen is ContentScreen.FolderView) (currentScreen as ContentScreen.FolderView).folderName else null
+            
+            if (folder != null) {
+                selectedFolderForAdd = folder
+                onFetchGalleryItems(FileCategory.PHOTO)
+            } else {
+                selectedCategoryForAdd = cat
+                onFetchGalleryItems(cat)
+            }
+        }
     }
 
     val isDark = state.isDarkMode
@@ -416,17 +432,33 @@ fun VaultContentScreen(
                             }
                             else -> stringResource(R.string.app_name)
                         }
-                        Text(
-                            title,
-                            fontWeight = FontWeight.Black, 
-                            color = if (isDark) CyberBlue else AppBlue,
-                            fontSize = 26.sp,
-                            letterSpacing = (-0.5).sp
-                        ) 
+                        if (currentScreen is ContentScreen.WebView) {
+                            Text(
+                                (currentScreen as ContentScreen.WebView).title,
+                                fontWeight = FontWeight.Black, 
+                                color = if (isDark) CyberBlue else AppBlue,
+                                fontSize = 20.sp,
+                                maxLines = 1
+                            )
+                        } else {
+                            Text(
+                                title,
+                                fontWeight = FontWeight.Black, 
+                                color = if (isDark) CyberBlue else AppBlue,
+                                fontSize = 26.sp,
+                                letterSpacing = (-0.5).sp
+                            )
+                        }
                     },
                     navigationIcon = {
                         if (currentScreen != ContentScreen.Dashboard) {
-                            IconButton(onClick = { currentScreen = ContentScreen.Dashboard }) {
+                            IconButton(onClick = { 
+                                currentScreen = when(currentScreen) {
+                                    is ContentScreen.WebView -> ContentScreen.Settings
+                                    is ContentScreen.FAQ -> ContentScreen.Settings
+                                    else -> ContentScreen.Dashboard
+                                }
+                            }) {
                                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = if (isDark) Color.White else Color.Black)
                             }
                         }
@@ -501,7 +533,12 @@ fun VaultContentScreen(
                 }
             }
         ) { padding ->
-            Box(modifier = Modifier.padding(padding).fillMaxSize().padding(horizontal = 16.dp)) {
+            Box(
+                modifier = Modifier
+                    .padding(padding)
+                    .fillMaxSize()
+                    .then(if (currentScreen is ContentScreen.WebView) Modifier else Modifier.padding(horizontal = 16.dp))
+            ) {
                 AnimatedContent(
                     targetState = currentScreen,
                     transitionSpec = {
@@ -546,7 +583,9 @@ fun VaultContentScreen(
                             onToggleFingerprint = onToggleFingerprint,
                             onSetLanguage = onSetLanguage,
                             onOpenLanguageSelection = { currentScreen = ContentScreen.LanguageSelection },
-                            onToggleScreenshotRestriction = onToggleScreenshotRestriction
+                            onToggleScreenshotRestriction = onToggleScreenshotRestriction,
+                            onOpenWebView = { url, title -> currentScreen = ContentScreen.WebView(url, title) },
+                            onOpenFAQ = { currentScreen = ContentScreen.FAQ }
                         )
                         is ContentScreen.CategoryView -> {
                             val gridState = categoryGridStates.getOrPut(screen.category) { LazyGridState() }
@@ -573,6 +612,11 @@ fun VaultContentScreen(
                                 currentScreen = ContentScreen.Dashboard
                             },
                             onBack = { currentScreen = ContentScreen.Settings }
+                        )
+                        is ContentScreen.FAQ -> FAQScreen(isDark = isDark)
+                        is ContentScreen.WebView -> WebViewScreen(
+                            url = screen.url,
+                            isDark = isDark
                         )
                     }
                 }
@@ -650,6 +694,7 @@ fun VaultContentScreen(
             state = state,
             onDismiss = { showBackupDialog = false },
             onRemoveVault = onRemoveVault,
+            onRemoveAppFromVault = onRemoveAppFromVault,
             onClearAll = onClearAllVaults
         )
     }
@@ -756,8 +801,10 @@ sealed class ContentScreen {
     object AppLock : ContentScreen()
     object Settings : ContentScreen()
     object LanguageSelection : ContentScreen()
+    object FAQ : ContentScreen()
     data class CategoryView(val category: FileCategory) : ContentScreen()
     data class FolderView(val folderName: String) : ContentScreen()
+    data class WebView(val url: String, val title: String) : ContentScreen()
 }
 
 @Composable
@@ -1214,7 +1261,9 @@ fun SettingsSection(
     onToggleFingerprint: () -> Unit,
     onSetLanguage: (String) -> Unit,
     onOpenLanguageSelection: () -> Unit,
-    onToggleScreenshotRestriction: () -> Unit
+    onToggleScreenshotRestriction: () -> Unit,
+    onOpenWebView: (String, String) -> Unit,
+    onOpenFAQ: () -> Unit
 ) {
     val isDark = state.isDarkMode
     val textPrimary = if (isDark) Color.White else Color.Black.copy(alpha = 0.8f)
@@ -1317,15 +1366,101 @@ fun SettingsSection(
             ) {
                 Column {
                     SettingsActionItem(stringResource(R.string.feedback), Icons.Default.ChatBubbleOutline, isDark) {}
-                    SettingsActionItem(stringResource(R.string.faq), Icons.Default.HelpOutline, isDark) {}
-                    SettingsActionItem(stringResource(R.string.terms_of_use), Icons.Default.Description, isDark) {}
-                    SettingsActionItem(stringResource(R.string.privacy_policy), Icons.Default.Security, isDark) {}
+                    SettingsActionItem(stringResource(R.string.faq), Icons.Default.HelpOutline, isDark) {
+                        onOpenFAQ()
+                    }
+                    SettingsActionItem(stringResource(R.string.terms_of_use), Icons.Default.Description, isDark) {
+                        onOpenWebView("https://maps.aitoyz.in/terms.html", "Terms of Use")
+                    }
+                    SettingsActionItem(stringResource(R.string.privacy_policy), Icons.Default.Security, isDark) {
+                        onOpenWebView("https://maps.aitoyz.in/privacypolicy.html", "Privacy Policy")
+                    }
                 }
             }
         }
 
         Spacer(Modifier.height(32.dp))
     }
+}
+
+@Composable
+fun FAQScreen(isDark: Boolean) {
+    val faqs = remember {
+        listOf(
+            "What is Mapplock and how is it different from other app lockers?" to "Mapplock is a next-generation security application developed by Aitoyz that uses location-based intelligence to protect your privacy. Unlike standard lockers that rely solely on PINs, Mapplock introduces \"Map-Gate\" technology, allowing you to define safe geographical zones. It provides a professional-grade vault for photos, videos, and files, combined with advanced intruder detection and stealth disguises. It is specifically built for users who want their phone's security to adapt automatically to their environment.",
+            "How does the \"Map-Gate\" feature work?" to "The Map-Gate feature allows you to set specific GPS coordinates as \"Safe Zones,\" such as your home or office. While you are within the designated radius of a safe zone, your protected apps can be accessed more conveniently or kept unlocked entirely. However, the moment you move outside this radius, Mapplock triggers a high-security lockdown automatically. This ensures that if your phone is lost, stolen, or accessed in a public area, your sensitive data remains completely inaccessible to others.",
+            "Are my private photos and videos stored on Mapplock's servers?" to "No, Aitoyz operates on a \"Privacy-First\" model, meaning Mapplock does not store any of your personal files on our servers. All photos, videos, and documents you move into the vault are encrypted locally on your device’s internal storage. We do not have any remote access to your private content, and we cannot see or share your files. This approach ensures that you have total control over your data and that it remains secure even if your internet connection is compromised.",
+            "What happens if I forget my PIN or Pattern?" to "If you forget your primary security code, you can use the secondary verification methods established during the initial setup. This includes biometric authentication, such as fingerprint or face unlock, if you have enabled those options in the settings menu. Additionally, you can use your \"Secret Map Point\" as a recovery method to reset your credentials. We strongly recommend setting up multiple recovery options to avoid a permanent lockout, as we cannot recover your PIN remotely for security reasons.",
+            "Will the map features work if I am offline or have no internet?" to "Yes, Mapplock is designed to remain fully functional even without an active data or Wi-Fi connection. The app proactively downloads and caches GPS map data for your current regional area as soon as you grant the required location permissions. This offline map engine allows the security interface to load instantly and accurately detect your location-based \"Safe Zones.\" This ensures that your Map-Gate security remains active and reliable, regardless of your signal strength or roaming status.",
+            "What is \"Intruder Capture\" and where can I see the photos?" to "Intruder Capture is an automated security feature that takes a secret selfie of anyone attempting to break into your vault. If an incorrect PIN or Pattern is entered more than the allowed number of times, the app silently triggers the front camera to snap a photo of the user. These photos are stored within a dedicated \"Intruders\" category inside your vault, complete with a timestamp of the attempt. You can review these logs at any time to see exactly who tried to access your private apps without permission.",
+            "What is \"File Loss Protection\" and why should I enable it?" to "File Loss Protection is a critical safeguard that uses Device Administrator rights to prevent the accidental or unauthorized uninstallation of Mapplock. Because your files are encrypted and stored within the app's protected directory, a standard uninstallation would result in the permanent loss of all your hidden data. By enabling this feature, the system requires an extra verification step before the app can be removed from the device. This ensures that your important documents and memories are never deleted by a mistake or by someone else."
+        )
+    }
+
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        items(faqs) { (question, answer) ->
+            var expanded by remember { mutableStateOf(false) }
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                color = if (isDark) CyberDarkBlue else CreamWhite,
+                shadowElevation = 2.dp,
+                onClick = { expanded = !expanded }
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = question,
+                            modifier = Modifier.weight(1f),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = if (isDark) Color.White else Color.Black
+                        )
+                        Icon(
+                            imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                            contentDescription = null,
+                            tint = if (isDark) CyberBlue else AppBlue
+                        )
+                    }
+                    if (expanded) {
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            text = answer,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = if (isDark) Color.Gray else Color.DarkGray,
+                            lineHeight = 20.sp
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun WebViewScreen(url: String, isDark: Boolean) {
+    androidx.compose.ui.viewinterop.AndroidView(
+        modifier = Modifier.fillMaxSize(),
+        factory = { context ->
+            android.webkit.WebView(context).apply {
+                settings.javaScriptEnabled = true
+                settings.domStorageEnabled = true
+                webViewClient = android.webkit.WebViewClient()
+                loadUrl(url)
+            }
+        },
+        update = { webView ->
+            // Update the webview if needed
+        }
+    )
 }
 
 @Composable
@@ -1415,6 +1550,7 @@ fun BackupManagementDialog(
     state: VaultState,
     onDismiss: () -> Unit,
     onRemoveVault: (String) -> Unit,
+    onRemoveAppFromVault: (String, String) -> Unit,
     onClearAll: () -> Unit
 ) {
     val context = LocalContext.current
@@ -1452,10 +1588,28 @@ fun BackupManagementDialog(
                                             color = CyberBlue,
                                             fontSize = 13.sp,
                                             fontWeight = FontWeight.Bold,
-                                            modifier = Modifier.clickable {
-                                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(mapsLink))
-                                                context.startActivity(intent)
-                                            }
+                                            modifier = Modifier
+                                                .clickable {
+                                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(mapsLink))
+                                                    context.startActivity(intent)
+                                                }
+                                                .drawBehind {
+                                                    val strokeWidth = 1.dp.toPx()
+                                                    val dashWidth = 3.dp.toPx()
+                                                    val gapWidth = 3.dp.toPx()
+                                                    val y = size.height - 1.dp.toPx()
+                                                    var x = 0f
+                                                    while (x < size.width) {
+                                                        drawLine(
+                                                            color = CyberBlue.copy(alpha = 0.6f),
+                                                            start = Offset(x, y),
+                                                            end = Offset(x + dashWidth, y),
+                                                            strokeWidth = strokeWidth,
+                                                            cap = StrokeCap.Round
+                                                        )
+                                                        x += dashWidth + gapWidth
+                                                    }
+                                                }
                                         )
                                         Spacer(Modifier.height(4.dp))
                                         Text(
@@ -1469,7 +1623,7 @@ fun BackupManagementDialog(
                                     }
                                 }
                                 
-                                Spacer(Modifier.height(8.dp))
+                                Spacer(Modifier.height(12.dp))
                                 
                                 Text(
                                     "Secured Apps:", 
@@ -1481,25 +1635,54 @@ fun BackupManagementDialog(
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(top = 8.dp)
+                                        .padding(top = 10.dp)
                                         .horizontalScroll(rememberScrollState()),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    horizontalArrangement = Arrangement.spacedBy(16.dp)
                                 ) {
                                     vault.hiddenApps.forEach { pkg ->
                                         val appInfo = state.installedApps.find { it.packageName == pkg }
-                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                            AppMiniIcon(pkg)
-                                            Text(
-                                                appInfo?.appName ?: "App", 
-                                                fontSize = 9.sp, 
-                                                color = if (state.isDarkMode) Color.Gray else Color.DarkGray,
-                                                maxLines = 1
-                                            )
+                                        Box(contentAlignment = Alignment.TopEnd) {
+                                            Column(
+                                                horizontalAlignment = Alignment.CenterHorizontally,
+                                                modifier = Modifier.width(60.dp)
+                                            ) {
+                                                AppMiniIcon(pkg)
+                                                Spacer(Modifier.height(4.dp))
+                                                Text(
+                                                    appInfo?.appName ?: "App", 
+                                                    fontSize = 9.sp, 
+                                                    color = if (state.isDarkMode) Color.White else Color.Black,
+                                                    maxLines = 1,
+                                                    fontWeight = FontWeight.Medium,
+                                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                                )
+                                            }
+                                            
+                                            // Unhide Eye Icon
+                                            Surface(
+                                                modifier = Modifier
+                                                    .size(20.dp)
+                                                    .offset(x = 4.dp, y = (-4).dp)
+                                                    .clickable { onRemoveAppFromVault(vault.id, pkg) },
+                                                shape = CircleShape,
+                                                color = CyberBlue,
+                                                shadowElevation = 2.dp
+                                            ) {
+                                                Icon(
+                                                    Icons.Default.VisibilityOff, 
+                                                    contentDescription = "Unhide",
+                                                    tint = Color.White,
+                                                    modifier = Modifier.padding(3.dp)
+                                                )
+                                            }
                                         }
                                     }
                                 }
                             }
-                            HorizontalDivider(color = (if (state.isDarkMode) Color.White else Color.Black).copy(alpha = 0.05f))
+                            HorizontalDivider(
+                                modifier = Modifier.padding(vertical = 4.dp),
+                                color = (if (state.isDarkMode) Color.White else Color.Black).copy(alpha = 0.05f)
+                            )
                         }
                     }
                 }
@@ -1822,22 +2005,6 @@ fun ImportPreviewBottomSheet(
                                     Text(formatDuration(item.duration), color = Color.Gray, fontSize = 12.sp)
                                 }
                             }
-                        }
-
-                        IconButton(onClick = { 
-                            selectedItems.find { it.uri == item.uri }?.let { galleryItem ->
-                                val intent = Intent(Intent.ACTION_VIEW).apply {
-                                    setDataAndType(galleryItem.uri, if (category == FileCategory.VIDEO) "video/*" else "audio/*")
-                                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                                }
-                                try {
-                                    context.startActivity(intent)
-                                } catch (e: Exception) {
-                                    Toast.makeText(context, "No app found to preview this file", Toast.LENGTH_SHORT).show()
-                                }
-                            }
-                        }) {
-                            Icon(Icons.Default.PlayCircle, null, tint = CyberBlue, modifier = Modifier.size(32.dp))
                         }
                     }
                 }

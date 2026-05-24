@@ -56,6 +56,7 @@ import android.widget.Toast
 class LockActivity : AppCompatActivity() {
 
     private var isUnlocked = false
+    private val targetPackageState = mutableStateOf("")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
@@ -69,8 +70,8 @@ class LockActivity : AppCompatActivity() {
             Toast.makeText(this, "Security Alert: Rooted device detected.", Toast.LENGTH_SHORT).show()
         }
         
-        val targetPackage = intent.getStringExtra("target_package") ?: ""
-        val isSilentCover = intent.getBooleanExtra("is_silent_cover", false)
+        val initialTargetPackage = intent.getStringExtra("target_package") ?: ""
+        targetPackageState.value = initialTargetPackage
         val requestBiometric = intent.getBooleanExtra("request_biometric", false)
 
         // Mark lock as active for Accessibility interception
@@ -96,7 +97,14 @@ class LockActivity : AppCompatActivity() {
 
         setContent {
             val isRestricted = remember { prefs.getBoolean("screenshot_restriction", true) }
+            val currentTargetPackage by targetPackageState
             
+            // Notify service to hide white overlay once UI is ready
+            LaunchedEffect(currentTargetPackage) {
+                kotlinx.coroutines.delay(300)
+                sendBroadcast(Intent("com.geovault.HIDE_OVERLAY"))
+            }
+
             GeoVaultTheme(darkTheme = false) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
@@ -113,16 +121,16 @@ class LockActivity : AppCompatActivity() {
 
                     AuthUI(
                         context = this,
-                        targetPackage = targetPackage,
+                        targetPackage = currentTargetPackage,
                         autoRequestBiometric = requestBiometric,
                         onAuthenticated = {
                             isUnlocked = true
                             val authPrefs = com.geovault.security.SecureManager.getInstance(this).prefs
-                            authPrefs.edit().putString("bypass_package", targetPackage).apply()
-                            unlock(targetPackage)
+                            authPrefs.edit().putString("bypass_package", currentTargetPackage).apply()
+                            unlock(currentTargetPackage)
                         },
                     ) {
-                        showBiometricPrompt(targetPackage)
+                        showBiometricPrompt(currentTargetPackage)
                     }
                 }
             }
@@ -138,12 +146,9 @@ class LockActivity : AppCompatActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        
-        val targetPackage = intent.getStringExtra("target_package") ?: ""
-        val requestBiometric = intent.getBooleanExtra("request_biometric", false)
-        
-        if (requestBiometric) {
-            showBiometricPrompt(targetPackage)
+        val newTarget = intent.getStringExtra("target_package") ?: ""
+        if (newTarget.isNotEmpty()) {
+            targetPackageState.value = newTarget
         }
     }
 

@@ -78,15 +78,14 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.draw.blur
 import androidx.biometric.BiometricManager
 import android.widget.Toast
-import androidx.media3.common.util.UnstableApi
 import com.geovault.security.IntruderManager
-import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.compose.LocalLifecycleOwner as LifecycleOwnerCompose
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import android.view.HapticFeedbackConstants
 import androidx.compose.animation.core.AnimationVector1D
 
-@OptIn(UnstableApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VaultScreen(
     state: VaultState,
@@ -96,7 +95,6 @@ fun VaultScreen(
     onLockClick: () -> Unit,
     onAppClick: (String) -> Unit,
     onRemoveApp: (String) -> Unit,
-    onSimulateArrive: () -> Unit,
     onOpenUsageSettings: () -> Unit,
     onOpenOverlaySettings: () -> Unit,
     onOpenProtectedApps: () -> Unit,
@@ -111,9 +109,9 @@ fun VaultScreen(
     onDeleteFile: (String) -> Unit,
     onRestoreFile: (String) -> Unit,
     onFetchGalleryItems: (com.geovault.model.FileCategory) -> Unit,
+    onRemoveAppFromVault: (String, String) -> Unit = { _, _ -> },
     onToggleDarkMode: () -> Unit,
     onToggleFingerprint: () -> Unit,
-    onToggleSatellite: () -> Unit,
     onSetLanguage: (String) -> Unit,
     onCompleteTour: () -> Unit,
     onToggleScreenshotRestriction: () -> Unit,
@@ -156,23 +154,22 @@ fun VaultScreen(
     
     // Search suggestions logic
     LaunchedEffect(searchQuery) {
-        if (searchQuery.length > 2) {
+        searchSuggestions = if (searchQuery.length > 2) {
             delay(200) // Reduced debounce for faster live suggestions
             if (state.isNetworkAvailable) {
-                searchSuggestions = getSearchSuggestions(searchQuery)
+                getSearchSuggestions(searchQuery)
             } else {
-                searchSuggestions = emptyList()
+                emptyList()
             }
         } else {
-            searchSuggestions = emptyList()
+            emptyList()
         }
     }
 
     // Dynamic Gyro Rotation
     var isCenteredOnUser by remember { mutableStateOf(false) }
     
-    val sensorManager = remember { context.getSystemService(android.content.Context.SENSOR_SERVICE) as android.hardware.SensorManager }
-    val rotationSensor = remember { sensorManager.getDefaultSensor(android.hardware.Sensor.TYPE_ROTATION_VECTOR) }
+    remember { context.getSystemService(android.content.Context.SENSOR_SERVICE) as android.hardware.SensorManager }
     
     LaunchedEffect(isCenteredOnUser) {
         mapLibreMap?.let { map ->
@@ -191,21 +188,18 @@ fun VaultScreen(
     
     // Ripple effect state
     var rippleOffset by remember { mutableStateOf<Offset?>(null) }
-    val rippleScale = remember { androidx.compose.animation.core.Animatable(0f) }
-    val rippleAlpha = remember { androidx.compose.animation.core.Animatable(0f) }
+    val rippleScale = remember { Animatable(0f) }
+    val rippleAlpha = remember { Animatable(0f) }
 
     // Tour Targets
     var fabColumnRect by remember { mutableStateOf(Rect.Zero) }
     
-    val lifecycleOwner = LocalLifecycleOwner.current
+    val lifecycleOwner = LifecycleOwnerCompose.current
 
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
+    ) { _ ->
         onEndAction()
-        if (permissions[android.Manifest.permission.ACCESS_FINE_LOCATION] == true) {
-            // Permission granted, will be reflected in state
-        }
     }
 
     DisposableEffect(showUnlockPrompt) {
@@ -237,7 +231,7 @@ fun VaultScreen(
     }
 
     val mapBlur by animateDpAsState(
-        targetValue = if (showUnlockPrompt || showSetupDialog) 12.dp else 0.dp,
+        targetValue = 0.dp,
         animationSpec = tween(500),
         label = "MapBlur"
     )
@@ -289,13 +283,12 @@ fun VaultScreen(
                                                 val dist = LocationHelper.calculateDistance(point.latitude, point.longitude, v.location.latitude, v.location.longitude)
                                                 dist <= 100f
                                             }
-                                            
-                                            return if (vault != null) {
+                                            if (vault != null) {
                                                 selectedVaultForUnlock = vault
                                                 showUnlockPrompt = true
-                                                true // Consumed - Prioritized!
+                                                return true
                                             } else {
-                                                false
+                                                return false
                                             }
                                         }
 
@@ -333,8 +326,11 @@ fun VaultScreen(
                                     })
 
                                     // Intercept touches for custom logic but allow map to handle its own gestures (tilt/pan/zoom)
-                                    setOnTouchListener { view, event ->
-                                        val handled = gestureDetector.onTouchEvent(event)
+                                    setOnTouchListener { v, event ->
+                                        gestureDetector.onTouchEvent(event)
+                                        if (event.action == android.view.MotionEvent.ACTION_UP) {
+                                            v.performClick()
+                                        }
                                         // If our gesture detector consumed it (e.g. double tap), we might want to block the map.
                                         // However, to ensure 3D tilt (multi-touch) works, we must return false 
                                         // unless we are absolutely sure we want to stop the map from seeing the event.
@@ -352,7 +348,7 @@ fun VaultScreen(
                                         try {
                                             val locationComponent = map.locationComponent
                                             locationComponent.activateLocationComponent(
-                                                org.maplibre.android.location.LocationComponentActivationOptions.builder(ctx, style)
+                                                LocationComponentActivationOptions.builder(ctx, style)
                                                     .locationComponentOptions(
                                                         org.maplibre.android.location.LocationComponentOptions.builder(ctx)
                                                             .compassAnimationEnabled(true)
@@ -361,7 +357,9 @@ fun VaultScreen(
                                                     )
                                                     .build()
                                             )
-                                            locationComponent.isLocationComponentEnabled = true
+                                            if (androidx.core.content.ContextCompat.checkSelfPermission(ctx, android.Manifest.permission.ACCESS_FINE_LOCATION) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                                                locationComponent.isLocationComponentEnabled = true
+                                            }
                                             
                                             // Randomize initial view for maximum stealth - Start at a random city
                                             val cities = listOf(
@@ -415,7 +413,7 @@ fun VaultScreen(
                                     }
                                 }
                             },
-                            isDark = isDark
+                            isDark = false // Always light theme
                         )
                         
                         if (searchSuggestions.isNotEmpty()) {
@@ -503,7 +501,7 @@ fun VaultScreen(
                             SmallMapFab(
                                 icon = Icons.Default.Explore, 
                                 active = false,
-                                isDark = isDark,
+                                isDark = false, // Always light theme
                                 modifier = Modifier.rotate(-mapBearing)
                             ) {
                                 HapticHelper.vibrate(context, 1)
@@ -511,17 +509,17 @@ fun VaultScreen(
                             }
 
                             // Zoom Controls
-                            SmallMapFab(icon = Icons.Default.Add, active = false, isDark = isDark) {
+                            SmallMapFab(icon = Icons.Default.Add, active = false, isDark = false) { // Always light theme
                                 HapticHelper.vibrate(context, 1)
                                 mapLibreMap?.animateCamera(CameraUpdateFactory.zoomIn())
                             }
 
-                            SmallMapFab(icon = Icons.Default.Remove, active = false, isDark = isDark) {
+                            SmallMapFab(icon = Icons.Default.Remove, active = false, isDark = false) { // Always light theme
                                 HapticHelper.vibrate(context, 1)
                                 mapLibreMap?.animateCamera(CameraUpdateFactory.zoomOut())
                             }
 
-                            SmallMapFab(icon = Icons.Default.MyLocation, active = isCenteredOnUser, isDark = isDark) {
+                            SmallMapFab(icon = Icons.Default.MyLocation, active = isCenteredOnUser, isDark = false) { // Always light theme
                                 HapticHelper.vibrate(context, 2)
                                 if (state.hasLocationPermission) {
                                     isCenteredOnUser = true
@@ -596,7 +594,7 @@ fun VaultScreen(
 
                     if (showUnlockPrompt && selectedVaultForUnlock != null) {
                         AnimatedVisibility(
-                            visible = showUnlockPrompt,
+                            visible = true,
                             enter = fadeIn() + scaleIn(initialScale = 0.9f),
                             exit = fadeOut() + scaleOut(targetScale = 0.9f)
                         ) {
@@ -615,12 +613,11 @@ fun VaultScreen(
 
                     if (showSetupDialog && setupLatLng != null) {
                         AnimatedVisibility(
-                            visible = showSetupDialog,
+                            visible = true,
                             enter = fadeIn() + scaleIn(initialScale = 0.9f),
                             exit = fadeOut() + scaleOut(targetScale = 0.9f)
                         ) {
                             VaultSetupDialog(
-                                apps = currentInstalledApps,
                                 isNativeEligible = isNativeEligible,
                                 isDark = isDark,
                                 onDismiss = { showSetupDialog = false },
@@ -664,6 +661,7 @@ fun VaultScreen(
                     onGrantFullStorage = onGrantFullStorage,
                     onDeleteFile = onDeleteFile,
                     onRestoreFile = onRestoreFile,
+                    onRemoveAppFromVault = onRemoveAppFromVault,
                     onToggleDarkMode = onToggleDarkMode,
                     onToggleFingerprint = onToggleFingerprint,
                     onSetLanguage = onSetLanguage,
@@ -689,7 +687,6 @@ fun VaultUnlockDialog(
     onIntruderCaptured: (android.net.Uri, String?) -> Unit
 ) {
     val context = LocalContext.current
-    val haptic = LocalHapticFeedback.current
     var failedAttempts by remember { mutableIntStateOf(0) }
     
     Dialog(onDismissRequest = onDismiss) {
@@ -698,7 +695,7 @@ fun VaultUnlockDialog(
             color = if (isDark) CyberDarkBlue else CreamWhite,
             border = null,
             shadowElevation = 12.dp,
-            modifier = Modifier.width(320.dp).blur(if (failedAttempts > 0) 1.dp else 0.dp)
+            modifier = Modifier.width(320.dp)
         ) {
             Column(
                 modifier = Modifier.padding(24.dp),
@@ -730,20 +727,22 @@ fun VaultUnlockDialog(
                         }
                     )
                 } else {
-                    CompactPatternGrid(
-                        correctPattern = vault.secret, 
-                        isLightTheme = !isDark,
-                        onPatternComplete = {
-                            failedAttempts = 0
-                            onConfirm(it)
-                        },
-                        onError = {
-                            failedAttempts++
-                            if (failedAttempts >= 3) {
-                                IntruderManager.getInstance(context).captureIntruder(onIntruderCaptured)
+                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        CompactPatternGrid(
+                            correctPattern = vault.secret, 
+                            isLightTheme = !isDark,
+                            onPatternComplete = {
+                                failedAttempts = 0
+                                onConfirm(it)
+                            },
+                            onError = {
+                                failedAttempts++
+                                if (failedAttempts >= 3) {
+                                    IntruderManager.getInstance(context).captureIntruder(onIntruderCaptured)
+                                }
                             }
-                        }
-                    )
+                        )
+                    }
                 }
                 
                 Spacer(Modifier.height(16.dp))
@@ -762,21 +761,16 @@ fun VaultUnlockDialog(
 
 @Composable
 fun VaultSetupDialog(
-    apps: List<AppInfo>, 
     isNativeEligible: Boolean,
     isDark: Boolean,
     onDismiss: () -> Unit, 
     onConfirm: (String, Set<String>, LockType, Float) -> Unit
 ) {
     val context = LocalContext.current
-    var secret by remember { mutableStateOf("") }
     var lockType by remember { mutableStateOf(LockType.PIN) }
-    val selectedApps = remember { mutableStateOf(setOf<String>()) }
-    var showApps by remember { mutableStateOf(false) }
     
-    val haptic = LocalHapticFeedback.current
     var isNativeEnabled by remember { mutableStateOf(false) }
-    var radius by remember { mutableStateOf(500f) }
+    var radius by remember { mutableFloatStateOf(500f) }
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -791,7 +785,7 @@ fun VaultSetupDialog(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    if (!showApps) "INITIALIZE VAULT" else "SECURE PACKAGES",
+                    "INITIALIZE VAULT",
                     style = MaterialTheme.typography.titleLarge,
                     color = if (isDark) CyberBlue else AppBlue,
                     fontWeight = FontWeight.Black,
@@ -799,154 +793,107 @@ fun VaultSetupDialog(
                 )
                 Spacer(Modifier.height(20.dp))
                 
-                if (!showApps) {
-                    if (isNativeEligible) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(16.dp))
-                                .background((if (isDark) CyberBlue else AppBlue).copy(alpha = 0.08f))
-                                .padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                "Native Mode", 
-                                style = MaterialTheme.typography.bodyLarge, 
-                                fontWeight = FontWeight.Bold,
-                                color = if (isDark) CyberBlue else AppBlue,
-                                modifier = Modifier.weight(1f)
+                if (isNativeEligible) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(16.dp))
+                            .background((if (isDark) CyberBlue else AppBlue).copy(alpha = 0.08f))
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            "Native Mode", 
+                            style = MaterialTheme.typography.bodyLarge, 
+                            fontWeight = FontWeight.Bold,
+                            color = if (isDark) CyberBlue else AppBlue,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Switch(
+                            checked = isNativeEnabled,
+                            onCheckedChange = { isNativeEnabled = it },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = Color.White,
+                                checkedTrackColor = if (isDark) CyberBlue else AppBlue
                             )
-                            Switch(
-                                checked = isNativeEnabled,
-                                onCheckedChange = { isNativeEnabled = it },
-                                colors = SwitchDefaults.colors(
-                                    checkedThumbColor = Color.White,
-                                    checkedTrackColor = if (isDark) CyberBlue else AppBlue
+                        )
+                    }
+                    
+                    if (isNativeEnabled) {
+                        Column(modifier = Modifier.padding(vertical = 16.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    "Lock Radius", 
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isDark) Color.LightGray else Color.Gray
                                 )
-                            )
-                        }
-                        
-                        if (isNativeEnabled) {
-                            Column(modifier = Modifier.padding(vertical = 16.dp)) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(
-                                        "Lock Radius", 
-                                        style = MaterialTheme.typography.bodySmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = if (isDark) Color.LightGray else Color.Gray
-                                    )
-                                    Spacer(Modifier.weight(1f))
-                                    Text(
-                                        "${radius.toInt()}m", 
-                                        color = if (isDark) CyberBlue else AppBlue,
-                                        fontWeight = FontWeight.Black
-                                    )
-                                }
-                                Slider(
-                                    value = radius,
-                                    onValueChange = { 
-                                        if (it.toInt() != radius.toInt()) {
-                                            HapticHelper.vibrate(context, 0)
-                                        }
-                                        radius = it 
-                                    },
-                                    valueRange = 100f..2000f,
-                                    steps = 19,
-                                    colors = SliderDefaults.colors(
-                                        thumbColor = if (isDark) CyberBlue else AppBlue,
-                                        activeTrackColor = if (isDark) CyberBlue else AppBlue
-                                    )
+                                Spacer(Modifier.weight(1f))
+                                Text(
+                                    "${radius.toInt()}m", 
+                                    color = if (isDark) CyberBlue else AppBlue,
+                                    fontWeight = FontWeight.Black
                                 )
                             }
-                        }
-                        
-                        Spacer(Modifier.height(16.dp))
-                    }
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        VaultLockTypeButton("PIN", lockType == LockType.PIN, isDark) { 
-                            lockType = LockType.PIN 
-                            secret = ""
-                        }
-                        VaultLockTypeButton("PATTERN", lockType == LockType.PATTERN, isDark) { 
-                            lockType = LockType.PATTERN 
-                            secret = ""
+                            Slider(
+                                value = radius,
+                                onValueChange = { 
+                                    if (it.toInt() != radius.toInt()) {
+                                        HapticHelper.vibrate(context, 0)
+                                    }
+                                    radius = it 
+                                },
+                                valueRange = 100f..2000f,
+                                steps = 19,
+                                colors = SliderDefaults.colors(
+                                    thumbColor = if (isDark) CyberBlue else AppBlue,
+                                    activeTrackColor = if (isDark) CyberBlue else AppBlue
+                                )
+                            )
                         }
                     }
                     
-                    Spacer(Modifier.height(24.dp))
+                    Spacer(Modifier.height(16.dp))
+                }
 
-                    if (lockType == LockType.PIN) {
-                        CompactPinPad(
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    VaultLockTypeButton("PIN", lockType == LockType.PIN, isDark) { 
+                        lockType = LockType.PIN 
+                    }
+                    VaultLockTypeButton("PATTERN", lockType == LockType.PATTERN, isDark) { 
+                        lockType = LockType.PATTERN 
+                    }
+                }
+                
+                Spacer(Modifier.height(24.dp))
+
+                if (lockType == LockType.PIN) {
+                    CompactPinPad(
+                        isLightTheme = !isDark,
+                        onPinComplete = {
+                            val finalRadius = if (isNativeEnabled) radius else 0f
+                            onConfirm(it, emptySet(), lockType, finalRadius)
+                        }
+                    )
+                } else {
+                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        CompactPatternGrid(
                             isLightTheme = !isDark,
-                            onPinComplete = {
-                                secret = it
-                                showApps = true
+                            onPatternComplete = {
+                                val finalRadius = if (isNativeEnabled) radius else 0f
+                                onConfirm(it, emptySet(), lockType, finalRadius)
                             }
                         )
-                    } else {
-                        Box(modifier = Modifier.align(Alignment.CenterHorizontally)) {
-                            CompactPatternGrid(
-                                isLightTheme = !isDark,
-                                onPatternComplete = {
-                                    secret = it
-                                    showApps = true
-                                }
-                            )
-                        }
                     }
-                } else {
-                    LazyColumn(modifier = Modifier.heightIn(max = 300.dp)) {
-                        items(apps) { app ->
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(16.dp))
-                                    .clickable {
-                                        if (selectedApps.value.contains(app.packageName)) selectedApps.value -= app.packageName
-                                        else selectedApps.value += app.packageName
-                                    }
-                                    .padding(vertical = 12.dp, horizontal = 12.dp)
-                            ) {
-                                app.icon?.let { Image(it.toBitmap().asImageBitmap(), contentDescription = null, modifier = Modifier.size(36.dp).clip(CircleShape)) }
-                                Spacer(Modifier.width(12.dp))
-                                Text(
-                                    app.appName, 
-                                    color = (if (isDark) Color.White else Color.Black).copy(alpha = 0.8f), 
-                                    modifier = Modifier.weight(1f), 
-                                    fontSize = 15.sp,
-                                    fontWeight = FontWeight.Medium
-                                )
-                                Checkbox(
-                                    checked = selectedApps.value.contains(app.packageName),
-                                    onCheckedChange = null,
-                                    colors = CheckboxDefaults.colors(checkedColor = if (isDark) CyberBlue else AppBlue)
-                                )
-                            }
-                        }
-                    }
-                    
-                    Spacer(Modifier.height(20.dp))
-                    
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                        TextButton(onClick = { showApps = false }) { 
-                            Text(stringResource(R.string.back), color = Color.Gray) 
-                        }
-                        Button(
-                            onClick = { 
-                                val finalRadius = if (isNativeEnabled) radius else 0f
-                                onConfirm(secret, selectedApps.value, lockType, finalRadius) 
-                            },
-                            colors = ButtonDefaults.buttonColors(containerColor = if (isDark) CyberBlue else AppBlue),
-                            shape = RoundedCornerShape(16.dp)
-                        ) {
-                            Text(stringResource(R.string.save_lock), color = Color.White, fontWeight = FontWeight.Bold)
-                        }
-                    }
+                }
+                
+                Spacer(Modifier.height(16.dp))
+                
+                TextButton(onClick = onDismiss) {
+                    Text(stringResource(R.string.cancel), color = Color.Gray)
                 }
             }
         }
@@ -971,23 +918,29 @@ fun RowScope.VaultLockTypeButton(text: String, selected: Boolean, isDark: Boolea
 }
 
 @Composable
-fun SmallMapFab(icon: ImageVector, active: Boolean, isDark: Boolean = false, modifier: Modifier = Modifier, onClick: () -> Unit) {
+fun SmallMapFab(
+    icon: ImageVector, 
+    active: Boolean, 
+    modifier: Modifier = Modifier,
+    isDark: Boolean = false, 
+    onClick: () -> Unit
+) {
     val interactionSource = remember { MutableInteractionSource() }
     Surface(
         modifier = modifier
-            .size(44.dp) // Slightly larger for better touch target
+            .size(44.dp)
             .clickable(
                 interactionSource = interactionSource,
-                indication = null // Removes the subtle faded black square shadow
+                indication = androidx.compose.material3.ripple()
             ) { onClick() },
         shape = CircleShape,
-        color = if (active) (if (isDark) CyberBlue else AppBlue) else (if (isDark) CyberDarkBlue else CreamWhite).copy(alpha = 0.9f),
-        contentColor = if (active) Color.White else (if (isDark) Color.White else Color.Black).copy(alpha = 0.7f),
-        shadowElevation = 6.dp,
+        color = if (active) (if (isDark) CyberBlue else AppBlue) else (if (isDark) CyberDarkBlue else CreamWhite),
+        contentColor = if (active) Color.White else (if (isDark) Color.White else Color.Black).copy(alpha = 0.8f),
+        shadowElevation = 4.dp,
         border = null
     ) {
         Box(contentAlignment = Alignment.Center) {
-            Icon(icon, contentDescription = null, modifier = Modifier.size(22.dp))
+            Icon(icon, contentDescription = null, modifier = Modifier.size(20.dp))
         }
     }
 }
@@ -1022,51 +975,88 @@ suspend fun getSearchSuggestions(query: String): List<Pair<String, LatLng>> = wi
 fun MapSearchBar(query: String, onQueryChange: (String) -> Unit, onSearch: (String) -> Unit, isDark: Boolean, modifier: Modifier = Modifier) {
     val keyboardController = LocalSoftwareKeyboardController.current
     Surface(
-        modifier = modifier.fillMaxWidth().height(56.dp),
-        shape = RoundedCornerShape(28.dp),
-        color = (if (isDark) CyberDarkBlue else CreamWhite).copy(alpha = 0.9f),
-        border = null,
-        shadowElevation = 6.dp
+        modifier = modifier
+            .fillMaxWidth()
+            .height(60.dp),
+        shape = RoundedCornerShape(30.dp),
+        color = if (isDark) CyberDarkBlue else CreamWhite,
+        shadowElevation = 4.dp,
+        border = null
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(horizontal = 20.dp)
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
         ) {
-            Icon(Icons.Default.Search, contentDescription = null, tint = if (isDark) CyberBlue else AppBlue)
-            Spacer(Modifier.width(12.dp))
-            androidx.compose.foundation.text.BasicTextField(
-                value = query,
-                onValueChange = onQueryChange,
-                modifier = Modifier.weight(1f),
-                textStyle = androidx.compose.ui.text.TextStyle(
-                    color = (if (isDark) Color.White else Color.Black).copy(alpha = 0.8f), 
-                    fontSize = 16.sp
-                ),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                keyboardActions = androidx.compose.foundation.text.KeyboardActions(onSearch = { 
-                    onSearch(query)
-                    keyboardController?.hide()
-                }),
-                cursorBrush = androidx.compose.ui.graphics.SolidColor(if (isDark) CyberBlue else AppBlue),
-                decorationBox = { innerTextField ->
-                    if (query.isEmpty()) {
-                        Text(
-                            stringResource(R.string.search_places),
-                            color = Color.Gray, 
-                            fontSize = 16.sp
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+            ) {
+                if (query.isNotEmpty()) {
+                    Icon(
+                        Icons.Default.Search, 
+                        contentDescription = null, 
+                        tint = if (isDark) Color.White.copy(alpha = 0.6f) else Color.Black.copy(alpha = 0.6f),
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(Modifier.width(12.dp))
+                }
+
+                androidx.compose.foundation.text.BasicTextField(
+                    value = query,
+                    onValueChange = onQueryChange,
+                    modifier = Modifier.weight(1f),
+                    textStyle = androidx.compose.ui.text.TextStyle(
+                        color = if (isDark) Color.White else Color.Black,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium
+                    ),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                    keyboardActions = androidx.compose.foundation.text.KeyboardActions(onSearch = { 
+                        onSearch(query)
+                        keyboardController?.hide()
+                    }),
+                    cursorBrush = androidx.compose.ui.graphics.SolidColor(if (isDark) CyberBlue else AppBlue),
+                    decorationBox = { innerTextField ->
+                        if (query.isEmpty()) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    Icons.Default.Search, 
+                                    contentDescription = null, 
+                                    tint = if (isDark) Color.White else Color.Black,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(Modifier.width(8.dp))
+                                Text(
+                                    "Start your search",
+                                    color = if (isDark) Color.White else Color.Black,
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                        }
+                        innerTextField()
+                    }
+                )
+
+                if (query.isNotEmpty()) {
+                    IconButton(
+                        onClick = { onQueryChange("") },
+                        modifier = Modifier.size(24.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Close, 
+                            contentDescription = null, 
+                            tint = if (isDark) Color.White.copy(alpha = 0.5f) else Color.Black.copy(alpha = 0.5f),
+                            modifier = Modifier.size(18.dp)
                         )
                     }
-                    innerTextField()
-                }
-            )
-            if (query.isNotEmpty()) {
-                IconButton(onClick = { onQueryChange("") }) {
-                    Icon(
-                        Icons.Default.Close, 
-                        contentDescription = null, 
-                        tint = Color.Gray
-                    )
                 }
             }
         }

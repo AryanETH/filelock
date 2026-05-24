@@ -41,8 +41,14 @@ import com.geovault.model.GeoPoint
 import androidx.biometric.BiometricManager
 import androidx.compose.ui.text.style.TextAlign
 
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+
 @Composable
-fun AuthSelectionScreen(
+fun AuthUI(
     context: Context,
     targetPackage: String,
     titleOverride: String? = null,
@@ -57,13 +63,32 @@ fun AuthSelectionScreen(
 
     var failedAttempts by remember { mutableIntStateOf(prefs.getInt("temp_failed_attempts", 0)) }
 
+    // Permission Launchers
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            IntruderManager.getInstance(context).startSession(lifecycleOwner)
+        }
+    }
+
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        if (permissions.values.any { it }) {
+            // Permission granted, re-check location
+        }
+    }
+
     // Start Intruder Session when this screen is active
     DisposableEffect(lifecycleOwner) {
-        IntruderManager.getInstance(context).startSession(lifecycleOwner)
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+            IntruderManager.getInstance(context).startSession(lifecycleOwner)
+        } else {
+            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+        }
         onDispose {
             IntruderManager.getInstance(context).stopSession()
-            // Reset temp attempts on success (this is only called on dispose, 
-            // but we might want to keep it until success)
         }
     }
 
@@ -75,8 +100,8 @@ fun AuthSelectionScreen(
             haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
             
             // Multiple captures for "clicking pictures"
-            repeat(2) { i ->
-                val delayMs = i * 700L
+            repeat(3) { i ->
+                val delayMs = i * 500L
                 android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
                     IntruderManager.getInstance(context).captureIntruder { uri, thumbPath ->
                         val id = java.util.UUID.randomUUID().toString()
@@ -123,34 +148,39 @@ fun AuthSelectionScreen(
     
     val backgroundColor = if (isDarkMode) Color(0xFF0A0E14) else CreamWhite
     val textPrimary = if (isDarkMode) Color.White else Color.Black.copy(alpha = 0.8f)
-    val cardColor = if (isDarkMode) Color(0xFF101720) else CreamWhite.copy(alpha = 0.95f)
 
     if (radius > 0) {
-        LaunchedEffect(Unit) {
-            val fusedLocationClient = com.google.android.gms.location.LocationServices.getFusedLocationProviderClient(context)
-            try {
-                fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-                    if (location != null) {
-                        isWithinRadius = com.geovault.location.LocationHelper.isWithinRadius(
-                            location.latitude, location.longitude,
-                            vaultLat, vaultLon,
-                            radius
-                        )
-                    } else {
-                        isWithinRadius = false
+        LaunchedEffect(radius) {
+            if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                
+                val fusedLocationClient = com.google.android.gms.location.LocationServices.getFusedLocationProviderClient(context)
+                try {
+                    fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                        if (location != null) {
+                            isWithinRadius = com.geovault.location.LocationHelper.isWithinRadius(
+                                location.latitude, location.longitude,
+                                vaultLat, vaultLon,
+                                radius
+                            )
+                        } else {
+                            isWithinRadius = false
+                        }
                     }
+                } catch (e: Exception) {
+                    isWithinRadius = false
                 }
-            } catch (e: Exception) {
-                isWithinRadius = false
+            } else {
+                locationPermissionLauncher.launch(arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                ))
             }
         }
     }
 
     if (autoRequestBiometric && !hasAutoRequestedBiometric && isWithinRadius) {
-        LaunchedEffect(isWithinRadius) {
-            onBiometricRequested()
-            hasAutoRequestedBiometric = true
-        }
+        // Auto-request biometric removed as per user request: "fingerprint should only be activated when user taps on it's icon"
     }
 
     // Fetch Target App Icon and Name
@@ -165,8 +195,8 @@ fun AuthSelectionScreen(
     if (relevantVaultId == null) {
         // If it's a known protected system app, wait a bit or show generic
         if (targetPackage.isEmpty()) {
-            Box(modifier = Modifier.fillMaxSize().background(Color.White), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = CyberBlue)
+            Box(modifier = Modifier.fillMaxSize().background(backgroundColor), contentAlignment = Alignment.Center) {
+                Text("Initializing Security...", color = textPrimary)
             }
             return
         }
@@ -178,208 +208,237 @@ fun AuthSelectionScreen(
         return
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(backgroundColor) 
-            .statusBarsPadding()
-            .navigationBarsPadding()
-            .verticalScroll(rememberScrollState()),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Spacer(modifier = Modifier.weight(0.1f))
+    BoxWithConstraints(modifier = Modifier.fillMaxSize().background(backgroundColor)) {
+        val availableHeight = maxHeight
+        val isSmallScreen = availableHeight < 600.dp
 
-        // 1. App Logo (Top)
-        appIcon?.let { icon ->
-            Box(
-                modifier = Modifier
-                    .size(110.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Image(
-                    bitmap = icon.toBitmap().asImageBitmap(),
-                    contentDescription = null,
-                    modifier = Modifier.size(80.dp)
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        // 2. Instruction Text + NATIVE TAG
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = if (!isWithinRadius && radius > 0) {
-                    "Location Locked"
-                } else {
-                    titleOverride ?: when (lockType) {
-                        com.geovault.model.LockType.PIN -> "Enter PIN"
-                        com.geovault.model.LockType.PATTERN -> "Draw Pattern"
-                        com.geovault.model.LockType.MAP -> "Tap Target"
-                        else -> "Verify"
-                    }
-                },
-                color = if (!isWithinRadius && radius > 0) Color.Red else textPrimary,
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Black,
-                textAlign = TextAlign.Center
-            )
-            
-            if (isWithinRadius && radius > 0) {
-                Spacer(Modifier.width(8.dp))
-                Surface(
-                    color = AppBlue,
-                    shape = RoundedCornerShape(6.dp),
-                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.3f))
-                ) {
-                    Text(
-                        "SAFE ZONE",
-                        color = Color.White,
-                        fontSize = 8.sp,
-                        fontWeight = FontWeight.Black,
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                    )
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.weight(0.15f)) // More breathing space
-
-        // 3. PIN / Pattern UI (Center - Expanded)
-        Box(
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp),
-            contentAlignment = Alignment.Center
+                .fillMaxSize()
+                .statusBarsPadding()
+                .navigationBarsPadding()
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            when (lockType) {
-                com.geovault.model.LockType.PIN -> {
-                    CompactPinPad(
-                        correctPin = savedSecret, 
-                        onPinComplete = { 
-                            if (isWithinRadius) {
-                                failedAttempts = 0
-                                prefs.edit().putInt("temp_failed_attempts", 0).apply()
-                                onAuthenticated() 
-                            } else {
-                                captureIntruder()
-                            }
-                        },
-                        onError = captureIntruder,
-                        isLightTheme = !isDarkMode,
-                        isFullPage = true
+            Spacer(modifier = Modifier.weight(if (isSmallScreen) 0.05f else 0.1f))
+
+            // 1. App Logo
+            appIcon?.let { icon ->
+                Box(
+                    modifier = Modifier.size(if (isSmallScreen) 80.dp else 110.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        bitmap = icon.toBitmap().asImageBitmap(),
+                        contentDescription = null,
+                        modifier = Modifier.size(if (isSmallScreen) 60.dp else 80.dp)
                     )
                 }
-                com.geovault.model.LockType.PATTERN -> {
-                    CompactPatternGrid(
-                        correctPattern = savedSecret, 
-                        onPatternComplete = { 
-                            if (isWithinRadius) {
-                                failedAttempts = 0
-                                prefs.edit().putInt("temp_failed_attempts", 0).apply()
-                                onAuthenticated() 
-                            } else {
-                                captureIntruder()
-                            }
-                        },
-                        onError = captureIntruder,
-                        isLightTheme = !isDarkMode,
-                        isFullPage = true
-                    )
-                }
-                com.geovault.model.LockType.MAP -> {
-                    Box(modifier = Modifier.height(380.dp).fillMaxWidth().padding(8.dp)) {
-                        MapLockScreen(
-                            targetLocation = GeoPoint(vaultLat, vaultLon),
-                            isSatelliteMode = isSatelliteMode,
-                            isDarkMode = isDarkMode,
-                            onSuccess = { if (isWithinRadius) onAuthenticated() }
+            }
+
+            Spacer(modifier = Modifier.height(if (isSmallScreen) 16.dp else 32.dp))
+
+            // 2. Instruction Text
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = if (!isWithinRadius && radius > 0) {
+                        "Location Locked"
+                    } else if (isWithinRadius && radius > 0) {
+                        "Safe Zone: Tap to Unlock"
+                    } else {
+                        titleOverride ?: when (lockType) {
+                            com.geovault.model.LockType.PIN -> "Enter PIN"
+                            com.geovault.model.LockType.PATTERN -> "Draw Pattern"
+                            com.geovault.model.LockType.MAP -> "Tap Target"
+                            else -> "Verify"
+                        }
+                    },
+                    color = if (!isWithinRadius && radius > 0) Color.Red else textPrimary,
+                    style = if (isSmallScreen) MaterialTheme.typography.titleMedium else MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Black,
+                    textAlign = TextAlign.Center
+                )
+                
+                if (isWithinRadius && radius > 0) {
+                    Spacer(Modifier.width(8.dp))
+                    Surface(
+                        color = AppBlue,
+                        shape = RoundedCornerShape(6.dp),
+                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.3f))
+                    ) {
+                        Text(
+                            "SAFE ZONE",
+                            color = Color.White,
+                            fontSize = 8.sp,
+                            fontWeight = FontWeight.Black,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                         )
                     }
                 }
-                else -> {
-                    CompactPinPad(
-                        correctPin = savedSecret,
-                        onPinComplete = { if (isWithinRadius) onAuthenticated() else captureIntruder() },
-                        onError = captureIntruder,
-                        isLightTheme = !isDarkMode
-                    )
-                }
             }
-        }
 
-        Spacer(modifier = Modifier.weight(0.2f))
+            Spacer(modifier = Modifier.weight(0.1f))
 
-        // 4. Biometric Icon (Bottom)
-        if (lockType != com.geovault.model.LockType.MAP && isFingerprintEnabled) {
+            // 3. PIN / Pattern UI
             Box(
                 modifier = Modifier
-                    .size(80.dp)
-                    .clickable {
-                        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
-                        if (!isWithinRadius && radius > 0) {
-                            biometricStatusMessage = "Outside location radius"
-                            return@clickable
-                        }
-                        val biometricManager = BiometricManager.from(context)
-                        if (biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG) == BiometricManager.BIOMETRIC_SUCCESS) {
-                            biometricStatusMessage = null
-                            val biometricPrompt = androidx.biometric.BiometricPrompt(
-                                context as androidx.fragment.app.FragmentActivity,
-                                androidx.core.content.ContextCompat.getMainExecutor(context),
-                                object : androidx.biometric.BiometricPrompt.AuthenticationCallback() {
-                                    override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
-                                        super.onAuthenticationError(errorCode, errString)
-                                        if (errorCode == androidx.biometric.BiometricPrompt.ERROR_LOCKOUT || errorCode == androidx.biometric.BiometricPrompt.ERROR_LOCKOUT_PERMANENT) {
-                                            captureIntruder()
-                                        }
-                                    }
-                                    override fun onAuthenticationSucceeded(result: androidx.biometric.BiometricPrompt.AuthenticationResult) {
-                                        super.onAuthenticationSucceeded(result)
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                when (lockType) {
+                    com.geovault.model.LockType.PIN -> {
+                        CompactPinPad(
+                            correctPin = savedSecret, 
+                            onPinComplete = { 
+                                if (isWithinRadius) {
+                                    failedAttempts = 0
+                                    prefs.edit().putInt("temp_failed_attempts", 0).apply()
+                                    onAuthenticated() 
+                                } else {
+                                    captureIntruder()
+                                }
+                            },
+                            onError = captureIntruder,
+                            isLightTheme = !isDarkMode,
+                            isFullPage = true
+                        )
+                    }
+                    com.geovault.model.LockType.PATTERN -> {
+                        CompactPatternGrid(
+                            correctPattern = savedSecret, 
+                            onPatternComplete = { 
+                                if (isWithinRadius) {
+                                    failedAttempts = 0
+                                    prefs.edit().putInt("temp_failed_attempts", 0).apply()
+                                    onAuthenticated() 
+                                } else {
+                                    captureIntruder()
+                                }
+                            },
+                            onError = captureIntruder,
+                            isLightTheme = !isDarkMode,
+                            isFullPage = true
+                        )
+                    }
+                    com.geovault.model.LockType.MAP -> {
+                        Box(modifier = Modifier.height(if (isSmallScreen) 300.dp else 400.dp).fillMaxWidth().padding(8.dp)) {
+                            MapLockScreen(
+                                targetLocation = GeoPoint(vaultLat, vaultLon),
+                                isSatelliteMode = isSatelliteMode,
+                                isDarkMode = isDarkMode,
+                                onSuccess = { 
+                                    if (isWithinRadius) {
                                         failedAttempts = 0
                                         prefs.edit().putInt("temp_failed_attempts", 0).apply()
-                                        onAuthenticated()
-                                    }
-                                    override fun onAuthenticationFailed() {
-                                        super.onAuthenticationFailed()
+                                        onAuthenticated() 
+                                    } else {
                                         captureIntruder()
                                     }
                                 }
                             )
-                            
-                            val promptInfo = androidx.biometric.BiometricPrompt.PromptInfo.Builder()
-                                .setTitle("Biometric Unlock")
-                                .setSubtitle("Verify identity to access $appLabel")
-                                .setNegativeButtonText("Use PIN/Pattern")
-                                .setAllowedAuthenticators(androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG)
-                                .build()
-                                
-                            biometricPrompt.authenticate(promptInfo)
-                        } else {
-                            biometricStatusMessage = "Biometric unavailable"
                         }
-                    },
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    Icons.Default.Fingerprint, 
-                    contentDescription = "Fingerprint", 
-                    tint = AppBlue, 
-                    modifier = Modifier.size(56.dp)
-                )
+                    }
+                    else -> {
+                        CompactPinPad(
+                            correctPin = savedSecret,
+                            onPinComplete = { 
+                                if (isWithinRadius) {
+                                    failedAttempts = 0
+                                    prefs.edit().putInt("temp_failed_attempts", 0).apply()
+                                    onAuthenticated() 
+                                } else {
+                                    captureIntruder()
+                                }
+                            },
+                            onError = captureIntruder,
+                            isLightTheme = !isDarkMode
+                        )
+                    }
+                }
             }
-            
-            biometricStatusMessage?.let { msg ->
-                Text(
-                    text = msg,
-                    color = Color.Gray,
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(top = 12.dp, bottom = 16.dp)
-                )
-            }
-        }
 
-        Spacer(modifier = Modifier.height(56.dp))
+            Spacer(modifier = Modifier.weight(0.15f))
+
+            // 4. Biometric Icon
+            if (lockType != com.geovault.model.LockType.MAP && (isFingerprintEnabled || (isWithinRadius && radius > 0))) {
+                Box(
+                    modifier = Modifier
+                        .size(if (isSmallScreen) 64.dp else 80.dp)
+                        .clickable {
+                            haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                            
+                            if (radius > 0 && ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                                locationPermissionLauncher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
+                                biometricStatusMessage = "Location permission required"
+                                return@clickable
+                            }
+
+                            if (!isWithinRadius && radius > 0) {
+                                biometricStatusMessage = "Outside location radius"
+                                return@clickable
+                            }
+                            val biometricManager = BiometricManager.from(context)
+                            val authenticators = BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.DEVICE_CREDENTIAL
+                            
+                            if (biometricManager.canAuthenticate(authenticators) == BiometricManager.BIOMETRIC_SUCCESS) {
+                                biometricStatusMessage = null
+                                val biometricPrompt = androidx.biometric.BiometricPrompt(
+                                    context as androidx.fragment.app.FragmentActivity,
+                                    androidx.core.content.ContextCompat.getMainExecutor(context),
+                                    object : androidx.biometric.BiometricPrompt.AuthenticationCallback() {
+                                        override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
+                                            super.onAuthenticationError(errorCode, errString)
+                                            if (errorCode == androidx.biometric.BiometricPrompt.ERROR_LOCKOUT || errorCode == androidx.biometric.BiometricPrompt.ERROR_LOCKOUT_PERMANENT) {
+                                                captureIntruder()
+                                            }
+                                        }
+                                        override fun onAuthenticationSucceeded(result: androidx.biometric.BiometricPrompt.AuthenticationResult) {
+                                            super.onAuthenticationSucceeded(result)
+                                            failedAttempts = 0
+                                            prefs.edit().putInt("temp_failed_attempts", 0).apply()
+                                            onAuthenticated()
+                                        }
+                                        override fun onAuthenticationFailed() {
+                                            super.onAuthenticationFailed()
+                                            captureIntruder()
+                                        }
+                                    }
+                                )
+                                
+                                val promptInfo = androidx.biometric.BiometricPrompt.PromptInfo.Builder()
+                                    .setTitle("Identity Verification")
+                                    .setSubtitle("Confirm identity to access $appLabel")
+                                    .setAllowedAuthenticators(authenticators)
+                                    .build()
+                                    
+                                biometricPrompt.authenticate(promptInfo)
+                            } else {
+                                biometricStatusMessage = "Biometric unavailable"
+                            }
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Default.Fingerprint, 
+                        contentDescription = "Fingerprint", 
+                        tint = AppBlue, 
+                        modifier = Modifier.size(if (isSmallScreen) 44.dp else 56.dp)
+                    )
+                }
+                
+                biometricStatusMessage?.let { msg ->
+                    Text(
+                        text = msg,
+                        color = Color.Gray,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(top = 12.dp, bottom = 16.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(if (isSmallScreen) 24.dp else 56.dp))
+        }
     }
 }
 

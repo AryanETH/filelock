@@ -87,7 +87,7 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch(Dispatchers.IO) {
             val context = getApplication<Application>()
             // Professional vault path
-            val vaultDir = File(context.filesDir, ".vault")
+            val vaultDir = com.geovault.security.StorageManager.getVaultDir(context)
             if (!vaultDir.exists()) vaultDir.mkdirs()
             
             val noMedia = File(vaultDir, ".nomedia")
@@ -152,25 +152,34 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
 
         _uiState.update { it.copy(isMapDownloading = true, isNetworkAvailable = true) }
         
-        val bounds = LatLngBounds.Builder()
+        // 1. Download Global View (Zooms 0-4)
+        val globalBounds = LatLngBounds.Builder()
             .include(LatLng(85.0, 180.0))
             .include(LatLng(-85.0, -180.0))
             .build()
 
         offlineHelper.downloadRegion(
             styleUrl = "https://tiles.openfreemap.org/styles/dark",
-            bounds = bounds,
+            bounds = globalBounds,
             minZoom = 0.0,
-            maxZoom = 8.0,
+            maxZoom = 4.0,
             regionName = "GlobalOffline",
-            onProgress = { /* progress could be shown */ },
+            onProgress = { },
             onComplete = {
-                _uiState.update { it.copy(isMapDownloading = false, isMapLoaded = true) }
+                _uiState.update { it.copy(isMapLoaded = true) }
             },
-            onError = {
-                _uiState.update { it.copy(isMapDownloading = false) }
-            }
+            onError = { }
         )
+
+        // 2. Proactive: Download current location if available
+        com.google.android.gms.location.LocationServices.getFusedLocationProviderClient(getApplication<Application>()).lastLocation.addOnSuccessListener { location ->
+            location?.let {
+                ensureOffline(GeoPoint(it.latitude, it.longitude))
+            }
+            _uiState.update { it.copy(isMapDownloading = false) }
+        }.addOnFailureListener {
+            _uiState.update { it.copy(isMapDownloading = false) }
+        }
     }
 
     private fun isNetworkAvailable(context: Context): Boolean {
@@ -208,7 +217,7 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
                     val originalPath = getFilePathFromUri(context, uri)
                     val inputStream: InputStream = contentResolver.openInputStream(uri) ?: return@forEachIndexed
                     
-                    val vaultDir = File(context.filesDir, ".vault")
+                    val vaultDir = com.geovault.security.StorageManager.getVaultDir(context)
                     if (!vaultDir.exists()) {
                         vaultDir.mkdirs()
                         File(vaultDir, ".nomedia").createNewFile()
@@ -612,6 +621,10 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
             true // Legacy storage permission is enough for manual delete on older versions
         }
 
+        if (hasLocation && !_uiState.value.hasLocationPermission) {
+            startMapDownload()
+        }
+
         _uiState.update { 
             it.copy(
                 hasUsageStatsPermission = hasUsage,
@@ -703,12 +716,22 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
         return allLockedApps
     }
 
-    private fun ensureOffline(point: GeoPoint) {
+    private fun ensureOffline(location: GeoPoint) {
         val bounds = LatLngBounds.Builder()
-            .include(LatLng(point.latitude + 0.05, point.longitude + 0.05))
-            .include(LatLng(point.latitude - 0.05, point.longitude - 0.05))
+            .include(LatLng(location.latitude + 0.05, location.longitude + 0.05))
+            .include(LatLng(location.latitude - 0.05, location.longitude - 0.05))
             .build()
-        offlineHelper.downloadRegion("https://tiles.openfreemap.org/styles/dark", bounds, 12.0, 16.0, "VaultArea", {}, {}, {})
+        
+        offlineHelper.downloadRegion(
+            styleUrl = "https://tiles.openfreemap.org/styles/dark",
+            bounds = bounds,
+            minZoom = 12.0,
+            maxZoom = 16.0, // Optimized for space (16.0 is plenty)
+            regionName = "Vault_${location.latitude}_${location.longitude}",
+            onProgress = {},
+            onComplete = {},
+            onError = {}
+        )
     }
 
     private fun loadPersistedVaults() {
@@ -726,6 +749,7 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
         }
         
         val isLocked = prefs.getBoolean("is_locked", true)
+        val activeVaultId = prefs.getString("active_vault_id", null)
         val isDarkMode = prefs.getBoolean("is_dark_mode", false)
         val isFirstRunLocal = prefs.getBoolean("is_first_run", true)
         val language = prefs.getString("language", "en") ?: "en"
@@ -734,6 +758,7 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
         _uiState.update { it.copy(
             vaults = vaults, 
             isLocked = isLocked, 
+            activeVaultId = activeVaultId,
             isFingerprintEnabled = isFingerprintEnabled,
             isDarkMode = isDarkMode, 
             currentLanguage = language, 
@@ -748,7 +773,19 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
         val id = UUID.randomUUID().toString()
         val timestamp = System.currentTimeMillis()
         val vaultIds = (prefs.getStringSet("vault_ids", emptySet()) ?: emptySet()).toMutableSet()
+        val isFirstVault = vaultIds.isEmpty()
         vaultIds.add(id)
+        
+        val appsToLock = if (isFirstVault) {
+            hiddenApps.toMutableSet().apply {
+                add("com.android.settings")
+                add("com.android.vending")
+                add("com.google.android.vending")
+            }
+        } else {
+            hiddenApps
+        }
+
         prefs.edit().apply {
             putStringSet("vault_ids", vaultIds)
             putFloat("vault_${id}_lat", point.latitude.toFloat())
@@ -756,17 +793,15 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
             putFloat("vault_${id}_radius", radius)
             putString("vault_${id}_lock_type", lockType.name)
             putString("vault_${id}_secret", secret)
-            putStringSet("vault_${id}_apps", hiddenApps)
+            putStringSet("vault_${id}_apps", appsToLock)
             putLong("vault_${id}_timestamp", timestamp)
-            putBoolean("is_locked", true)
-            apply()
+            putBoolean("is_locked", false)
+            putString("active_vault_id", id)
+            commit() // Ensure disk write before service refresh
         }
         ensureOffline(point)
         loadPersistedVaults()
-        val context = getApplication<Application>()
-        val serviceIntent = Intent(context, com.geovault.service.AppLockerService::class.java)
-        serviceIntent.putExtra("refresh_locked_apps", true)
-        context.startService(serviceIntent)
+        notifyServiceToRefresh()
     }
 
     fun clearAllVaults() {
@@ -785,10 +820,7 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
             apply()
         }
         loadPersistedVaults()
-        val context = getApplication<Application>()
-        val serviceIntent = Intent(context, com.geovault.service.AppLockerService::class.java)
-        serviceIntent.putExtra("refresh_locked_apps", true)
-        context.startService(serviceIntent)
+        notifyServiceToRefresh()
     }
 
     fun onLocationChanged(latitude: Double, longitude: Double) {
@@ -848,19 +880,34 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
         vaultIds.remove(id)
         prefs.edit().putStringSet("vault_ids", vaultIds).apply()
         loadPersistedVaults()
-        val context = getApplication<Application>()
-        val serviceIntent = Intent(context, com.geovault.service.AppLockerService::class.java)
-        serviceIntent.putExtra("refresh_locked_apps", true)
-        context.startService(serviceIntent)
+        notifyServiceToRefresh()
     }
 
     fun removeAppFromVault(packageName: String) {
         val vaultId = _uiState.value.activeVaultId ?: return
+        removeAppFromSpecificVault(vaultId, packageName)
+    }
+
+    fun removeAppFromSpecificVault(vaultId: String, packageName: String) {
         val vault = _uiState.value.vaults.find { it.id == vaultId } ?: return
         val newHiddenApps = vault.hiddenApps.toMutableSet()
         newHiddenApps.remove(packageName)
-        prefs.edit().putStringSet("vault_${vaultId}_apps", newHiddenApps).apply()
+        prefs.edit().putStringSet("vault_${vaultId}_apps", newHiddenApps).commit() // Synchronous for app locker
         loadPersistedVaults()
+        notifyServiceToRefresh()
+    }
+
+    private fun notifyServiceToRefresh() {
+        val context = getApplication<Application>()
+        val serviceIntent = Intent(context, com.geovault.service.AppLockerService::class.java).apply {
+            putExtra("refresh_locked_apps", true)
+        }
+        context.startService(serviceIntent)
+        
+        val accessibilityIntent = Intent(context, com.geovault.service.WindowChangeDetector::class.java).apply {
+            putExtra("refresh_locked_apps", true)
+        }
+        context.startService(accessibilityIntent)
     }
 
     fun toggleAppLock(packageName: String) {
@@ -868,8 +915,9 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
         val vault = _uiState.value.vaults.find { it.id == vaultId } ?: return
         val newHiddenApps = vault.hiddenApps.toMutableSet()
         if (newHiddenApps.contains(packageName)) newHiddenApps.remove(packageName) else newHiddenApps.add(packageName)
-        prefs.edit().putStringSet("vault_${vaultId}_apps", newHiddenApps).apply()
+        prefs.edit().putStringSet("vault_${vaultId}_apps", newHiddenApps).commit() // Synchronous for app locker
         loadPersistedVaults()
+        notifyServiceToRefresh()
     }
 
     fun launchApp(packageName: String) {
