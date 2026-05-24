@@ -195,4 +195,18 @@
     <string name="biometric_unavailable">Biometric authentication unavailable</string>
     <string name="fingerprint">Fingerprint</string>
     <string name="tap_target_coordinates">Tap target coordinates</string>
+
+    <!--DashboardTour-->
+     <string name="tour_dash_welcome_title">Welcome to Mapp Lock</string>
+     <string name="tour_dash_welcome_desc">Your privacy is hidden in plain sight. Let\'s take a quick tour of the dashboard.</string>
+     <string name="tour_dash_hide_apps_title">Hide Apps</string>
+     <string name="tour_dash_hide_apps_desc">Tap here to lock and hide any app on your phone. Hidden apps disappear until you unlock them.</string>
+     <string name="tour_dash_history_title">History</string>
+     <string name="tour_dash_history_desc">See all your active vaults and the apps secured inside them.</string>
+     <string name="tour_dash_categories_title">Your Secure Vault</string>
+     <string name="tour_dash_categories_desc">Photos, Videos, Audio and Documents you hide are stored here — encrypted and invisible to other apps.</string>
+     <string name="tour_dash_fab_title">Add Files</string>
+     <string name="tour_dash_fab_desc">Tap the + button to import files from your gallery directly into the vault.</string>
+     <string name="tour_dash_settings_title">Settings</string>
+     <string name="tour_dash_settings_desc">Configure your lock type, fingerprint, language and more from here.</string>
 </resources>

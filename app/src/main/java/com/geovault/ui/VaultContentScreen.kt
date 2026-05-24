@@ -29,6 +29,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.layout.ContentScale
@@ -54,7 +55,6 @@ import java.text.SimpleDateFormat
 import java.util.*
 import com.geovault.core.AppCloner
 import com.geovault.core.VirtualAppManager
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LocalFilePicker(
@@ -365,6 +365,12 @@ fun VaultContentScreen(
     onStartAction: () -> Unit = {},
     onEndAction: () -> Unit = {}
 ) {
+    var hideAppsRect   by remember { mutableStateOf(Rect.Zero) }
+    var historyRect    by remember { mutableStateOf(Rect.Zero) }
+    var categoriesRect by remember { mutableStateOf(Rect.Zero) }
+    var settingsRect   by remember { mutableStateOf(Rect.Zero) }
+    var fabRect        by remember { mutableStateOf(Rect.Zero) }
+
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val virtualAppManager = remember { VirtualAppManager(context) }
@@ -386,6 +392,10 @@ fun VaultContentScreen(
     var isCloning by remember { mutableStateOf(false) }
     
     var showUserGuide by remember { mutableStateOf(state.showTour) }
+
+    var showDashboardTour by remember {
+        mutableStateOf(FeatureHintManager.shouldShow(context, "dashboard_tour"))
+    }
 
     val mediaPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
@@ -465,7 +475,10 @@ fun VaultContentScreen(
                     },
                     actions = {
                         if (currentScreen == ContentScreen.Dashboard) {
-                            IconButton(onClick = { currentScreen = ContentScreen.Settings }) {
+                            IconButton(
+                                onClick = { currentScreen = ContentScreen.Settings },
+                                modifier = Modifier.captureRect { settingsRect = it }
+                            ) {
                                 Icon(Icons.Default.Settings, contentDescription = "Settings", tint = if (isDark) Color.White.copy(alpha = 0.7f) else Color.Black.copy(alpha = 0.7f))
                             }
                         }
@@ -525,6 +538,7 @@ fun VaultContentScreen(
                                 }
                             }
                         },
+                        modifier = Modifier.captureRect { fabRect = it },
                         containerColor = if (currentScreen == ContentScreen.Dashboard) FolderPurple else CyberBlue,
                         shape = CircleShape
                     ) {
@@ -555,12 +569,15 @@ fun VaultContentScreen(
                 ) { screen ->
                     when (screen) {
                         is ContentScreen.Dashboard -> DashboardContent(
-                            state = state, 
+                            state = state,
                             scrollState = dashboardScrollState,
                             onAppLockClick = { currentScreen = ContentScreen.AppLock },
                             onCategoryClick = { currentScreen = ContentScreen.CategoryView(it) },
                             onFolderClick = { currentScreen = ContentScreen.FolderView(it) },
-                            onBackupClick = { showBackupDialog = true }
+                            onBackupClick = { showBackupDialog = true },
+                            onHideAppsRectCaptured = { hideAppsRect = it },
+                            onHistoryRectCaptured = { historyRect = it },
+                            onCategoriesRectCaptured = { categoriesRect = it }
                         )
                         is ContentScreen.AppLock -> AppLockManagement(
                             state = state, 
@@ -786,9 +803,36 @@ fun VaultContentScreen(
         )
     }
 
+    if (showDashboardTour && currentScreen is ContentScreen.Dashboard) {
+        DashboardTourOverlay(
+            steps = listOf(
+                DashboardTourStep(R.string.tour_dash_welcome_title, R.string.tour_dash_welcome_desc),
+                DashboardTourStep(R.string.tour_dash_hide_apps_title, R.string.tour_dash_hide_apps_desc, hideAppsRect),
+                DashboardTourStep(R.string.tour_dash_history_title, R.string.tour_dash_history_desc, historyRect),
+                DashboardTourStep(R.string.tour_dash_categories_title, R.string.tour_dash_categories_desc, categoriesRect),
+                DashboardTourStep(R.string.tour_dash_fab_title, R.string.tour_dash_fab_desc, fabRect)
+            ),
+            isDark = isDark,
+            onCompleted = {
+                showDashboardTour = false
+                FeatureHintManager.markShown(context, "dashboard_tour")
+            }
+        )
+    }
+
     if (showUserGuide) {
-        InteractiveUserGuide(
-            onDismiss = { 
+        val tourSteps = listOf(
+            DashboardTourStep(R.string.tour_dash_welcome_title, R.string.tour_dash_welcome_desc, null),
+            DashboardTourStep(R.string.tour_dash_hide_apps_title, R.string.tour_dash_hide_apps_desc, hideAppsRect.takeIf { it != Rect.Zero }),
+            DashboardTourStep(R.string.tour_dash_history_title, R.string.tour_dash_history_desc, historyRect.takeIf { it != Rect.Zero }),
+            DashboardTourStep(R.string.tour_dash_categories_title, R.string.tour_dash_categories_desc, categoriesRect.takeIf { it != Rect.Zero }),
+            DashboardTourStep(R.string.tour_dash_fab_title, R.string.tour_dash_fab_desc, fabRect.takeIf { it != Rect.Zero }),
+            DashboardTourStep(R.string.tour_dash_settings_title, R.string.tour_dash_settings_desc, settingsRect.takeIf { it != Rect.Zero })
+        )
+        DashboardTourOverlay(
+            steps = tourSteps,
+            isDark = state.isDarkMode,
+            onCompleted = {
                 showUserGuide = false
                 onCompleteTour()
             }
@@ -809,12 +853,16 @@ sealed class ContentScreen {
 
 @Composable
 fun DashboardContent(
-    state: VaultState, 
+    state: VaultState,
     scrollState: LazyListState = rememberLazyListState(),
     onAppLockClick: () -> Unit,
     onCategoryClick: (FileCategory) -> Unit,
     onFolderClick: (String) -> Unit,
-    onBackupClick: () -> Unit
+    onBackupClick: () -> Unit,
+    // ↓ Tour rect callbacks — default no-ops so existing call sites don't break
+    onHideAppsRectCaptured: (Rect) -> Unit = {},
+    onHistoryRectCaptured: (Rect) -> Unit = {},
+    onCategoriesRectCaptured: (Rect) -> Unit = {}
 ) {
     val isDark = state.isDarkMode
     val textPrimary = if (isDark) Color.White else Color.Black
@@ -827,12 +875,17 @@ fun DashboardContent(
         contentPadding = PaddingValues(vertical = 16.dp)
     ) {
         item {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
                 DashboardCard(
                     title = stringResource(R.string.app_lock_title),
                     subtitle = stringResource(R.string.app_lock_subtitle),
                     icon = Icons.Default.Shield,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .captureRect { onHideAppsRectCaptured(it) }, // ← TAG
                     color = IconGreen,
                     isDark = isDark,
                     onClick = onAppLockClick
@@ -841,7 +894,9 @@ fun DashboardContent(
                     title = stringResource(R.string.history_title),
                     subtitle = stringResource(R.string.history_subtitle),
                     icon = Icons.Default.History,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .captureRect { onHistoryRectCaptured(it) }, // ← TAG
                     color = IconBlue,
                     isDark = isDark,
                     onClick = onBackupClick
@@ -852,7 +907,10 @@ fun DashboardContent(
 
         item {
             Row(
-                modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp)
+                    .captureRect { onCategoriesRectCaptured(it) }, // ← TAG
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
@@ -864,9 +922,9 @@ fun DashboardContent(
                 )
                 IconButton(onClick = { isGridView = !isGridView }) {
                     Icon(
-                        if (isGridView) Icons.Default.ViewList else Icons.Default.GridView, 
-                        null, 
-                        tint = textSecondary, 
+                        if (isGridView) Icons.Default.ViewList else Icons.Default.GridView,
+                        null,
+                        tint = textSecondary,
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -882,8 +940,7 @@ fun DashboardContent(
                 CategoryData(FileCategory.INTRUDER, stringResource(R.string.wrong_unlocks), state.intruderCount, Icons.Default.PersonSearch, IconOrange, SoftOrange),
                 CategoryData(FileCategory.RECYCLE_BIN, stringResource(R.string.recycle_bin), state.recycleBinCount, Icons.Default.Delete, IconGray, SoftGray)
             )
-            
-            // Add custom folders
+
             state.customFolders.forEach { folderName ->
                 val count = state.files.count { it.folderName == folderName }
                 categories.add(CategoryData(FileCategory.OTHER, folderName, count, Icons.Default.Folder, IconPurple, SoftPurple, folderName))
@@ -892,16 +949,18 @@ fun DashboardContent(
             if (isGridView) {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     for (i in categories.indices step 2) {
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
                             val cat1 = categories[i]
-                            CategoryGridItem(cat1.title, cat1.count, cat1.icon, cat1.color, isDark, Modifier.weight(1f)) { 
-                                if (cat1.customFolderName != null) onFolderClick(cat1.customFolderName) else onCategoryClick(cat1.category) 
+                            CategoryGridItem(cat1.title, cat1.count, cat1.icon, cat1.color, isDark, Modifier.weight(1f)) {
+                                if (cat1.customFolderName != null) onFolderClick(cat1.customFolderName) else onCategoryClick(cat1.category)
                             }
-                            
                             if (i + 1 < categories.size) {
-                                val cat2 = categories[i+1]
-                                CategoryGridItem(cat2.title, cat2.count, cat2.icon, cat2.color, isDark, Modifier.weight(1f)) { 
-                                    if (cat2.customFolderName != null) onFolderClick(cat2.customFolderName) else onCategoryClick(cat2.category) 
+                                val cat2 = categories[i + 1]
+                                CategoryGridItem(cat2.title, cat2.count, cat2.icon, cat2.color, isDark, Modifier.weight(1f)) {
+                                    if (cat2.customFolderName != null) onFolderClick(cat2.customFolderName) else onCategoryClick(cat2.category)
                                 }
                             } else {
                                 Spacer(Modifier.weight(1f))
@@ -912,8 +971,8 @@ fun DashboardContent(
             } else {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     categories.forEach { cat ->
-                        CategoryItem(cat.title, cat.count, cat.icon, cat.color, cat.bgColor, isDark) { 
-                            if (cat.customFolderName != null) onFolderClick(cat.customFolderName) else onCategoryClick(cat.category) 
+                        CategoryItem(cat.title, cat.count, cat.icon, cat.color, cat.bgColor, isDark) {
+                            if (cat.customFolderName != null) onFolderClick(cat.customFolderName) else onCategoryClick(cat.category)
                         }
                     }
                 }

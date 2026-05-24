@@ -184,4 +184,19 @@
 <string name="biometric_unavailable">बायोमेट्रिक प्रमाणीकरण उपलब्ध नहीं है</string>
 <string name="fingerprint">फिंगरप्रिंट</string>
 <string name="tap_target_coordinates">लक्षित कोऑर्डिनेट्स पर टैप करें</string>
+
+    <!-- Dashboard Tour -->
+     <string name="tour_dash_welcome_title">मैप लॉक में आपका स्वागत है</string>
+     <string name="tour_dash_welcome_desc">आपकी प्राइवेसी सबकी नज़रों में छिपी है। चलिए डैशबोर्ड का एक छोटा दौरा करते हैं।</string>
+     <string name="tour_dash_hide_apps_title">ऐप्स छिपाएं</string>
+     <string name="tour_dash_hide_apps_desc">यहाँ टैप करके अपने फोन के किसी भी ऐप को लॉक करें। छिपे ऐप्स तब तक नहीं दिखते जब तक आप अनलॉक न करें।</string>
+     <string name="tour_dash_history_title">इतिहास</string>
+     <string name="tour_dash_history_desc">अपने सभी सक्रिय वॉल्ट और उनमें सुरक्षित ऐप्स देखें।</string>
+     <string name="tour_dash_categories_title">आपका सुरक्षित वॉल्ट</string>
+     <string name="tour_dash_categories_desc">आपके छिपाए हुए फोटो, वीडियो, ऑडियो और दस्तावेज़ यहाँ एन्क्रिप्ट होकर रखे जाते हैं।</string>
+     <string name="tour_dash_fab_title">फ़ाइलें जोड़ें</string>
+     <string name="tour_dash_fab_desc">गैलरी से सीधे वॉल्ट में फ़ाइलें लाने के लिए + बटन दबाएं।</string>
+     <string name="tour_dash_settings_title">सेटिंग</string>
+     <string name="tour_dash_settings_desc">लॉक का प्रकार, फिंगरप्रिंट, भाषा और अन्य विकल्प यहाँ से बदलें।</string>
+
 </resources>
