@@ -533,7 +533,9 @@ fun VaultScreen(
                             }
 
                             SmallMapFab(icon = Icons.Default.MyLocation, active = isCenteredOnUser, isDark = false) { // Always light theme
-                                HapticHelper.vibrate(context, 2)
+                                if (!isCenteredOnUser) {
+                                    HapticHelper.vibrate(context, 1)
+                                }
                                 if (state.hasLocationPermission) {
                                     isCenteredOnUser = true
                                     try {
@@ -887,6 +889,7 @@ fun VaultSetupDialog(
                 if (lockType == LockType.PIN) {
                     CompactPinPad(
                         isLightTheme = !isDark,
+                        autoConfirm = false, // Must press OK to confirm setup
                         onPinComplete = {
                             val finalRadius = if (isNativeEnabled) radius else 0f
                             onConfirm(it, emptySet(), lockType, finalRadius)
@@ -896,6 +899,7 @@ fun VaultSetupDialog(
                     Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                         CompactPatternGrid(
                             isLightTheme = !isDark,
+                            showConfirmButton = true, // Must press CONFIRM to finalize
                             onPatternComplete = {
                                 val finalRadius = if (isNativeEnabled) radius else 0f
                                 onConfirm(it, emptySet(), lockType, finalRadius)

@@ -7,6 +7,12 @@ import android.os.Vibrator
 import android.os.VibratorManager
 
 object HapticHelper {
+    /**
+     * Variable Haptic Feedback Strategy:
+     * 0: Subtle (Light tap) - Keypads, sliders, small interactions.
+     * 1: Medium (Firm tap) - Tab switches, confirmation toggles.
+     * 2: Strong (Double/Heavy) - Errors, deletions, security alerts.
+     */
     fun vibrate(context: Context, strength: Int = 1) {
         val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
@@ -17,15 +23,19 @@ object HapticHelper {
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val amplitude = when(strength) {
-                0 -> 50  // Subtle
-                2 -> 255 // Strong
-                else -> 150 // Medium
+            when(strength) {
+                0 -> vibrator.vibrate(VibrationEffect.createOneShot(20, 40)) // Light
+                2 -> {
+                    // Double pulse for strong alerts
+                    val timings = longArrayOf(0, 40, 60, 100)
+                    val amplitudes = intArrayOf(0, 255, 0, 255)
+                    vibrator.vibrate(VibrationEffect.createWaveform(timings, amplitudes, -1))
+                }
+                else -> vibrator.vibrate(VibrationEffect.createOneShot(40, 150)) // Medium
             }
-            vibrator.vibrate(VibrationEffect.createOneShot(50, amplitude))
         } else {
             @Suppress("DEPRECATION")
-            vibrator.vibrate(50)
+            vibrator.vibrate(strength.toLong() * 50 + 50)
         }
     }
 }

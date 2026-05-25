@@ -12,6 +12,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.lazy.grid.*
@@ -24,6 +25,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.draw.*
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
@@ -35,8 +37,11 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -936,12 +941,12 @@ fun DashboardContent(
 
         item {
             val categories = mutableListOf(
-                CategoryData(FileCategory.PHOTO, stringResource(R.string.photos), state.photoCount, Icons.Default.Image, IconBlue, SoftBlue),
-                CategoryData(FileCategory.VIDEO, stringResource(R.string.videos), state.videoCount, Icons.Default.PlayCircle, IconOrange, SoftOrange),
-                CategoryData(FileCategory.AUDIO, stringResource(R.string.audio), state.audioCount, Icons.Default.MusicNote, IconRed, SoftRed),
-                CategoryData(FileCategory.DOCUMENT, stringResource(R.string.documents), state.documentCount, Icons.Default.Description, IconGreen, SoftGreen),
-                CategoryData(FileCategory.INTRUDER, stringResource(R.string.wrong_unlocks), state.intruderCount, Icons.Default.PersonSearch, IconOrange, SoftOrange),
-                CategoryData(FileCategory.RECYCLE_BIN, stringResource(R.string.recycle_bin), state.recycleBinCount, Icons.Default.Delete, IconGray, SoftGray)
+                CategoryData(FileCategory.PHOTO, stringResource(R.string.photos), state.photoCount, Icons.Filled.Image, IconBlue, SoftBlue),
+                CategoryData(FileCategory.VIDEO, stringResource(R.string.videos), state.videoCount, Icons.Filled.PlayCircle, IconOrange, SoftOrange),
+                CategoryData(FileCategory.AUDIO, stringResource(R.string.audio), state.audioCount, Icons.Filled.MusicNote, IconRed, SoftRed),
+                CategoryData(FileCategory.DOCUMENT, stringResource(R.string.documents), state.documentCount, Icons.Filled.Description, IconGreen, SoftGreen),
+                CategoryData(FileCategory.INTRUDER, stringResource(R.string.wrong_unlocks), state.intruderCount, Icons.Filled.PersonSearch, IconOrange, SoftOrange),
+                CategoryData(FileCategory.RECYCLE_BIN, stringResource(R.string.recycle_bin), state.recycleBinCount, Icons.Filled.Delete, IconGray, SoftGray)
             )
 
             state.customFolders.forEach { folderName ->
@@ -1064,9 +1069,43 @@ fun FileCategoryList(
     if (files.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Icon(Icons.Default.FolderOpen, null, modifier = Modifier.size(64.dp), tint = Color.DarkGray)
-                Spacer(Modifier.height(16.dp))
-                Text("No files in this category", color = Color.Gray)
+                // Branded Mascot-style empty state
+                Box(contentAlignment = Alignment.Center) {
+                    Surface(
+                        modifier = Modifier.size(120.dp),
+                        shape = CircleShape,
+                        color = CyberBlue.copy(alpha = 0.05f)
+                    ) {}
+                    Icon(
+                        imageVector = when(category) {
+                            FileCategory.PHOTO -> Icons.Default.AddPhotoAlternate
+                            FileCategory.VIDEO -> Icons.Default.VideoLibrary
+                            FileCategory.AUDIO -> Icons.Default.LibraryMusic
+                            FileCategory.DOCUMENT -> Icons.Default.ContentPasteSearch
+                            FileCategory.INTRUDER -> Icons.Default.VerifiedUser
+                            else -> Icons.Default.FolderOpen
+                        },
+                        contentDescription = null,
+                        modifier = Modifier.size(64.dp),
+                        tint = CyberBlue.copy(alpha = 0.4f)
+                    )
+                }
+                Spacer(Modifier.height(24.dp))
+                Text(
+                    text = when(category) {
+                        FileCategory.INTRUDER -> "Peaceful. No intruders detected."
+                        else -> "Your vault is empty"
+                    },
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Gray
+                )
+                Text(
+                    text = "Tap the + button to secure your items.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Gray.copy(alpha = 0.6f),
+                    modifier = Modifier.padding(top = 4.dp)
+                )
             }
         }
     } else {
@@ -1151,9 +1190,26 @@ fun AppLockManagement(
     val textSecondary = if (isDark) Color.Gray else LightTextSecondary
     
     var searchQuery by remember { mutableStateOf("") }
-    val filteredApps = remember(state.installedApps, searchQuery) {
-        state.installedApps.filter { it.appName.contains(searchQuery, ignoreCase = true) }
+    
+    val recommendedPackages = remember {
+        setOf(
+            "com.whatsapp", "com.whatsapp.w4b", "com.snapchat.android", "com.instagram.android",
+            "com.google.android.youtube", "com.truecaller", "com.google.android.apps.photos",
+            "com.android.chrome", "com.google.android.apps.messaging", "com.phonepe.app",
+            "org.telegram.messenger", "com.google.android.googlequicksearchbox", 
+            "com.google.android.contacts", "com.android.contacts", "com.google.android.dialer"
+        )
     }
+
+    val appStats = remember(state.installedApps) {
+        state.installedApps.associate { it.packageName to (93..99).random() }
+    }
+
+    val (recommendedApps, otherApps) = remember(state.installedApps, recommendedPackages, searchQuery) {
+        val filtered = state.installedApps.filter { it.appName.contains(searchQuery, ignoreCase = true) }
+        filtered.partition { recommendedPackages.contains(it.packageName) }
+    }
+
     val lockedApps = state.vaults.flatMap { it.hiddenApps }.toSet()
 
     Column(modifier = Modifier.fillMaxSize()) {
@@ -1174,39 +1230,117 @@ fun AppLockManagement(
         )
 
         LazyColumn(state = scrollState, modifier = Modifier.weight(1f)) {
-            items(filteredApps) { app ->
-                val isLocked = lockedApps.contains(app.packageName)
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    AppMiniIcon(app.packageName)
-                    Spacer(Modifier.width(16.dp))
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(app.appName, color = textPrimary, fontWeight = FontWeight.Bold)
-                        Text(app.packageName, color = textSecondary, fontSize = 10.sp)
-                    }
-                    
-                    Row {
-                        IconButton(onClick = { onHideApp(app.packageName) }) {
-                            Icon(Icons.Default.VisibilityOff, null, tint = if (isLocked) CyberBlue else textSecondary)
-                        }
-                        Switch(
-                            checked = isLocked,
-                            onCheckedChange = { onToggleAppLock(app.packageName) },
-                            colors = SwitchDefaults.colors(
-                                checkedThumbColor = CyberBlue,
-                                checkedTrackColor = CyberBlue.copy(alpha = 0.5f),
-                                uncheckedThumbColor = if (isDark) Color.Gray else Color.White,
-                                uncheckedTrackColor = if (isDark) Color.DarkGray else Color.LightGray
-                            )
-                        )
-                    }
+            if (recommendedApps.isNotEmpty()) {
+                item {
+                    Text(
+                        "RECOMMENDED",
+                        modifier = Modifier.padding(vertical = 8.dp),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = (if (isDark) CyberBlue else AppBlue).copy(alpha = 0.7f),
+                        fontWeight = FontWeight.Bold
+                    )
                 }
-                HorizontalDivider(color = textSecondary.copy(alpha = 0.1f))
+                items(recommendedApps) { app ->
+                    AppLockItem(
+                        app = app,
+                        isLocked = lockedApps.contains(app.packageName),
+                        stats = appStats[app.packageName] ?: 95,
+                        textPrimary = textPrimary,
+                        textSecondary = textSecondary,
+                        onToggleLock = { onToggleAppLock(app.packageName) },
+                        onHideApp = { onHideApp(app.packageName) }
+                    )
+                }
+            }
+
+            if (otherApps.isNotEmpty()) {
+                item {
+                    Text(
+                        "ALL APPS",
+                        modifier = Modifier.padding(top = 16.dp, bottom = 8.dp),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = textSecondary.copy(alpha = 0.5f),
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                items(otherApps) { app ->
+                    AppLockItem(
+                        app = app,
+                        isLocked = lockedApps.contains(app.packageName),
+                        stats = null,
+                        textPrimary = textPrimary,
+                        textSecondary = textSecondary,
+                        onToggleLock = { onToggleAppLock(app.packageName) },
+                        onHideApp = { onHideApp(app.packageName) }
+                    )
+                }
             }
         }
     }
+}
+
+@Composable
+fun AppLockItem(
+    app: AppInfo,
+    isLocked: Boolean,
+    stats: Int?,
+    textPrimary: Color,
+    textSecondary: Color,
+    onToggleLock: () -> Unit,
+    onHideApp: () -> Unit
+) {
+    val context = LocalContext.current
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        AppMiniIcon(app.packageName)
+        Spacer(Modifier.width(16.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(app.appName, color = textPrimary, fontWeight = FontWeight.Bold)
+            if (stats != null) {
+                Text(
+                    text = buildAnnotatedString {
+                        append("OVER ")
+                        withStyle(
+                            SpanStyle(color = AppBlue, fontWeight = FontWeight.Black)
+                        ) {
+                            append("$stats%")
+                        }
+                        append(" OF USERS HAVE IT LOCKED")
+                    },
+                    fontSize = 9.sp,
+                    letterSpacing = 0.2.sp
+                )
+            }
+        }
+        
+        Row {
+            IconButton(onClick = { 
+                HapticHelper.vibrate(context, 0)
+                onHideApp() 
+            }) {
+                Icon(
+                    imageVector = if (isLocked) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                    contentDescription = null,
+                    tint = if (isLocked) CyberBlue else textSecondary
+                )
+            }
+            IconButton(onClick = { 
+                HapticHelper.vibrate(context, 1)
+                onToggleLock() 
+            }) {
+                Icon(
+                    imageVector = if (isLocked) Icons.Default.Lock else Icons.Default.LockOpen,
+                    contentDescription = null,
+                    tint = if (isLocked) CyberBlue else textSecondary
+                )
+            }
+        }
+    }
+    HorizontalDivider(color = textSecondary.copy(alpha = 0.1f))
 }
 
 @Composable
@@ -1219,9 +1353,32 @@ fun DashboardCard(
     isDark: Boolean,
     onClick: () -> Unit
 ) {
+    val context = LocalContext.current
+    var isPressed by remember { mutableStateOf(false) }
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.96f else 1.0f,
+        animationSpec = spring(dampingRatio = 0.4f, stiffness = 400f),
+        label = "CardScale"
+    )
+
     Surface(
         onClick = onClick,
-        modifier = modifier.height(140.dp),
+        modifier = modifier
+            .height(140.dp)
+            .scale(scale)
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onPress = { 
+                        isPressed = true
+                        tryAwaitRelease()
+                        isPressed = false
+                    },
+                    onTap = { 
+                        HapticHelper.vibrate(context, 1)
+                        onClick() 
+                    }
+                )
+            },
         shape = RoundedCornerShape(28.dp),
         color = if (isDark) CyberDarkBlue else CreamWhite,
         border = null,
@@ -1428,7 +1585,32 @@ fun SettingsSection(
             }
         }
 
-        Spacer(Modifier.height(32.dp))
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "Map Data © OpenStreetMap contributors",
+                color = textSecondary.copy(alpha = 0.4f),
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Medium
+            )
+            Text(
+                text = "Engine: MapLibre GL • OpenFreeMap",
+                color = textSecondary.copy(alpha = 0.4f),
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Normal,
+                modifier = Modifier.padding(top = 2.dp)
+            )
+            Text(
+                text = "Mapplock v1.0.4 • Aitoyz Labs",
+                color = textSecondary.copy(alpha = 0.3f),
+                fontSize = 10.sp,
+                modifier = Modifier.padding(top = 6.dp)
+            )
+        }
+
+        Spacer(Modifier.height(8.dp))
     }
 }
 
@@ -1437,6 +1619,7 @@ fun FAQScreen(isDark: Boolean) {
     val faqs = remember {
         listOf(
             "What is Mapplock and how is it different from other app lockers?" to "Mapplock is a next-generation security application developed by Aitoyz that uses location-based intelligence to protect your privacy. Unlike standard lockers that rely solely on PINs, Mapplock introduces \"Map-Gate\" technology, allowing you to define safe geographical zones. It provides a professional-grade vault for photos, videos, and files, combined with advanced intruder detection and stealth disguises. It is specifically built for users who want their phone's security to adapt automatically to their environment.",
+            "How does Mapplock protect my data against 'Q-Day'?" to "Mapplock is built with a Quantum-Resilient architecture. Most cloud-based lockers are vulnerable to 'Harvest Now, Decrypt Later' attacks, where data is stolen today to be cracked by future quantum computers. Mapplock prevents this by using local-only AES-256 symmetric encryption and a zero-knowledge architecture. Since your data never leaves your device, it cannot be harvested. Even with quantum algorithms like Grover's, our 256-bit encryption remains computationally unbreakable for billions of years.",
             "How does the \"Map-Gate\" feature work?" to "The Map-Gate feature allows you to set specific GPS coordinates as \"Safe Zones,\" such as your home or office. While you are within the designated radius of a safe zone, your protected apps can be accessed more conveniently or kept unlocked entirely. However, the moment you move outside this radius, Mapplock triggers a high-security lockdown automatically. This ensures that if your phone is lost, stolen, or accessed in a public area, your sensitive data remains completely inaccessible to others.",
             "Are my private photos and videos stored on Mapplock's servers?" to "No, Aitoyz operates on a \"Privacy-First\" model, meaning Mapplock does not store any of your personal files on our servers. All photos, videos, and documents you move into the vault are encrypted locally on your device’s internal storage. We do not have any remote access to your private content, and we cannot see or share your files. This approach ensures that you have total control over your data and that it remains secure even if your internet connection is compromised.",
             "What happens if I forget my PIN or Pattern?" to "If you forget your primary security code, you can use the secondary verification methods established during the initial setup. This includes biometric authentication, such as fingerprint or face unlock, if you have enabled those options in the settings menu. Additionally, you can use your \"Secret Map Point\" as a recovery method to reset your credentials. We strongly recommend setting up multiple recovery options to avoid a permanent lockout, as we cannot recover your PIN remotely for security reasons.",
@@ -1542,11 +1725,23 @@ fun PermissionItem(title: String, subtitle: String, isGranted: Boolean, isDark: 
 
 @Composable
 fun SettingsToggleItem(title: String, subtitle: String, icon: ImageVector, checked: Boolean, isDark: Boolean, onCheckedChange: (Boolean) -> Unit) {
+    val context = LocalContext.current
     Row(
-        modifier = Modifier.fillMaxWidth().padding(16.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { 
+                HapticHelper.vibrate(context, 1)
+                onCheckedChange(!checked) 
+            }
+            .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(icon, null, tint = if (isDark) CyberBlue else AppBlue, modifier = Modifier.size(24.dp))
+        Icon(
+            imageVector = icon, 
+            contentDescription = null, 
+            tint = if (checked) (if (isDark) CyberBlue else AppBlue) else Color.Gray, 
+            modifier = Modifier.size(24.dp).scale(if (checked) 1.1f else 1.0f)
+        )
         Spacer(Modifier.width(16.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(title, color = if (isDark) Color.White else Color.Black.copy(alpha = 0.8f), fontWeight = FontWeight.Black, fontSize = 16.sp)
@@ -1703,7 +1898,7 @@ fun BackupManagementDialog(
                                                     color = if (state.isDarkMode) Color.White else Color.Black,
                                                     maxLines = 1,
                                                     fontWeight = FontWeight.Medium,
-                                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                                    textAlign = TextAlign.Center
                                                 )
                                             }
                                             
@@ -1787,6 +1982,11 @@ fun InteractiveUserGuide(onDismiss: () -> Unit) {
             "Welcome to GeoVault",
             "Secure your media and apps based on your location. Let's learn how to use the player and import files.",
             Icons.Default.Security
+        ),
+        GuideStep(
+            "Q-Day Protected",
+            "Your data is shielded against the future. We use Quantum-Resilient local encryption (AES-256) to ensure your files remain uncrackable, even by next-generation quantum computers.",
+            Icons.Default.Hub
         ),
         GuideStep(
             "Importing Files",

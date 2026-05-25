@@ -44,13 +44,15 @@ fun CompactPinPad(
     onPinComplete: (String) -> Unit, 
     onError: (() -> Unit)? = null,
     isLightTheme: Boolean = true,
-    isFullPage: Boolean = false
+    isFullPage: Boolean = false,
+    autoConfirm: Boolean = true
 ) {
     var pin by remember { mutableStateOf("") }
     var isError by remember { mutableStateOf(false) }
     val haptic = LocalHapticFeedback.current
+    val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    
+
     BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
         val availableWidth = maxWidth
         val availableHeight = maxHeight
@@ -64,23 +66,24 @@ fun CompactPinPad(
 
         LaunchedEffect(pin) {
             if (pin.length == 4) {
-                delay(300)
                 if (correctPin != null) {
+                    delay(300)
                     if (pin == correctPin) {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        HapticHelper.vibrate(context, 1) // Medium on Success
                         onPinComplete(pin)
                         pin = ""
                     } else {
                         isError = true
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        HapticHelper.vibrate(context, 2) // Strong on Error
                         delay(100)
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         onError?.invoke()
                         delay(1000)
                         isError = false
                         pin = ""
                     }
-                } else {
+                } else if (autoConfirm) {
+                    delay(300)
+                    HapticHelper.vibrate(context, 1)
                     onPinComplete(pin)
                     pin = ""
                 }
@@ -160,7 +163,7 @@ fun CompactPinPad(
                                 .padding(horizontal = keyPadding)
                                 .size(keySize)
                                 .clickable(enabled = !isError) {
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                HapticHelper.vibrate(context, 0) // Light for keys
                                 when (key) {
                                     "DEL" -> if (pin.isNotEmpty()) pin = pin.dropLast(1)
                                     "OK" -> if (pin.length == 4) {
@@ -227,12 +230,14 @@ fun CompactPatternGrid(
     onPatternComplete: (String) -> Unit, 
     onError: (() -> Unit)? = null,
     isLightTheme: Boolean = false,
-    isFullPage: Boolean = false
+    isFullPage: Boolean = false,
+    showConfirmButton: Boolean = false
 ) {
     var secret by remember { mutableStateOf("") }
     var isError by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val haptic = LocalHapticFeedback.current
+    val context = LocalContext.current
     
     BoxWithConstraints(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
         val availableWidth = maxWidth
@@ -256,7 +261,7 @@ fun CompactPatternGrid(
                             onDrag = { change, _ ->
                                 val dotIndex = getDotIndexAt(change.position, size.width.toFloat())
                                 if (dotIndex != -1 && !secret.contains(dotIndex.toString())) {
-                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    HapticHelper.vibrate(context, 0) // Light for dots
                                     secret += dotIndex.toString()
                                 }
                             },
@@ -264,16 +269,12 @@ fun CompactPatternGrid(
                                 if (secret.length >= 3) {
                                     if (correctPattern != null) {
                                         if (secret == correctPattern) {
-                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                            HapticHelper.vibrate(context, 1) // Medium for success
                                             onPatternComplete(secret)
                                             secret = ""
                                         } else {
                                             isError = true
-                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                            scope.launch {
-                                                delay(100)
-                                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                            }
+                                            HapticHelper.vibrate(context, 2) // Strong for error
                                             onError?.invoke()
                                             scope.launch {
                                                 delay(1000)
@@ -281,8 +282,8 @@ fun CompactPatternGrid(
                                                 secret = ""
                                             }
                                         }
-                                    } else {
-                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    } else if (!showConfirmButton) {
+                                        HapticHelper.vibrate(context, 1)
                                         onPatternComplete(secret)
                                         secret = ""
                                     }
@@ -327,14 +328,29 @@ fun CompactPatternGrid(
             }
             
             Spacer(Modifier.height(24.dp))
-            Text(
-                text = if (isError) "TRY AGAIN" else if (availableWidth > 500.dp) "DRAW PATTERN TO UNLOCK" else "CONNECT DOTS TO VERIFY", 
-                color = if (isError) Color.Red else (if (isLightTheme) Color.Gray else Color.White.copy(alpha = 0.6f)),
-                fontSize = if (availableWidth > 500.dp) 14.sp else 10.sp,
-                letterSpacing = 1.sp,
-                fontWeight = FontWeight.Black,
-                textAlign = TextAlign.Center
-            )
+            
+            if (showConfirmButton && secret.length >= 3) {
+                Button(
+                    onClick = {
+                        HapticHelper.vibrate(context, 1)
+                        onPatternComplete(secret)
+                    },
+                    modifier = Modifier.fillMaxWidth().height(50.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = if (isLightTheme) AppBlue else CyberBlue),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("CONFIRM PATTERN", fontWeight = FontWeight.Black)
+                }
+            } else {
+                Text(
+                    text = if (isError) "TRY AGAIN" else if (availableWidth > 500.dp) "DRAW PATTERN TO UNLOCK" else "CONNECT DOTS TO VERIFY", 
+                    color = if (isError) Color.Red else (if (isLightTheme) Color.Gray else Color.White.copy(alpha = 0.6f)),
+                    fontSize = if (availableWidth > 500.dp) 14.sp else 10.sp,
+                    letterSpacing = 1.sp,
+                    fontWeight = FontWeight.Black,
+                    textAlign = TextAlign.Center
+                )
+            }
         }
     }
 }
