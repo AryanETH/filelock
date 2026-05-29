@@ -5,37 +5,16 @@ import android.graphics.Bitmap
 import android.graphics.pdf.PdfRenderer
 import android.net.Uri
 import android.os.ParcelFileDescriptor
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.*
+import androidx.compose.foundation.gestures.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.ui.draw.blur
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Shadow
-import androidx.compose.ui.text.TextStyle
-import android.media.AudioManager
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.gestures.rememberTransformableState
-import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
@@ -45,7 +24,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
@@ -59,12 +41,13 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.core.content.FileProvider
-import androidx.core.graphics.createBitmap
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import coil.compose.AsyncImage
+import com.geovault.R
+import androidx.compose.ui.res.stringResource
 import com.geovault.model.FileCategory
 import com.geovault.model.VaultFile
 import com.geovault.security.CryptoManager
@@ -88,6 +71,10 @@ fun MediaViewerScreen(
     onStartAction: () -> Unit = {},
     onEndAction: () -> Unit = {}
 ) {
+    androidx.activity.compose.BackHandler {
+        onBack()
+    }
+    
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val cryptoManager = remember { CryptoManager() }
@@ -98,13 +85,14 @@ fun MediaViewerScreen(
     val pagerFiles = remember(file, allFiles) {
         if (allFiles.isEmpty()) listOf(file)
         else {
-            if (file.folderName != null) {
-                // If in a folder, show all files in that folder
+            val baseList = if (file.folderName != null) {
                 allFiles.filter { it.folderName == file.folderName }
             } else {
-                // If in a category, show all files in that category that are NOT in any folder
                 allFiles.filter { it.category == file.category && it.folderName == null }
             }
+            // Optimization: Filter out categories that don't support preview if needed,
+            // but for custom folders, we allow all.
+            baseList
         }
     }
 
@@ -115,12 +103,35 @@ fun MediaViewerScreen(
 
     val pagerState = rememberPagerState(initialPage = initialPage) { pagerFiles.size }
 
+    // Ultra Fast: Pre-decrypt neighboring files with optimized buffers
+    LaunchedEffect(pagerState.currentPage) {
+        val cacheDir = File(context.cacheDir, "decrypted_vault")
+        if (!cacheDir.exists()) cacheDir.mkdirs()
+        
+        val nextIdx = pagerState.currentPage + 1
+        val prevIdx = pagerState.currentPage - 1
+        
+        listOfNotNull(pagerFiles.getOrNull(nextIdx), pagerFiles.getOrNull(prevIdx)).forEach { f ->
+            launch(Dispatchers.IO) {
+                val tempFile = File(cacheDir, "preview_${f.id}_${f.originalName}")
+                if (!tempFile.exists()) {
+                    try {
+                        cryptoManager.decryptToStream(
+                            File(f.encryptedPath).inputStream().buffered(1024 * 256),
+                            FileOutputStream(tempFile).buffered(1024 * 256)
+                        )
+                    } catch (e: Exception) {}
+                }
+            }
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
                     val currentFile = pagerFiles.getOrNull(pagerState.currentPage) ?: file
-                    Text(currentFile.originalName, style = MaterialTheme.typography.titleMedium)
+                    Text(currentFile.originalName, style = MaterialTheme.typography.titleMedium, maxLines = 1, fontWeight = FontWeight.Black)
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
@@ -129,23 +140,29 @@ fun MediaViewerScreen(
                 },
                 actions = {
                     val currentFile = pagerFiles.getOrNull(pagerState.currentPage)
-
                     IconButton(onClick = {
                         currentFile?.let { cf ->
                             scope.launch {
-                                val tempFile = File(context.cacheDir, "share_${cf.id}_${cf.originalName}")
-                                withContext(Dispatchers.IO) {
-                                    try {
-                                        cryptoManager.decryptToStream(File(cf.encryptedPath).inputStream(), FileOutputStream(tempFile))
-                                    } catch (e: Exception) { e.printStackTrace() }
+                                val cacheDir = File(context.cacheDir, "decrypted_vault")
+                                if (!cacheDir.exists()) cacheDir.mkdirs()
+                                
+                                val tempFile = File(cacheDir, "share_${cf.id}_${cf.originalName}")
+                                if (!tempFile.exists()) {
+                                    withContext(Dispatchers.IO) {
+                                        try {
+                                            cryptoManager.decryptToStream(
+                                                File(cf.encryptedPath).inputStream().buffered(1024 * 256),
+                                                FileOutputStream(tempFile).buffered(1024 * 256)
+                                            )
+                                        } catch (e: Exception) {}
+                                    }
                                 }
+                                
                                 if (tempFile.exists()) {
                                     onStartAction()
                                     shareFile(context, tempFile)
-                                    scope.launch {
-                                        delay(2000)
-                                        onEndAction()
-                                    }
+                                    // Removed delay to fix slow redirect complaint
+                                    onEndAction()
                                 }
                             }
                         }
@@ -173,52 +190,68 @@ fun MediaViewerScreen(
                 state = pagerState,
                 modifier = Modifier.padding(padding).fillMaxSize(),
                 pageSpacing = 16.dp,
-                beyondViewportPageCount = 1
+                beyondViewportPageCount = 1,
+                key = { pageIndex -> if (pageIndex < pagerFiles.size) pagerFiles[pageIndex].id else pageIndex }
             ) { pageIndex ->
                 val currentFile = pagerFiles[pageIndex]
                 val isVisible = pagerState.currentPage == pageIndex
 
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     var decryptedFile by remember(currentFile.id) { mutableStateOf<File?>(null) }
+                    var isDecrypting by remember(currentFile.id) { mutableStateOf(true) }
 
                     LaunchedEffect(currentFile.id) {
+                        isDecrypting = true
                         withContext(Dispatchers.IO) {
                             try {
-                                val tempFile = File(context.cacheDir, "preview_${currentFile.id}_${currentFile.originalName}")
+                                val cacheDir = File(context.cacheDir, "decrypted_vault")
+                                if (!cacheDir.exists()) cacheDir.mkdirs()
+                                
+                                val tempFile = File(cacheDir, "preview_${currentFile.id}_${currentFile.originalName}")
+                                
+                                // INSTANT OPEN STRATEGY:
+                                // If it's a small file (Images, Docs < 5MB), it should be instant.
+                                // We use a high-speed buffer and check existence first.
                                 if (!tempFile.exists()) {
-                                    cryptoManager.decryptToStream(File(currentFile.encryptedPath).inputStream(), FileOutputStream(tempFile))
+                                    cryptoManager.decryptToStream(
+                                        File(currentFile.encryptedPath).inputStream().buffered(1024 * 256), // 256KB buffer
+                                        FileOutputStream(tempFile).buffered(1024 * 256)
+                                    )
                                 }
                                 decryptedFile = tempFile
-                            } catch (e: Exception) { e.printStackTrace() }
+                            } catch (e: Exception) {}
+                            finally { isDecrypting = false }
                         }
                     }
 
                     if (decryptedFile != null) {
-                        when (currentFile.category) {
-                            FileCategory.PHOTO, FileCategory.INTRUDER -> PhotoViewer(decryptedFile!!)
-                            FileCategory.VIDEO -> VideoViewer(decryptedFile!!, isVisible)
-                            FileCategory.AUDIO -> AudioViewer(decryptedFile!!, isVisible)
-                            FileCategory.DOCUMENT -> {
-                                if (currentFile.originalName.lowercase().endsWith(".pdf")) {
-                                    PdfViewer(decryptedFile!!)
-                                } else {
-                                    ExternalViewer(currentFile.originalName)
+                        Box(Modifier.fillMaxSize()) {
+                            when (currentFile.category) {
+                                FileCategory.PHOTO, FileCategory.INTRUDER -> PhotoViewer(decryptedFile!!)
+                                FileCategory.VIDEO -> VideoViewer(decryptedFile!!, isVisible)
+                                FileCategory.AUDIO -> AudioViewer(decryptedFile!!, isVisible)
+                                FileCategory.DOCUMENT -> {
+                                    if (currentFile.originalName.lowercase().endsWith(".pdf")) {
+                                        PdfViewer(decryptedFile!!)
+                                    } else {
+                                        ExternalViewer(currentFile.originalName)
+                                    }
                                 }
+                                else -> ExternalViewer(currentFile.originalName)
                             }
-                            else -> ExternalViewer(currentFile.originalName)
                         }
-                    } else {
-                        // Show thumbnail as placeholder for instant visual feedback
+                    } else if (isDecrypting) {
                         Box(contentAlignment = Alignment.Center) {
                             if (currentFile.thumbnailPath != null && File(currentFile.thumbnailPath).exists()) {
                                 AsyncImage(
                                     model = File(currentFile.thumbnailPath),
                                     contentDescription = null,
-                                    modifier = Modifier.fillMaxSize().blur(8.dp),
-                                    contentScale = ContentScale.Fit
+                                    modifier = Modifier.fillMaxSize().blur(12.dp),
+                                    contentScale = ContentScale.Fit,
+                                    alpha = 0.5f
                                 )
                             }
-                            CircularProgressIndicator(color = CyberBlue)
+                            CircularProgressIndicator(color = CyberBlue, strokeWidth = 2.dp)
                         }
                     }
                 }
@@ -226,9 +259,9 @@ fun MediaViewerScreen(
 
             if (showRestoreDialog) {
                 MediaActionDialog(
-                    title = "RESTORE FILE?",
-                    message = "This will move the file back to your phone's gallery.",
-                    confirmText = "RESTORE",
+                    title = stringResource(R.string.restore_file_title),
+                    message = stringResource(R.string.restore_file_message),
+                    confirmText = stringResource(R.string.restore_confirm),
                     onDismiss = { showRestoreDialog = false },
                     onConfirm = {
                         pagerFiles.getOrNull(pagerState.currentPage)?.let { onRestore(it.id) }
@@ -239,9 +272,9 @@ fun MediaViewerScreen(
 
             if (showDeleteDialog) {
                 MediaActionDialog(
-                    title = "DELETE FILE?",
-                    message = "This action cannot be undone.",
-                    confirmText = "DELETE",
+                    title = stringResource(R.string.delete_file_title),
+                    message = stringResource(R.string.delete_file_message),
+                    confirmText = stringResource(R.string.delete_confirm),
                     confirmColor = Color.Red.copy(alpha = 0.8f),
                     onDismiss = { showDeleteDialog = false },
                     onConfirm = {
@@ -259,55 +292,47 @@ fun PhotoViewer(file: File) {
     var scale by remember { mutableFloatStateOf(1f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
     
-    BoxWithConstraints(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        val state = rememberTransformableState { zoomChange, offsetChange, _ ->
-            val newScale = (scale * zoomChange).coerceIn(1f, 5f)
-            
-            // Calculate boundaries for the offset based on scale
-            val extraWidth = (newScale - 1) * constraints.maxWidth
-            val extraHeight = (newScale - 1) * constraints.maxHeight
-            
-            val maxX = extraWidth / 2
-            val maxY = extraHeight / 2
-            
-            scale = newScale
-            offset = Offset(
-                x = (offset.x + offsetChange.x).coerceIn(-maxX, maxX),
-                y = (offset.y + offsetChange.y).coerceIn(-maxY, maxY)
-            )
-        }
+    val state = rememberTransformableState { zoomChange, offsetChange, _ ->
+        scale = (scale * zoomChange).coerceIn(1f, 5f)
+        offset += offsetChange
+    }
 
-        Box(
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .pointerInput(scale) {
+                if (scale > 1f) {
+                    detectDragGestures { change, dragAmount ->
+                        change.consume()
+                        offset += dragAmount
+                    }
+                }
+            }
+            .pointerInput(Unit) {
+                detectTapGestures(onDoubleTap = {
+                    if (scale > 1f) {
+                        scale = 1f
+                        offset = Offset.Zero
+                    } else {
+                        scale = 3f
+                    }
+                })
+            }
+            .transformable(state = state)
+    ) {
+        AsyncImage(
+            model = Uri.fromFile(file),
+            contentDescription = null,
             modifier = Modifier
                 .fillMaxSize()
-                .pointerInput(Unit) {
-                    detectTapGestures(onDoubleTap = {
-                        if (scale > 1f) {
-                            scale = 1f
-                            offset = Offset.Zero
-                        } else {
-                            scale = 3f
-                        }
-                    })
-                }
-                .transformable(state = state)
-        ) {
-            AsyncImage(
-                model = Uri.fromFile(file),
-                contentDescription = null,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .graphicsLayer {
-                        scaleX = scale
-                        scaleY = scale
-                        translationX = offset.x
-                        translationY = offset.y
-                    },
-                contentScale = ContentScale.Fit
-            )
-        }
+                .graphicsLayer {
+                    scaleX = scale
+                    scaleY = scale
+                    translationX = offset.x
+                    translationY = offset.y
+                },
+            contentScale = ContentScale.Fit
+        )
     }
 }
 
@@ -328,183 +353,22 @@ fun VideoViewer(file: File, isVisible: Boolean) {
         }
     }
 
-    var showControls by remember { mutableStateOf(true) }
-    var isPlaying by remember { mutableStateOf(false) }
-    var currentPosition by remember { mutableLongStateOf(0L) }
-    var duration by remember { mutableLongStateOf(0L) }
-    var brightness by remember { mutableFloatStateOf(0.5f) }
-    var volume by remember { mutableFloatStateOf(exoPlayer.volume) }
-    var isLocked by remember { mutableStateOf(false) }
-    
-    var showBrightnessOverlay by remember { mutableStateOf(false) }
-    var showVolumeOverlay by remember { mutableStateOf(false) }
-
     DisposableEffect(exoPlayer) {
-        val listener = object : androidx.media3.common.Player.Listener {
-            override fun onIsPlayingChanged(playing: Boolean) { isPlaying = playing }
-            override fun onEvents(player: androidx.media3.common.Player, events: androidx.media3.common.Player.Events) {
-                duration = player.duration.coerceAtLeast(0L)
-            }
-        }
-        exoPlayer.addListener(listener)
         onDispose {
-            exoPlayer.removeListener(listener)
             exoPlayer.release()
         }
     }
 
-    LaunchedEffect(isPlaying) {
-        while (isPlaying) {
-            currentPosition = exoPlayer.currentPosition
-            delay(500)
-        }
-    }
-
-    LaunchedEffect(showControls) {
-        if (showControls && !isLocked) {
-            delay(3000)
-            showControls = false
-        }
-    }
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Black)
-            .pointerInput(isLocked) {
-                detectTapGestures(onTap = { if (!isLocked) showControls = !showControls })
-            }
-            .pointerInput(isLocked) {
-                if (isLocked) return@pointerInput
-                detectVerticalDragGestures(
-                    onDragStart = { },
-                    onDragEnd = { 
-                        showBrightnessOverlay = false
-                        showVolumeOverlay = false
-                    },
-                    onDragCancel = {
-                        showBrightnessOverlay = false
-                        showVolumeOverlay = false
-                    },
-                    onVerticalDrag = { change, dragAmount ->
-                        val isLeft = change.position.x < size.width / 2
-                        if (isLeft) {
-                            brightness = (brightness - dragAmount / size.height).coerceIn(0f, 1f)
-                            showBrightnessOverlay = true
-                        } else {
-                            volume = (volume - dragAmount / size.height).coerceIn(0f, 1f)
-                            exoPlayer.volume = volume
-                            showVolumeOverlay = true
-                        }
-                    }
-                )
-            }
-    ) {
-        val window = (context as? android.app.Activity)?.window
-        
-        // Handle brightness changes
-        LaunchedEffect(brightness, showBrightnessOverlay) {
-            if (showBrightnessOverlay && window != null) {
-                val params = window.attributes
-                params.screenBrightness = brightness.coerceIn(0.01f, 1f)
-                window.attributes = params
-            }
-        }
-
-        // Reset brightness when leaving or not visible
-        DisposableEffect(Unit) {
-            onDispose {
-                window?.let { w ->
-                    val params = w.attributes
-                    params.screenBrightness = -1f // Revert to system brightness
-                    w.attributes = params
+    Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
+        AndroidView(
+            factory = { ctx ->
+                PlayerView(ctx).apply {
+                    player = exoPlayer
+                    useController = true
                 }
-            }
-        }
-
-        // Also reset when page is no longer the active one
-        LaunchedEffect(isVisible) {
-            if (!isVisible) {
-                window?.let { w ->
-                    val params = w.attributes
-                    params.screenBrightness = -1f 
-                    w.attributes = params
-                }
-            }
-        }
-
-        AndroidView(factory = { ctx -> PlayerView(ctx).apply { player = exoPlayer; useController = false } }, modifier = Modifier.fillMaxSize())
-
-        // Quick Settings Overlays
-        if (showBrightnessOverlay) {
-            GestureOverlay(icon = Icons.Default.BrightnessMedium, value = brightness, label = "Brightness")
-        }
-        if (showVolumeOverlay) {
-            GestureOverlay(icon = Icons.Default.VolumeUp, value = volume, label = "Volume")
-        }
-
-        // Custom Controls
-        AnimatedVisibility(visible = showControls, enter = fadeIn(), exit = fadeOut()) {
-            VideoPlayerControls(
-                isPlaying = isPlaying,
-                currentPosition = currentPosition,
-                duration = duration,
-                isLocked = isLocked,
-                onPlayPause = { if (isPlaying) exoPlayer.pause() else exoPlayer.play() },
-                onSeek = { exoPlayer.seekTo(it) },
-                onToggleLock = { isLocked = !isLocked },
-                onForward = { exoPlayer.seekTo(currentPosition + 10000) },
-                onRewind = { exoPlayer.seekTo(currentPosition - 10000) }
-            )
-        }
-    }
-}
-
-@Composable
-fun VideoPlayerControls(
-    isPlaying: Boolean,
-    currentPosition: Long,
-    duration: Long,
-    isLocked: Boolean,
-    onPlayPause: () -> Unit,
-    onSeek: (Long) -> Unit,
-    onToggleLock: () -> Unit,
-    onForward: () -> Unit,
-    onRewind: () -> Unit
-) {
-    Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.3f))) {
-        // Lock Button
-        IconButton(
-            onClick = onToggleLock,
-            modifier = Modifier.align(Alignment.CenterStart).padding(16.dp)
-        ) {
-            Icon(if (isLocked) Icons.Default.Lock else Icons.Default.LockOpen, null, tint = Color.White)
-        }
-
-        if (!isLocked) {
-            // Center Controls
-            Row(modifier = Modifier.align(Alignment.Center), verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onRewind) { Icon(Icons.Default.Replay10, null, tint = Color.White, modifier = Modifier.size(48.dp)) }
-                Spacer(Modifier.width(32.dp))
-                IconButton(onClick = onPlayPause) { Icon(if (isPlaying) Icons.Default.PauseCircleFilled else Icons.Default.PlayCircleFilled, null, tint = Color.White, modifier = Modifier.size(80.dp)) }
-                Spacer(Modifier.width(32.dp))
-                IconButton(onClick = onForward) { Icon(Icons.Default.Forward10, null, tint = Color.White, modifier = Modifier.size(48.dp)) }
-            }
-
-            // Bottom Bar
-            Column(modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp)) {
-                Slider(
-                    value = currentPosition.toFloat(),
-                    onValueChange = { onSeek(it.toLong()) },
-                    valueRange = 0f..duration.toFloat().coerceAtLeast(1f),
-                    colors = SliderDefaults.colors(thumbColor = CyberBlue, activeTrackColor = CyberBlue)
-                )
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(formatDuration(currentPosition), color = Color.White, fontSize = 12.sp)
-                    Text(formatDuration(duration), color = Color.White, fontSize = 12.sp)
-                }
-            }
-        }
+            },
+            modifier = Modifier.fillMaxSize()
+        )
     }
 }
 
@@ -512,8 +376,6 @@ fun VideoPlayerControls(
 @Composable
 fun AudioViewer(file: File, isVisible: Boolean) {
     val context = LocalContext.current
-    val audioManager = remember { context.getSystemService(android.content.Context.AUDIO_SERVICE) as AudioManager }
-    
     val exoPlayer = remember(file) {
         ExoPlayer.Builder(context).build().apply {
             setMediaItem(MediaItem.fromUri(Uri.fromFile(file)))
@@ -527,181 +389,48 @@ fun AudioViewer(file: File, isVisible: Boolean) {
         }
     }
 
-    var playbackState by remember { mutableIntStateOf(exoPlayer.playbackState) }
-    var isPlaying by remember { mutableStateOf(exoPlayer.isPlaying) }
-    var currentPosition by remember { mutableLongStateOf(0L) }
-    var duration by remember { mutableLongStateOf(0L) }
-    
-    var volume by remember { mutableFloatStateOf(exoPlayer.volume) }
-    var showVolumeOverlay by remember { mutableStateOf(false) }
-
     DisposableEffect(exoPlayer) {
-        val listener = object : androidx.media3.common.Player.Listener {
-            override fun onEvents(player: androidx.media3.common.Player, events: androidx.media3.common.Player.Events) {
-                playbackState = player.playbackState
-                isPlaying = player.isPlaying
-                duration = player.duration.coerceAtLeast(0L)
-            }
-        }
-        exoPlayer.addListener(listener)
         onDispose {
-            exoPlayer.removeListener(listener)
             exoPlayer.release()
-        }
-    }
-
-    LaunchedEffect(isPlaying) {
-        while (isPlaying) {
-            currentPosition = exoPlayer.currentPosition
-            delay(500)
-        }
-    }
-
-    // Audio Focus Handling with backward compatibility
-    DisposableEffect(Unit) {
-        val listener = AudioManager.OnAudioFocusChangeListener { focusChange ->
-            when (focusChange) {
-                AudioManager.AUDIOFOCUS_LOSS, AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> exoPlayer.pause()
-            }
-        }
-        
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            val focusRequest = android.media.AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
-                .setAudioAttributes(android.media.AudioAttributes.Builder()
-                    .setUsage(android.media.AudioAttributes.USAGE_MEDIA)
-                    .setContentType(android.media.AudioAttributes.CONTENT_TYPE_MUSIC)
-                    .build())
-                .setAcceptsDelayedFocusGain(true)
-                .setOnAudioFocusChangeListener(listener)
-                .build()
-            audioManager.requestAudioFocus(focusRequest)
-        } else {
-            @Suppress("DEPRECATION")
-            audioManager.requestAudioFocus(listener, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN)
-        }
-        
-        onDispose {
-            // Unregister listener if needed
         }
     }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(Color(0xFF2C3E50), Color(0xFF000000))))
-            .padding(24.dp)
-            .pointerInput(Unit) {
-                detectVerticalDragGestures(
-                    onDragStart = { },
-                    onDragEnd = { showVolumeOverlay = false },
-                    onDragCancel = { showVolumeOverlay = false },
-                    onVerticalDrag = { _, dragAmount ->
-                        volume = (volume - dragAmount / size.height).coerceIn(0f, 1f)
-                        exoPlayer.volume = volume
-                        showVolumeOverlay = true
-                    }
-                )
-            },
+            .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        if (showVolumeOverlay) {
-            GestureOverlay(icon = Icons.Default.VolumeUp, value = volume, label = "Volume")
-        }
-
-        Text("PLAYING NOW", color = Color.White.copy(alpha = 0.6f), fontSize = 12.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
-        
+        Icon(
+            Icons.Default.MusicNote, 
+            null, 
+            tint = CyberBlue, 
+            modifier = Modifier.size(120.dp)
+        )
+        Spacer(Modifier.height(24.dp))
+        Text(
+            file.name, 
+            color = Color.White, 
+            fontSize = 20.sp, 
+            fontWeight = FontWeight.Black, 
+            textAlign = TextAlign.Center
+        )
         Spacer(Modifier.height(48.dp))
-        
-        // Artwork with glassmorphism/neomorphism effect
-        Box(contentAlignment = Alignment.Center) {
-            Surface(
-                modifier = Modifier.size(260.dp),
-                shape = androidx.compose.foundation.shape.CircleShape,
-                color = Color.White.copy(alpha = 0.05f),
-                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
-            ) {}
-            
-            val infiniteTransition = rememberInfiniteTransition()
-            val rotation by infiniteTransition.animateFloat(
-                initialValue = 0f,
-                targetValue = 360f,
-                animationSpec = infiniteRepeatable(tween(20000, easing = LinearEasing))
-            )
-
-            Surface(
-                modifier = Modifier.size(220.dp).graphicsLayer { rotationZ = if (isPlaying) rotation else 0f },
-                shape = androidx.compose.foundation.shape.CircleShape,
-                shadowElevation = 20.dp
-            ) {
-                Image(
-                    imageVector = Icons.Default.MusicNote,
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize().padding(40.dp).background(Color(0xFF1A1A1A)),
-                    colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(CyberBlue)
-                )
-            }
-        }
-        
-        Spacer(Modifier.height(48.dp))
-        
-        Text(file.name, color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Black, textAlign = TextAlign.Center, maxLines = 1)
-        Text("Secure Vault Audio", color = Color.White.copy(alpha = 0.5f), fontSize = 14.sp)
-        
-        Spacer(Modifier.height(48.dp))
-        
-        // Seekbar
-        Column {
-            Slider(
-                value = currentPosition.toFloat(),
-                onValueChange = { exoPlayer.seekTo(it.toLong()) },
-                valueRange = 0f..duration.toFloat().coerceAtLeast(1f),
-                colors = SliderDefaults.colors(
-                    thumbColor = Color.White,
-                    activeTrackColor = CyberBlue,
-                    inactiveTrackColor = Color.White.copy(alpha = 0.2f)
-                )
-            )
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(formatDuration(currentPosition), color = Color.White.copy(alpha = 0.6f), fontSize = 12.sp)
-                Text(formatDuration(duration), color = Color.White.copy(alpha = 0.6f), fontSize = 12.sp)
-            }
-        }
-        
-        Spacer(Modifier.height(48.dp))
-        
-        // Controls
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = { exoPlayer.seekTo(currentPosition - 10000) }) {
-                Icon(Icons.Default.Replay10, null, tint = Color.White, modifier = Modifier.size(32.dp))
-            }
-            
-            FloatingActionButton(
-                onClick = { if (isPlaying) exoPlayer.pause() else exoPlayer.play() },
-                containerColor = Color.White,
-                contentColor = Color.Black,
-                shape = androidx.compose.foundation.shape.CircleShape,
-                modifier = Modifier.size(72.dp)
-            ) {
-                Icon(if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow, null, modifier = Modifier.size(40.dp))
-            }
-            
-            IconButton(onClick = { exoPlayer.seekTo(currentPosition + 10000) }) {
-                Icon(Icons.Default.Forward10, null, tint = Color.White, modifier = Modifier.size(32.dp))
-            }
-        }
+        AndroidView(
+            factory = { ctx ->
+                PlayerView(ctx).apply {
+                    player = exoPlayer
+                    useController = true
+                    controllerHideOnTouch = false
+                    controllerShowTimeoutMs = 0
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(100.dp)
+        )
     }
-}
-
-private fun formatDuration(ms: Long): String {
-    val totalSec = ms / 1000
-    val min = totalSec / 60
-    val sec = totalSec % 60
-    return String.format("%02d:%02d", min, sec)
 }
 
 @Composable
@@ -712,76 +441,39 @@ fun PdfViewer(file: File) {
     }
     DisposableEffect(renderer) { onDispose { renderer.close() } }
     
-    var scale by remember { mutableFloatStateOf(1f) }
-    var offset by remember { mutableStateOf(Offset.Zero) }
-    val state = rememberTransformableState { zoomChange, offsetChange, _ ->
-        scale = (scale * zoomChange).coerceIn(1f, 5f)
-        offset += offsetChange
-    }
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .pointerInput(Unit) {
-                detectTapGestures(onDoubleTap = {
-                    scale = if (scale > 1f) 1f else 2.5f
-                    offset = Offset.Zero
-                })
-            }
-            .transformable(state = state)
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-                translationX = offset.x
-                translationY = offset.y
-            }
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            items(renderer.pageCount) { index -> 
-                PdfPage(renderer, index) 
-            }
-        }
+        items(renderer.pageCount) { index -> PdfPage(renderer, index) }
     }
 }
 
 @Composable
 fun PdfPage(renderer: PdfRenderer, index: Int) {
     var bitmap by remember { mutableStateOf<Bitmap?>(null) }
-    val scope = rememberCoroutineScope()
-    
     LaunchedEffect(index) {
         withContext(Dispatchers.IO) {
             try {
                 renderer.openPage(index).use { page ->
-                    // High quality rendering
                     val b = Bitmap.createBitmap(page.width * 2, page.height * 2, Bitmap.Config.ARGB_8888)
                     val canvas = android.graphics.Canvas(b)
                     canvas.drawColor(android.graphics.Color.WHITE)
                     page.render(b, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
                     bitmap = b
                 }
-            } catch (e: Exception) { e.printStackTrace() }
+            } catch (e: Exception) {}
         }
     }
-
     bitmap?.let {
-        Card(
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-            shape = RoundedCornerShape(4.dp),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Image(
-                bitmap = it.asImageBitmap(),
-                contentDescription = "Page ${index + 1}",
-                modifier = Modifier.fillMaxWidth(),
-                contentScale = ContentScale.FillWidth
-            )
-        }
-    } ?: Box(modifier = Modifier.fillMaxWidth().height(400.dp), contentAlignment = Alignment.Center) {
+        Image(
+            bitmap = it.asImageBitmap(),
+            contentDescription = null,
+            modifier = Modifier.fillMaxWidth(),
+            contentScale = ContentScale.FillWidth
+        )
+    } ?: Box(modifier = Modifier.fillMaxWidth().height(300.dp), contentAlignment = Alignment.Center) {
         CircularProgressIndicator(color = CyberBlue)
     }
 }
@@ -795,39 +487,8 @@ fun ExternalViewer(fileName: String) {
     ) {
         Icon(Icons.AutoMirrored.Filled.InsertDriveFile, null, tint = Color.Gray, modifier = Modifier.size(80.dp))
         Spacer(Modifier.height(24.dp))
-        Text("No preview for $fileName", color = Color.White, fontWeight = FontWeight.Bold)
-        Text("Use 'Open In' to view with another app.", color = CyberBlue, textAlign = TextAlign.Center, fontSize = 12.sp)
-    }
-}
-
-@Composable
-fun GestureOverlay(icon: androidx.compose.ui.graphics.vector.ImageVector, value: Float, label: String) {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Surface(
-            shape = RoundedCornerShape(16.dp),
-            color = Color.Black.copy(alpha = 0.6f),
-            modifier = Modifier.size(120.dp)
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-                modifier = Modifier.padding(16.dp)
-            ) {
-                Icon(icon, null, tint = Color.White, modifier = Modifier.size(32.dp))
-                Spacer(Modifier.height(8.dp))
-                Text(label, color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                Spacer(Modifier.height(8.dp))
-                LinearProgressIndicator(
-                    progress = { value },
-                    modifier = Modifier.fillMaxWidth().height(4.dp).clip(androidx.compose.foundation.shape.CircleShape),
-                    color = CyberBlue,
-                    trackColor = Color.White.copy(alpha = 0.2f)
-                )
-            }
-        }
+        Text(stringResource(R.string.no_preview, fileName), color = Color.White, fontWeight = FontWeight.Black)
+        Text(stringResource(R.string.open_in_hint), color = CyberBlue, textAlign = TextAlign.Center, fontSize = 12.sp, fontWeight = FontWeight.Bold)
     }
 }
 
@@ -837,100 +498,36 @@ fun MediaActionDialog(
     message: String,
     confirmText: String,
     confirmColor: Color = CyberBlue,
-    icon: androidx.compose.ui.graphics.vector.ImageVector = Icons.Default.Warning,
     onDismiss: () -> Unit,
     onConfirm: () -> Unit
 ) {
-    Dialog(onDismissRequest = onDismiss) {
-        val infiniteTransition = rememberInfiniteTransition()
-        val scale by infiniteTransition.animateFloat(
-            initialValue = 1f,
-            targetValue = 1.1f,
-            animationSpec = infiniteRepeatable(tween(1000), RepeatMode.Reverse)
-        )
-
-        Surface(
-            shape = RoundedCornerShape(28.dp),
-            color = Color(0xFF1A1A1A),
-            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f)),
-            shadowElevation = 24.dp
-        ) {
-            Column(
-                modifier = Modifier.padding(32.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Icon(
-                    icon,
-                    null,
-                    tint = confirmColor,
-                    modifier = Modifier.size(64.dp).graphicsLayer { scaleX = scale; scaleY = scale }
-                )
-                
-                Spacer(Modifier.height(24.dp))
-                
-                Text(
-                    title,
-                    color = Color.White,
-                    fontWeight = FontWeight.Black,
-                    fontSize = 20.sp,
-                    textAlign = TextAlign.Center
-                )
-                
-                Spacer(Modifier.height(16.dp))
-                
-                Text(
-                    message,
-                    color = Color.Gray,
-                    fontSize = 15.sp,
-                    textAlign = TextAlign.Center,
-                    lineHeight = 22.sp
-                )
-                
-                Spacer(Modifier.height(32.dp))
-                
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    TextButton(
-                        onClick = onDismiss,
-                        modifier = Modifier.weight(1f).height(50.dp)
-                    ) {
-                        Text("CANCEL", color = Color.Gray, fontWeight = FontWeight.Bold)
-                    }
-                    Button(
-                        onClick = onConfirm,
-                        colors = ButtonDefaults.buttonColors(containerColor = confirmColor),
-                        shape = RoundedCornerShape(14.dp),
-                        modifier = Modifier.weight(1f).height(50.dp)
-                    ) {
-                        Text(confirmText, color = Color.White, fontWeight = FontWeight.Black)
-                    }
-                }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title, fontWeight = FontWeight.Black) },
+        text = { Text(message, fontWeight = FontWeight.Bold) },
+        confirmButton = {
+            Button(onClick = onConfirm, colors = ButtonDefaults.buttonColors(containerColor = confirmColor)) {
+                Text(confirmText, fontWeight = FontWeight.Black)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.cancel), fontWeight = FontWeight.Bold)
             }
         }
-    }
+    )
 }
 
 private fun shareFile(context: android.content.Context, file: File) {
     try {
-        val authority = "${context.packageName}.fileprovider"
-        val uri = FileProvider.getUriForFile(context, authority, file)
-        
-        val extension = file.name.substringAfterLast(".", "").lowercase()
-        val mimeType = android.webkit.MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension) ?: "*/*"
-        
+        val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
         val intent = Intent(Intent.ACTION_VIEW).apply {
-            setDataAndType(uri, mimeType)
+            setDataAndType(uri, context.contentResolver.getType(uri) ?: "*/*")
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
-        
-        val chooser = Intent.createChooser(intent, "Open ${file.name} with:")
-        chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        context.startActivity(chooser)
+        context.startActivity(Intent.createChooser(intent, "Open with").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     } catch (e: Exception) {
-        e.printStackTrace()
-        android.widget.Toast.makeText(context, "No app found to open this file type", android.widget.Toast.LENGTH_SHORT).show()
+        android.widget.Toast.makeText(context, "No app found", android.widget.Toast.LENGTH_SHORT).show()
     }
 }

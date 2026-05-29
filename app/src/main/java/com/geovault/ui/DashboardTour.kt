@@ -69,7 +69,6 @@ fun animateDashboardRectAsState(
 @Composable
 fun DashboardTourOverlay(
     steps: List<DashboardTourStep>,
-    isDark: Boolean,
     onCompleted: () -> Unit
 ) {
     var currentIdx by remember { mutableIntStateOf(0) }
@@ -156,7 +155,7 @@ fun DashboardTourOverlay(
                         .padding(horizontal = 24.dp, vertical = cardPaddingV)
                         .widthIn(max = 420.dp)
                         .background(
-                            color = if (isDark) Color(0xFF1A1F2E) else Color.White,
+                            color = Color.White, // Always light for the tour cards
                             shape = RoundedCornerShape(28.dp)
                         )
                         .padding(24.dp),
@@ -175,7 +174,7 @@ fun DashboardTourOverlay(
                                     .weight(1f)
                                     .clip(CircleShape)
                                     .background(
-                                        if (i <= idx) (if (isDark) CyberBlue else AppBlue)
+                                        if (i <= idx) AppBlue
                                         else Color.Gray.copy(alpha = 0.25f)
                                     )
                             )
@@ -190,7 +189,7 @@ fun DashboardTourOverlay(
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Black,
                         textAlign = TextAlign.Center,
-                        color = if (isDark) Color.White else Color.Black,
+                        color = Color.Black,
                         fontSize = 18.sp
                     )
 
@@ -201,7 +200,7 @@ fun DashboardTourOverlay(
                         text = stringResource(step.descResId),
                         style = MaterialTheme.typography.bodyMedium,
                         textAlign = TextAlign.Center,
-                        color = if (isDark) Color.Gray else Color.DarkGray,
+                        color = Color.DarkGray,
                         lineHeight = 22.sp
                     )
 
@@ -227,7 +226,7 @@ fun DashboardTourOverlay(
                                 else onCompleted()
                             },
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = if (isDark) CyberBlue else AppBlue
+                                containerColor = AppBlue
                             ),
                             shape = RoundedCornerShape(14.dp),
                             contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp)

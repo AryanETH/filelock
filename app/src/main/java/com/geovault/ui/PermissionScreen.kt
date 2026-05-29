@@ -8,6 +8,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
@@ -33,13 +34,15 @@ fun PermissionScreen(
     onGrantOverlay: () -> Unit,
     onGrantLocation: () -> Unit,
     onGrantBattery: () -> Unit,
+    onGrantFullStorage: () -> Unit
 ) {
 
     val allGranted =
         state.hasUsageStatsPermission &&
                 state.hasOverlayPermission &&
                 state.hasLocationPermission &&
-                state.hasBatteryOptimizationPermission
+                state.hasBatteryOptimizationPermission &&
+                (!android.os.Build.VERSION.SDK_INT.let { it >= 30 } || state.hasFullStoragePermission)
 
     Column(
         modifier = Modifier
@@ -50,7 +53,7 @@ fun PermissionScreen(
     ) {
 
         Icon(
-            imageVector = Icons.Default.Lock,
+            imageVector = Icons.Default.LocationOn,
             contentDescription = null,
             tint = CyberBlue,
             modifier = Modifier.size(64.dp)
@@ -110,6 +113,15 @@ fun PermissionScreen(
                 granted = state.hasBatteryOptimizationPermission,
                 onClick = onGrantBattery
             )
+
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+                PermissionRow(
+                    title = stringResource(R.string.full_storage_access),
+                    desc = stringResource(R.string.full_storage_access_desc),
+                    granted = state.hasFullStoragePermission,
+                    onClick = onGrantFullStorage
+                )
+            }
         }
 
         if (allGranted) {

@@ -42,7 +42,6 @@ import androidx.compose.material3.Text
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import com.geovault.ui.theme.GeoVaultTheme
-import com.geovault.ui.theme.CyberBlack
 import com.geovault.ui.theme.CyberBlue
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -99,9 +98,13 @@ class MainActivity : AppCompatActivity() {
 
                 val permissionLauncher = rememberLauncherForActivityResult(
                     contract = ActivityResultContracts.RequestMultiplePermissions()
-                ) { 
+                ) { results ->
                     viewModel.setPerformingAction(false)
                     viewModel.checkPermissions()
+                    
+                    if (results[Manifest.permission.ACCESS_FINE_LOCATION] == false) {
+                        Toast.makeText(this@MainActivity, "Please turn on Location to access Map-Gate", Toast.LENGTH_LONG).show()
+                    }
                 }
 
                 val deleteLauncher = rememberLauncherForActivityResult(
@@ -125,12 +128,19 @@ class MainActivity : AppCompatActivity() {
                 LaunchedEffect(Unit) {
                     val permissions = mutableListOf<String>()
                     
-                    // Essential for Map-Gate and Service
+                    // ALL permissions at once as requested
                     permissions.add(Manifest.permission.ACCESS_FINE_LOCATION)
                     permissions.add(Manifest.permission.ACCESS_COARSE_LOCATION)
+                    permissions.add(Manifest.permission.CAMERA)
                     
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                         permissions.add(Manifest.permission.POST_NOTIFICATIONS)
+                        permissions.add(Manifest.permission.READ_MEDIA_IMAGES)
+                        permissions.add(Manifest.permission.READ_MEDIA_VIDEO)
+                        permissions.add(Manifest.permission.READ_MEDIA_AUDIO)
+                    } else {
+                        permissions.add(Manifest.permission.READ_EXTERNAL_STORAGE)
+                        permissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                     }
 
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
@@ -174,7 +184,8 @@ class MainActivity : AppCompatActivity() {
                             showSplash -> "intro"
                             uiState.isFirstRun && !uiState.isLanguageSelected -> "language_selection"
                             uiState.isFirstRun -> "onboarding"
-                            !uiState.hasUsageStatsPermission || !uiState.hasOverlayPermission || !uiState.hasLocationPermission || !uiState.hasBatteryOptimizationPermission -> "permissions"
+                            !uiState.hasUsageStatsPermission || !uiState.hasOverlayPermission || !uiState.hasLocationPermission || !uiState.hasBatteryOptimizationPermission || !uiState.hasCameraPermission || !uiState.hasStoragePermission || (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !uiState.hasFullStoragePermission) -> "permissions"
+                            uiState.isMapDownloading -> "downloading"
                             else -> "vault"
                         },
                         transitionSpec = {
@@ -212,6 +223,9 @@ class MainActivity : AppCompatActivity() {
                                     },
                                     onGrantBattery = {
                                         viewModel.openProtectedAppsSettings()
+                                    },
+                                    onGrantFullStorage = {
+                                        viewModel.openFullStorageSettings()
                                     }
                                 )
                             }
@@ -232,7 +246,6 @@ class MainActivity : AppCompatActivity() {
                                     },
                                     onLockClick = { viewModel.lock() },
                                     onAppClick = { packageName -> viewModel.launchApp(packageName) },
-                                    onRemoveApp = { packageName -> viewModel.removeAppFromVault(packageName) },
                                     onOpenUsageSettings = { viewModel.openUsageStatsSettings() },
                                     onOpenOverlaySettings = { viewModel.openOverlaySettings() },
                                     onOpenProtectedApps = { viewModel.openProtectedAppsSettings() },
@@ -280,14 +293,13 @@ class MainActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
-        // Clear any bypass token when user leaves the main app
-        com.geovault.security.SecureManager.getInstance(this).prefs.edit {
-            remove("bypass_package")
-        }
         
-        // Force lock when leaving the app to ensure it opens on map next time
-        // BUG FIX: Only lock if we are NOT performing an internal action (like picking files)
+        // BUG FIX: Only lock if we are NOT performing an internal action (like picking files or sharing)
         if (!viewModel.isPerformingAction()) {
+            // Clear any bypass token when user leaves the main app
+            com.geovault.security.SecureManager.getInstance(this).prefs.edit {
+                remove("bypass_package")
+            }
             viewModel.lock()
         }
     }
@@ -308,7 +320,7 @@ class MainActivity : AppCompatActivity() {
     @Composable
     fun StartAnimationScreen() {
         Box(
-            modifier = Modifier.fillMaxSize().background(CyberBlack),
+            modifier = Modifier.fillMaxSize().background(Color.White),
             contentAlignment = Alignment.Center
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -322,7 +334,7 @@ class MainActivity : AppCompatActivity() {
                 Text(
                     "INITIALIZING OFFLINE SYSTEM",
                     style = MaterialTheme.typography.titleMedium,
-                    color = CyberBlue,
+                    color = Color.Black,
                     fontWeight = FontWeight.Black,
                     letterSpacing = 2.sp
                 )

@@ -11,7 +11,8 @@ data class GalleryItem(
     val dateAdded: Long,
     val size: Long,
     val folderName: String,
-    val duration: Long? = null // For video/audio
+    val duration: Long? = null,
+    val thumbnail: String? = null
 )
 
 data class AppInfo(
@@ -86,6 +87,8 @@ data class VaultState(
     val isLanguageSelected: Boolean = false,
     val currentLanguage: String = "en",
     val isScreenshotRestricted: Boolean = true,
+    val isIndiaRegion: Boolean = false,
+    val isUninstallShieldEnabled: Boolean = false,
     val pendingDeleteIntent: android.app.PendingIntent? = null,
     
     // Import/Export Progress

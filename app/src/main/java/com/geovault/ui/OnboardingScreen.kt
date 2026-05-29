@@ -2,6 +2,7 @@ package com.geovault.ui
 
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -58,7 +59,7 @@ fun OnboardingScreen(onFinished: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(CyberBlack)
+            .background(Color.White)
     ) {
 
         HorizontalPager(
@@ -100,6 +101,7 @@ fun OnboardingScreen(onFinished: () -> Unit) {
                                 width = if (pagerState.currentPage == iteration) 24.dp else 8.dp,
                                 height = 8.dp
                             )
+                            .border(if (pagerState.currentPage != iteration) 1.dp else 0.dp, Color.LightGray, CircleShape)
                     )
                 }
             }
@@ -133,7 +135,7 @@ fun OnboardingScreen(onFinished: () -> Unit) {
                             stringResource(R.string.initialize_system)
                         else
                             stringResource(R.string.next),
-                    color = Color.Black,
+                    color = Color.White,
                     fontWeight = FontWeight.Bold
                 )
 
@@ -141,7 +143,7 @@ fun OnboardingScreen(onFinished: () -> Unit) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                         contentDescription = stringResource(R.string.next),
-                        tint = Color.Black,
+                        tint = Color.White,
                         modifier = Modifier.padding(start = 8.dp)
                     )
                 }
@@ -167,7 +169,7 @@ fun OnboardingSlideContent(slide: OnboardingSlide) {
                 .background(
                     brush = Brush.radialGradient(
                         listOf(
-                            slide.color.copy(alpha = 0.2f),
+                            slide.color.copy(alpha = 0.1f),
                             Color.Transparent
                         )
                     ),
@@ -179,7 +181,8 @@ fun OnboardingSlideContent(slide: OnboardingSlide) {
             Surface(
                 modifier = Modifier.size(120.dp),
                 shape = CircleShape,
-                color = CyberDarkBlue,
+                color = Color.White,
+                shadowElevation = 8.dp,
                 border = androidx.compose.foundation.BorderStroke(
                     2.dp,
                     slide.color
@@ -204,7 +207,7 @@ fun OnboardingSlideContent(slide: OnboardingSlide) {
             text = slide.title,
             style = MaterialTheme.typography.headlineLarge,
             fontWeight = FontWeight.Black,
-            color = Color.White,
+            color = Color.Black,
             letterSpacing = 4.sp,
             textAlign = TextAlign.Center
         )
@@ -214,7 +217,7 @@ fun OnboardingSlideContent(slide: OnboardingSlide) {
         Text(
             text = slide.description,
             style = MaterialTheme.typography.bodyLarge,
-            color = Color.Gray,
+            color = Color.DarkGray,
             textAlign = TextAlign.Center,
             lineHeight = 24.sp
         )

@@ -64,55 +64,26 @@ object MapStyleHelper {
      * @param isHybrid If true (and isSatellite is true), adds labels/roads over imagery.
      * @param isDark If not in satellite mode, determines whether to use dark or light theme.
      */
-    fun getStyle(isSatellite: Boolean, isHybrid: Boolean = true, isDark: Boolean = true): String {
-        if (!isSatellite) {
-            return if (isDark) DARK else BRIGHT
+    fun applyIndiaBoundaries(style: org.maplibre.android.maps.Style) {
+        try {
+            // Official Indian Boundaries Layer (Simplified GeoJSON URL)
+            val indiaSourceId = "india-boundary-source"
+            val indiaLayerId = "india-boundary-layer"
+            
+            if (style.getSource(indiaSourceId) == null) {
+                style.addSource(org.maplibre.android.style.sources.GeoJsonSource(indiaSourceId, java.net.URL("https://raw.githubusercontent.com/datameet/maps/master/Country/india-composite.json")))
+                
+                val layer = org.maplibre.android.style.layers.LineLayer(indiaLayerId, indiaSourceId).apply {
+                    setProperties(
+                        org.maplibre.android.style.layers.PropertyFactory.lineColor(android.graphics.Color.parseColor("#FF5722")),
+                        org.maplibre.android.style.layers.PropertyFactory.lineWidth(2f),
+                        org.maplibre.android.style.layers.PropertyFactory.lineOpacity(0.8f)
+                    )
+                }
+                style.addLayer(layer)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
-
-        // Generate MapLibre Style JSON for Satellite/Hybrid
-        return """
-        {
-            "version": 8,
-            "name": "Satellite",
-            "metadata": {},
-            "sources": {
-                "satellite-source": {
-                    "type": "raster",
-                    "tiles": ["$SATELLITE_RASTER"],
-                    "tileSize": 256
-                }${if (isHybrid) """,
-                "labels-source": {
-                    "type": "raster",
-                    "tiles": ["$HYBRID_LABELS"],
-                    "tileSize": 256
-                }""" else ""}
-            },
-            "sprite": "",
-            "glyphs": "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
-            "layers": [
-                {
-                    "id": "background",
-                    "type": "background",
-                    "paint": {
-                        "background-color": "#000000"
-                    }
-                },
-                {
-                    "id": "satellite-layer",
-                    "type": "raster",
-                    "source": "satellite-source",
-                    "minzoom": 0,
-                    "maxzoom": 22
-                }${if (isHybrid) """,
-                {
-                    "id": "labels-layer",
-                    "type": "raster",
-                    "source": "labels-source",
-                    "minzoom": 0,
-                    "maxzoom": 22
-                }""" else ""}
-            ]
-        }
-        """.trimIndent()
     }
 }

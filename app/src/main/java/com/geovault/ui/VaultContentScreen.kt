@@ -257,11 +257,18 @@ fun LocalFilePicker(
 
 @Composable
 fun GalleryGridItem(item: GalleryItem, category: FileCategory, isSelected: Boolean, onToggle: () -> Unit) {
+    val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
     Box(
         modifier = Modifier
             .aspectRatio(1f)
             .padding(1.dp)
-            .clickable { onToggle() }
+            .combinedClickable(
+                onClick = { onToggle() },
+                onLongClick = {
+                    haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                    onToggle()
+                }
+            )
     ) {
         if (category == FileCategory.AUDIO) {
             Box(
@@ -279,7 +286,7 @@ fun GalleryGridItem(item: GalleryItem, category: FileCategory, isSelected: Boole
             }
         } else {
             AsyncImage(
-                model = item.uri,
+                model = item.thumbnail ?: item.uri,
                 contentDescription = null,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop
@@ -347,7 +354,6 @@ fun VaultContentScreen(
     state: VaultState,
     onLockClick: () -> Unit,
     onAppClick: (String) -> Unit,
-    onRemoveApp: (String) -> Unit,
     onOpenUsageSettings: () -> Unit,
     onOpenOverlaySettings: () -> Unit,
     onOpenProtectedApps: () -> Unit,
@@ -362,12 +368,14 @@ fun VaultContentScreen(
     onFetchGalleryItems: (FileCategory) -> Unit,
     onDeleteFile: (String) -> Unit,
     onRestoreFile: (String) -> Unit,
-    onRemoveAppFromVault: (String, String) -> Unit = { _, _ -> }, // Added this
+    onRemoveAppFromVault: (String, String) -> Unit = { _, _ -> },
     onToggleDarkMode: () -> Unit,
     onToggleFingerprint: () -> Unit,
     onSetLanguage: (String) -> Unit,
     onCompleteTour: () -> Unit,
     onToggleScreenshotRestriction: () -> Unit,
+    onToggleUninstallShield: (Boolean) -> Unit = {},
+    onRestoreAndUninstall: () -> Unit = {},
     onCreateFolder: (String) -> Unit = {},
     onAddFilesToFolder: (List<Uri>, String) -> Unit = { _, _ -> },
     onStartAction: () -> Unit = {},
@@ -400,6 +408,22 @@ fun VaultContentScreen(
     var isCloning by remember { mutableStateOf(false) }
     
     var showUserGuide by remember { mutableStateOf(state.showTour) }
+
+    // Navigation Stack Handling
+    androidx.activity.compose.BackHandler(enabled = true) {
+        when {
+            viewingFile != null -> viewingFile = null
+            selectedCategoryForAdd != null || selectedFolderForAdd != null -> {
+                selectedCategoryForAdd = null
+                selectedFolderForAdd = null
+            }
+            currentScreen is ContentScreen.WebView -> currentScreen = ContentScreen.Settings
+            currentScreen is ContentScreen.FAQ -> currentScreen = ContentScreen.Settings
+            currentScreen is ContentScreen.LanguageSelection -> currentScreen = ContentScreen.Settings
+            currentScreen != ContentScreen.Dashboard -> currentScreen = ContentScreen.Dashboard
+            else -> onLockClick()
+        }
+    }
 
     var showDashboardTour by remember {
         mutableStateOf(FeatureHintManager.shouldShow(context, "dashboard_tour"))
@@ -491,7 +515,7 @@ fun VaultContentScreen(
                             }
                         }
                         IconButton(onClick = onLockClick) {
-                            Icon(Icons.Default.Lock, contentDescription = "Lock", tint = if (isDark) CyberBlue else AppBlue)
+                            Icon(Icons.Default.LocationOn, contentDescription = "Lock", tint = if (isDark) CyberBlue else AppBlue)
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
@@ -550,7 +574,11 @@ fun VaultContentScreen(
                         containerColor = if (currentScreen == ContentScreen.Dashboard) FolderPurple else CyberBlue,
                         shape = CircleShape
                     ) {
-                        Icon(Icons.Default.Add, contentDescription = "Add", tint = Color.White)
+                        Icon(
+                            if (currentScreen == ContentScreen.Dashboard) Icons.Default.CreateNewFolder else Icons.Default.Add,
+                            contentDescription = "Add",
+                            tint = Color.White
+                        )
                     }
                 }
             }
@@ -587,14 +615,22 @@ fun VaultContentScreen(
                             onHistoryRectCaptured = { historyRect = it },
                             onCategoriesRectCaptured = { categoriesRect = it }
                         )
-                        is ContentScreen.AppLock -> AppLockManagement(
-                            state = state, 
-                            scrollState = appLockScrollState,
-                            onToggleAppLock = onToggleAppLock,
-                            onHideApp = { pkg ->
-                                appToHide = pkg
+                        is ContentScreen.AppLock -> {
+                            if (state.installedApps.isEmpty()) {
+                                repeat(5) {
+                                    SkeletonBox(modifier = Modifier.fillMaxWidth().height(70.dp).padding(vertical = 8.dp), isDark = isDark)
+                                }
+                            } else {
+                                AppLockManagement(
+                                    state = state, 
+                                    scrollState = appLockScrollState,
+                                    onToggleAppLock = onToggleAppLock,
+                                    onHideApp = { pkg ->
+                                        appToHide = pkg
+                                    }
+                                )
                             }
-                        )
+                        }
                         is ContentScreen.Settings -> SettingsSection(
                             state = state,
                             onOpenUsageSettings = onOpenUsageSettings,
@@ -609,6 +645,8 @@ fun VaultContentScreen(
                             onSetLanguage = onSetLanguage,
                             onOpenLanguageSelection = { currentScreen = ContentScreen.LanguageSelection },
                             onToggleScreenshotRestriction = onToggleScreenshotRestriction,
+                            onToggleUninstallShield = onToggleUninstallShield,
+                            onRestoreAndUninstall = onRestoreAndUninstall,
                             onOpenWebView = { url, title -> currentScreen = ContentScreen.WebView(url, title) },
                             onOpenFAQ = { currentScreen = ContentScreen.FAQ }
                         )
@@ -820,7 +858,6 @@ fun VaultContentScreen(
                 DashboardTourStep(R.string.tour_dash_categories_title, R.string.tour_dash_categories_desc, categoriesRect),
                 DashboardTourStep(R.string.tour_dash_fab_title, R.string.tour_dash_fab_desc, fabRect)
             ),
-            isDark = isDark,
             onCompleted = {
                 showDashboardTour = false
                 FeatureHintManager.markShown(context, "dashboard_tour")
@@ -839,7 +876,6 @@ fun VaultContentScreen(
         )
         DashboardTourOverlay(
             steps = tourSteps,
-            isDark = state.isDarkMode,
             onCompleted = {
                 showUserGuide = false
                 onCompleteTour()
@@ -867,12 +903,17 @@ fun DashboardContent(
     onCategoryClick: (FileCategory) -> Unit,
     onFolderClick: (String) -> Unit,
     onBackupClick: () -> Unit,
-    // ↓ Tour rect callbacks — default no-ops so existing call sites don't break
     onHideAppsRectCaptured: (Rect) -> Unit = {},
     onHistoryRectCaptured: (Rect) -> Unit = {},
     onCategoriesRectCaptured: (Rect) -> Unit = {}
 ) {
     val isDark = state.isDarkMode
+    
+    if (state.installedApps.isEmpty() && state.files.isEmpty()) {
+        DashboardSkeleton(isDark)
+        return
+    }
+
     val textPrimary = if (isDark) Color.White else Color.Black
     val textSecondary = if (isDark) Color.Gray else LightTextSecondary
     var isGridView by rememberSaveable { mutableStateOf(false) }
@@ -926,7 +967,7 @@ fun DashboardContent(
                     stringResource(R.string.categories),
                     style = MaterialTheme.typography.titleMedium,
                     color = textPrimary,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Black
                 )
                 IconButton(onClick = { isGridView = !isGridView }) {
                     Icon(
@@ -1039,7 +1080,7 @@ fun CategoryGridItem(
             Text(
                 title, 
                 color = if (isDark) Color.White else Color.Black.copy(alpha = 0.8f), 
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.Black,
                 fontSize = 14.sp,
                 textAlign = TextAlign.Center,
                 maxLines = 2,
@@ -1051,7 +1092,8 @@ fun CategoryGridItem(
                 stringResource(R.string.items_count, count), 
                 color = Color.Gray,
                 fontSize = 12.sp,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                fontWeight = FontWeight.Bold
             )
         }
     }
@@ -1060,36 +1102,59 @@ fun CategoryGridItem(
 
 
 @Composable
+fun IllustrationBox(category: FileCategory) {
+    val color = when(category) {
+        FileCategory.PHOTO -> IconBlue
+        FileCategory.VIDEO -> IconOrange
+        FileCategory.AUDIO -> IconRed
+        FileCategory.DOCUMENT -> IconGreen
+        FileCategory.INTRUDER -> Color.Red
+        else -> IconPurple
+    }
+    
+    Box(contentAlignment = Alignment.Center, modifier = Modifier.size(150.dp)) {
+        Canvas(modifier = Modifier.size(120.dp)) {
+            drawCircle(
+                color = color.copy(alpha = 0.05f),
+                radius = size.minDimension / 2
+            )
+            drawCircle(
+                color = color.copy(alpha = 0.1f),
+                radius = size.minDimension / 3,
+                center = Offset(size.width * 0.7f, size.height * 0.3f)
+            )
+        }
+        
+        Icon(
+            imageVector = when(category) {
+                FileCategory.PHOTO -> Icons.Default.AddPhotoAlternate
+                FileCategory.VIDEO -> Icons.Default.VideoLibrary
+                FileCategory.AUDIO -> Icons.Default.LibraryMusic
+                FileCategory.DOCUMENT -> Icons.Default.ContentPasteSearch
+                FileCategory.INTRUDER -> Icons.Default.VerifiedUser
+                else -> Icons.Default.FolderOpen
+            },
+            contentDescription = null,
+            modifier = Modifier.size(72.dp),
+            tint = color.copy(alpha = 0.6f)
+        )
+    }
+}
+
+@Composable
 fun FileCategoryList(
     category: FileCategory,
     files: List<VaultFile>,
     gridState: LazyGridState = rememberLazyGridState(),
     onFileClick: (VaultFile) -> Unit
 ) {
+    var selectedIds by remember { mutableStateOf(setOf<String>()) }
+    
     if (files.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                // Branded Mascot-style empty state
-                Box(contentAlignment = Alignment.Center) {
-                    Surface(
-                        modifier = Modifier.size(120.dp),
-                        shape = CircleShape,
-                        color = CyberBlue.copy(alpha = 0.05f)
-                    ) {}
-                    Icon(
-                        imageVector = when(category) {
-                            FileCategory.PHOTO -> Icons.Default.AddPhotoAlternate
-                            FileCategory.VIDEO -> Icons.Default.VideoLibrary
-                            FileCategory.AUDIO -> Icons.Default.LibraryMusic
-                            FileCategory.DOCUMENT -> Icons.Default.ContentPasteSearch
-                            FileCategory.INTRUDER -> Icons.Default.VerifiedUser
-                            else -> Icons.Default.FolderOpen
-                        },
-                        contentDescription = null,
-                        modifier = Modifier.size(64.dp),
-                        tint = CyberBlue.copy(alpha = 0.4f)
-                    )
-                }
+                // Branded Mascot-style empty state with illustration
+                IllustrationBox(category)
                 Spacer(Modifier.height(24.dp))
                 Text(
                     text = when(category) {
@@ -1118,25 +1183,56 @@ fun FileCategoryList(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(files) { file ->
-                FileItem(file) { onFileClick(file) }
+                FileItem(
+                    file = file,
+                    isSelected = selectedIds.contains(file.id),
+                    onClick = {
+                        if (selectedIds.isNotEmpty()) {
+                            selectedIds = if (selectedIds.contains(file.id)) selectedIds - file.id else selectedIds + file.id
+                        } else {
+                            onFileClick(file)
+                        }
+                    },
+                    onLongClick = {
+                        selectedIds = selectedIds + file.id
+                    }
+                )
             }
         }
     }
 }
 
 @Composable
-fun FileItem(file: VaultFile, onClick: () -> Unit) {
+fun FileItem(file: VaultFile, isSelected: Boolean = false, onClick: () -> Unit, onLongClick: () -> Unit = {}) {
+    val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .aspectRatio(1f)
-            .clickable { onClick() },
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = {
+                    haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                    onLongClick()
+                }
+            ),
         shape = RoundedCornerShape(12.dp),
+        border = if (isSelected) BorderStroke(3.dp, CyberBlue) else null,
         colors = CardDefaults.cardColors(containerColor = CyberDarkBlue)
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             FileThumbnail(file)
             
+            if (isSelected) {
+                Box(modifier = Modifier.fillMaxSize().background(CyberBlue.copy(alpha = 0.3f)))
+                Icon(
+                    Icons.Default.CheckCircle,
+                    null,
+                    tint = Color.White,
+                    modifier = Modifier.align(Alignment.TopEnd).padding(4.dp).size(20.dp)
+                )
+            }
+
             // File Extension Overlay
             Surface(
                 modifier = Modifier.align(Alignment.BottomEnd).padding(4.dp),
@@ -1319,16 +1415,6 @@ fun AppLockItem(
         
         Row {
             IconButton(onClick = { 
-                HapticHelper.vibrate(context, 0)
-                onHideApp() 
-            }) {
-                Icon(
-                    imageVector = if (isLocked) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                    contentDescription = null,
-                    tint = if (isLocked) CyberBlue else textSecondary
-                )
-            }
-            IconButton(onClick = { 
                 HapticHelper.vibrate(context, 1)
                 onToggleLock() 
             }) {
@@ -1341,6 +1427,39 @@ fun AppLockItem(
         }
     }
     HorizontalDivider(color = textSecondary.copy(alpha = 0.1f))
+}
+
+@Composable
+fun DashboardSkeleton(isDark: Boolean) {
+    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            SkeletonBox(modifier = Modifier.weight(1f).height(140.dp), isDark = isDark)
+            SkeletonBox(modifier = Modifier.weight(1f).height(140.dp), isDark = isDark)
+        }
+        Spacer(Modifier.height(32.dp))
+        SkeletonBox(modifier = Modifier.width(150.dp).height(24.dp), isDark = isDark)
+        Spacer(Modifier.height(16.dp))
+        repeat(4) {
+            SkeletonBox(modifier = Modifier.fillMaxWidth().height(80.dp), isDark = isDark)
+            Spacer(Modifier.height(12.dp))
+        }
+    }
+}
+
+@Composable
+fun SkeletonBox(modifier: Modifier, isDark: Boolean) {
+    val transition = rememberInfiniteTransition(label = "skeleton")
+    val alpha by transition.animateFloat(
+        initialValue = 0.3f,
+        targetValue = 0.7f,
+        animationSpec = infiniteRepeatable(tween(1000), RepeatMode.Reverse),
+        label = "alpha"
+    )
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(24.dp))
+            .background((if (isDark) Color.White else Color.Black).copy(alpha = alpha * 0.1f))
+    )
 }
 
 @Composable
@@ -1408,7 +1527,8 @@ fun DashboardCard(
                     color = if (isDark) Color.Gray else Color.Gray, 
                     fontSize = 12.sp,
                     lineHeight = 16.sp,
-                    maxLines = 2
+                    maxLines = 2,
+                    fontWeight = FontWeight.Bold
                 )
             }
         }
@@ -1453,7 +1573,8 @@ fun CategoryItem(
                 Text(
                     stringResource(R.string.items_count, count), 
                     color = if (isDark) Color.Gray else Color.Gray,
-                    fontSize = 13.sp
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold
                 )
             }
             Icon(
@@ -1481,6 +1602,8 @@ fun SettingsSection(
     onSetLanguage: (String) -> Unit,
     onOpenLanguageSelection: () -> Unit,
     onToggleScreenshotRestriction: () -> Unit,
+    onToggleUninstallShield: (Boolean) -> Unit = {},
+    onRestoreAndUninstall: () -> Unit = {},
     onOpenWebView: (String, String) -> Unit,
     onOpenFAQ: () -> Unit
 ) {
@@ -1496,10 +1619,11 @@ fun SettingsSection(
         Spacer(Modifier.height(8.dp))
 
             // Other necessary permissions hidden in screenshots but needed
-            if (!state.hasUsageStatsPermission || !state.hasOverlayPermission) {
+            if (!state.hasUsageStatsPermission || !state.hasOverlayPermission || (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !state.hasFullStoragePermission)) {
                 Text(stringResource(R.string.system_permissions), color = if (isDark) CyberBlue else AppBlue, fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 8.dp))
                 if (!state.hasUsageStatsPermission) PermissionItem("App Usage Access", "Required to detect app launches", false, isDark, onOpenUsageSettings)
                 if (!state.hasOverlayPermission) PermissionItem("Overlay Permission", "Required to show lock screen", false, isDark, onOpenOverlaySettings)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !state.hasFullStoragePermission) PermissionItem("Full Storage Access", "Required to delete files from gallery", false, isDark, onGrantFullStorage)
             }
 
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -1526,7 +1650,6 @@ fun SettingsSection(
                             isDark = isDark,
                             onCheckedChange = { onToggleFingerprint() }
                         )
-                        // Removed Dividers to clean up "lines"
                         SettingsToggleItem(
                             title = stringResource(R.string.screenshot_restriction),
                             subtitle = stringResource(R.string.screenshot_restriction_desc),
@@ -1576,37 +1699,34 @@ fun SettingsSection(
                         onOpenFAQ()
                     }
                     SettingsActionItem(stringResource(R.string.terms_of_use), Icons.Default.Description, isDark) {
-                        onOpenWebView("https://maps.aitoyz.in/terms.html", "Terms of Use")
+                        val url = if (state.currentLanguage == "hi") "https://maps.aitoyz.in/termshindi.html" else "https://maps.aitoyz.in/terms.html"
+                        onOpenWebView(url, "Terms of Use")
                     }
                     SettingsActionItem(stringResource(R.string.privacy_policy), Icons.Default.Security, isDark) {
-                        onOpenWebView("https://maps.aitoyz.in/privacypolicy.html", "Privacy Policy")
+                        val url = if (state.currentLanguage == "hi") "https://maps.aitoyz.in/privacypolicyhindi.html" else "https://maps.aitoyz.in/privacypolicy.html"
+                        onOpenWebView(url, "Privacy Policy")
                     }
                 }
             }
         }
 
+        Spacer(Modifier.height(16.dp))
+        
         Column(
             modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Map Data © OpenStreetMap contributors",
+                text = "map data © openstreet map",
                 color = textSecondary.copy(alpha = 0.4f),
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Medium
             )
             Text(
-                text = "Engine: MapLibre GL • OpenFreeMap",
-                color = textSecondary.copy(alpha = 0.4f),
-                fontSize = 10.sp,
-                fontWeight = FontWeight.Normal,
-                modifier = Modifier.padding(top = 2.dp)
-            )
-            Text(
-                text = "Mapplock v1.0.4 • Aitoyz Labs",
+                text = "mapplock v1.0 - Aitoyz labs",
                 color = textSecondary.copy(alpha = 0.3f),
                 fontSize = 10.sp,
-                modifier = Modifier.padding(top = 6.dp)
+                modifier = Modifier.padding(top = 4.dp)
             )
         }
 
@@ -1807,142 +1927,105 @@ fun BackupManagementDialog(
         ) {
             Column(modifier = Modifier.padding(24.dp)) {
                 Text(
-                    "MANAGE VAULTS", 
+                    "LOCKED APPS",
                     color = if (state.isDarkMode) Color.White else Color.Black, 
                     fontWeight = FontWeight.Black, 
-                    fontSize = 20.sp
+                    fontSize = 20.sp,
+                    letterSpacing = 1.sp
                 )
                 Spacer(Modifier.height(16.dp))
                 
                 if (state.vaults.isEmpty()) {
-                    Text("No active vaults found.", color = Color.Gray)
+                    Text(stringResource(R.string.vault_empty), color = Color.Gray)
                 } else {
-                    LazyColumn(modifier = Modifier.heightIn(max = 400.dp)) {
+                    LazyColumn(
+                        modifier = Modifier.heightIn(max = 450.dp),
+                        verticalArrangement = Arrangement.spacedBy(20.dp)
+                    ) {
                         items(state.vaults) { vault ->
-                            val mapsLink = "https://www.google.com/maps/search/?api=1&query=${vault.location.latitude},${vault.location.longitude}"
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 12.dp)
-                            ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(
-                                            "Coordinates: ${String.format("%.5f", vault.location.latitude)}, ${String.format("%.5f", vault.location.longitude)}",
-                                            color = CyberBlue,
-                                            fontSize = 13.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            modifier = Modifier
-                                                .clickable {
-                                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(mapsLink))
-                                                    context.startActivity(intent)
-                                                }
-                                                .drawBehind {
-                                                    val strokeWidth = 1.dp.toPx()
-                                                    val dashWidth = 3.dp.toPx()
-                                                    val gapWidth = 3.dp.toPx()
-                                                    val y = size.height - 1.dp.toPx()
-                                                    var x = 0f
-                                                    while (x < size.width) {
-                                                        drawLine(
-                                                            color = CyberBlue.copy(alpha = 0.6f),
-                                                            start = Offset(x, y),
-                                                            end = Offset(x + dashWidth, y),
-                                                            strokeWidth = strokeWidth,
-                                                            cap = StrokeCap.Round
-                                                        )
-                                                        x += dashWidth + gapWidth
-                                                    }
-                                                }
-                                        )
-                                        Spacer(Modifier.height(4.dp))
-                                        Text(
-                                            "Lock Type: ${vault.lockType}",
-                                            color = if (state.isDarkMode) Color.LightGray else Color.Gray,
-                                            fontSize = 11.sp
-                                        )
+                            Column {
+                                // 1. Header: Pin Icon + Coordinates (Clickable)
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.clickable {
+                                        val lat = vault.location.latitude
+                                        val lon = vault.location.longitude
+                                        val gmmIntentUri = Uri.parse("geo:$lat,$lon?q=$lat,$lon")
+                                        val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
+                                        mapIntent.`package` = "com.google.android.apps.maps"
+                                        context.startActivity(mapIntent)
                                     }
-                                    IconButton(onClick = { onRemoveVault(vault.id) }) {
-                                        Icon(Icons.Default.Delete, null, tint = CyberNeonRed)
-                                    }
+                                ) {
+                                    Icon(
+                                        Icons.Default.LocationOn,
+                                        contentDescription = null,
+                                        tint = CyberBlue,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(Modifier.width(8.dp))
+                                    Text(
+                                        text = "${String.format("%.4f", vault.location.latitude)}, ${String.format("%.4f", vault.location.longitude)}",
+                                        color = CyberBlue,
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline
+                                    )
                                 }
                                 
                                 Spacer(Modifier.height(12.dp))
-                                
-                                Text(
-                                    "Secured Apps:", 
-                                    color = if (state.isDarkMode) Color.White else Color.Black, 
-                                    fontSize = 12.sp, 
-                                    fontWeight = FontWeight.Bold
-                                )
-                                
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(top = 10.dp)
-                                        .horizontalScroll(rememberScrollState()),
-                                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                                ) {
-                                    vault.hiddenApps.forEach { pkg ->
-                                        val appInfo = state.installedApps.find { it.packageName == pkg }
-                                        Box(contentAlignment = Alignment.TopEnd) {
-                                            Column(
-                                                horizontalAlignment = Alignment.CenterHorizontally,
-                                                modifier = Modifier.width(60.dp)
-                                            ) {
-                                                AppMiniIcon(pkg)
-                                                Spacer(Modifier.height(4.dp))
-                                                Text(
-                                                    appInfo?.appName ?: "App", 
-                                                    fontSize = 9.sp, 
-                                                    color = if (state.isDarkMode) Color.White else Color.Black,
-                                                    maxLines = 1,
-                                                    fontWeight = FontWeight.Medium,
-                                                    textAlign = TextAlign.Center
-                                                )
-                                            }
-                                            
-                                            // Unhide Eye Icon
-                                            Surface(
-                                                modifier = Modifier
-                                                    .size(20.dp)
-                                                    .offset(x = 4.dp, y = (-4).dp)
-                                                    .clickable { onRemoveAppFromVault(vault.id, pkg) },
-                                                shape = CircleShape,
-                                                color = CyberBlue,
-                                                shadowElevation = 2.dp
-                                            ) {
-                                                Icon(
-                                                    Icons.Default.VisibilityOff, 
-                                                    contentDescription = "Unhide",
-                                                    tint = Color.White,
-                                                    modifier = Modifier.padding(3.dp)
-                                                )
-                                            }
+
+                                // 2. App List for this Coordinate
+                                vault.hiddenApps.forEach { pkg ->
+                                    val appInfo = state.installedApps.find { it.packageName == pkg }
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 4.dp, horizontal = 4.dp)
+                                    ) {
+                                        AppMiniIcon(pkg)
+                                        Spacer(Modifier.width(16.dp))
+                                        Text(
+                                            appInfo?.appName ?: try { context.packageManager.getApplicationLabel(context.packageManager.getApplicationInfo(pkg, 0)).toString() } catch (e: Exception) { "App" },
+                                            color = if (state.isDarkMode) Color.White else Color.Black,
+                                            fontWeight = FontWeight.Medium,
+                                            fontSize = 15.sp,
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                        IconButton(
+                                            onClick = { onRemoveAppFromVault(vault.id, pkg) },
+                                            modifier = Modifier.size(32.dp)
+                                        ) {
+                                            Icon(
+                                                Icons.Default.VisibilityOff,
+                                                contentDescription = "Unhide",
+                                                tint = (if (state.isDarkMode) Color.Gray else Color.LightGray).copy(alpha = 0.6f),
+                                                modifier = Modifier.size(20.dp)
+                                            )
                                         }
                                     }
                                 }
+                                
+                                if (vault.hiddenApps.isEmpty()) {
+                                    Text("No apps in this zone", color = Color.Gray, fontSize = 12.sp, modifier = Modifier.padding(start = 28.dp))
+                                }
                             }
-                            HorizontalDivider(
-                                modifier = Modifier.padding(vertical = 4.dp),
-                                color = (if (state.isDarkMode) Color.White else Color.Black).copy(alpha = 0.05f)
-                            )
                         }
                     }
                 }
                 
-                Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(32.dp))
                 
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    TextButton(onClick = onDismiss, modifier = Modifier.weight(1f)) {
-                        Text("CLOSE", color = Color.Gray)
+                Row(
+                    modifier = Modifier.fillMaxWidth(), 
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TextButton(onClick = onDismiss) {
+                        Text("CLOSE", color = Color.Gray, fontWeight = FontWeight.Bold)
                     }
-                    Button(
-                        onClick = { onClearAll(); onDismiss() },
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(containerColor = CyberNeonRed)
-                    ) {
-                        Text("CLEAR ALL", fontWeight = FontWeight.Bold, color = Color.White)
+                    TextButton(onClick = { onClearAll(); onDismiss() }) {
+                        Text("UNLOCK ALL", fontWeight = FontWeight.Black, color = CyberNeonRed)
                     }
                 }
             }
@@ -2008,9 +2091,10 @@ fun InteractiveUserGuide(onDismiss: () -> Unit) {
     Dialog(onDismissRequest = onDismiss) {
         Surface(
             shape = RoundedCornerShape(28.dp),
-            color = CyberDarkBlue,
-            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f)),
-            modifier = Modifier.fillMaxWidth().padding(16.dp)
+            color = Color.White,
+            border = BorderStroke(1.dp, Color.Black.copy(alpha = 0.05f)),
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            shadowElevation = 8.dp
         ) {
             Column(
                 modifier = Modifier.padding(24.dp),
@@ -2029,7 +2113,7 @@ fun InteractiveUserGuide(onDismiss: () -> Unit) {
                 
                 Text(
                     currentStep.title,
-                    color = Color.White,
+                    color = Color.Black,
                     fontWeight = FontWeight.Black,
                     fontSize = 20.sp,
                     textAlign = TextAlign.Center
@@ -2039,7 +2123,7 @@ fun InteractiveUserGuide(onDismiss: () -> Unit) {
                 
                 Text(
                     currentStep.description,
-                    color = Color.Gray,
+                    color = Color.DarkGray,
                     fontSize = 14.sp,
                     textAlign = TextAlign.Center,
                     lineHeight = 20.sp
@@ -2054,7 +2138,7 @@ fun InteractiveUserGuide(onDismiss: () -> Unit) {
                     modifier = Modifier.fillMaxWidth().height(50.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = CyberBlue)
                 ) {
-                    Text(if (step < steps.size - 1) "NEXT" else "GOT IT", fontWeight = FontWeight.Black)
+                    Text(if (step < steps.size - 1) "NEXT" else "GOT IT", fontWeight = FontWeight.Black, color = Color.White)
                 }
                 
                 if (step > 0) {

@@ -65,7 +65,7 @@ class CryptoManager {
         outputStream.close()
     }
 
-    fun encryptStream(inputStream: InputStream, outputStream: OutputStream): Long {
+    fun encryptStream(inputStream: InputStream, outputStream: OutputStream, onProgress: (Long) -> Unit = {}): Long {
         val cipher = getEncryptCipher()
         val iv = cipher.iv
         outputStream.write(iv.size)
@@ -75,11 +75,19 @@ class CryptoManager {
         val buffer = ByteArray(131072) // 128KB buffer for faster IO
         var bytesRead: Int
         var totalBytes: Long = 0
+        var lastUpdate: Long = 0
         
         while (inputStream.read(buffer).also { bytesRead = it } != -1) {
             cipherOutputStream.write(buffer, 0, bytesRead)
             totalBytes += bytesRead
+            
+            // Throttle progress updates to avoid flooding
+            if (totalBytes - lastUpdate > 1024 * 512) { // 512KB
+                onProgress(totalBytes)
+                lastUpdate = totalBytes
+            }
         }
+        onProgress(totalBytes)
         cipherOutputStream.close()
         return totalBytes
     }
@@ -96,7 +104,7 @@ class CryptoManager {
         return cipher.doFinal(encryptedBytes)
     }
 
-    fun decryptToStream(inputStream: InputStream, outputStream: OutputStream) {
+    fun decryptToStream(inputStream: InputStream, outputStream: OutputStream, onProgress: (Long) -> Unit = {}) {
         val ivSize = inputStream.read()
         val iv = ByteArray(ivSize)
         inputStream.read(iv)
@@ -105,10 +113,20 @@ class CryptoManager {
         val cipherInputStream = javax.crypto.CipherInputStream(inputStream, cipher)
         val buffer = ByteArray(131072) // 128KB buffer for faster IO
         var bytesRead: Int
+        var totalBytes: Long = 0
+        var lastUpdate: Long = 0
         
         while (cipherInputStream.read(buffer).also { bytesRead = it } != -1) {
             outputStream.write(buffer, 0, bytesRead)
+            totalBytes += bytesRead
+            
+            // Throttle progress updates
+            if (totalBytes - lastUpdate > 1024 * 512) { // 512KB
+                onProgress(totalBytes)
+                lastUpdate = totalBytes
+            }
         }
+        onProgress(totalBytes)
         cipherInputStream.close()
         outputStream.flush()
         outputStream.close()

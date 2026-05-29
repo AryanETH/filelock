@@ -55,7 +55,7 @@ class WindowChangeDetector : AccessibilityService() {
 
             // 2. High-Speed Detection & Trigger
             if (shouldLock && packageName != bypassPackage && packageName != myPackage) {
-                val isFingerprintEnabled = prefs.getBoolean("fingerprint_enabled", false)
+                val isFingerprintEnabled = prefs.getBoolean("fingerprint_enabled", true)
                 val lockIntent = Intent(this, com.geovault.LockActivity::class.java).apply {
                     putExtra("target_package", packageName)
                     putExtra("request_biometric", isFingerprintEnabled)

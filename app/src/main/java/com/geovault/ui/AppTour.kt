@@ -129,7 +129,7 @@ fun AppTour(
                         .align(if (step.targetRect == null) Alignment.Center else if (isTargetInBottomHalf) Alignment.TopCenter else Alignment.BottomCenter)
                         .padding(horizontal = 24.dp, vertical = if (step.targetRect == null) 0.dp else 140.dp)
                         .widthIn(max = 400.dp)
-                        .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(28.dp))
+                        .background(Color.White, RoundedCornerShape(28.dp))
                         .padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -145,7 +145,7 @@ fun AppTour(
                                     .height(4.dp)
                                     .weight(1f)
                                     .clip(CircleShape)
-                                    .background(if (i <= stepIdx) CyberBlue else Color.Gray.copy(alpha = 0.3f))
+                                    .background(if (i <= stepIdx) CyberBlue else Color.LightGray)
                             )
                         }
                     }
@@ -156,7 +156,7 @@ fun AppTour(
                         text = stringResource(step.textResId),
                         style = MaterialTheme.typography.titleMedium,
                         textAlign = TextAlign.Center,
-                        color = MaterialTheme.colorScheme.onSurface,
+                        color = Color.Black,
                         fontWeight = FontWeight.Bold,
                         lineHeight = 28.sp
                     )
@@ -169,7 +169,7 @@ fun AppTour(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         TextButton(onClick = onCompleted) {
-                            Text(stringResource(R.string.tour_skip), color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.SemiBold)
+                            Text(stringResource(R.string.tour_skip), color = Color.Gray, fontWeight = FontWeight.SemiBold)
                         }
 
                         Button(
@@ -187,7 +187,7 @@ fun AppTour(
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
                                     if (currentStepIdx < steps.size - 1) stringResource(R.string.tour_next) else stringResource(R.string.get_started),
-                                    color = Color.Black,
+                                    color = Color.White,
                                     fontWeight = FontWeight.Black,
                                     letterSpacing = 1.sp
                                 )
@@ -195,7 +195,7 @@ fun AppTour(
                                 Icon(
                                     if (currentStepIdx < steps.size - 1) Icons.Default.ArrowForward else Icons.Default.Check,
                                     contentDescription = null,
-                                    tint = Color.Black,
+                                    tint = Color.White,
                                     modifier = Modifier.size(18.dp)
                                 )
                             }

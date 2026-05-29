@@ -43,15 +43,14 @@ fun IntroScreen() {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(CyberBlack),
+            .background(Color.White),
         contentAlignment = Alignment.Center
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // App Logo (Using a placeholder icon if not exists, but prompt says "App name: Mapp Lock")
-            // I'll use a simple Box with a shield/lock icon or just text for now if resource is missing
+            // App Logo
             Box(
                 modifier = Modifier
                     .size(120.dp)
@@ -59,7 +58,6 @@ fun IntroScreen() {
                     .background(CyberBlue.copy(alpha = 0.1f * opacity), shape = androidx.compose.foundation.shape.CircleShape),
                 contentAlignment = Alignment.Center
             ) {
-                // Assuming there's an ic_launcher or similar. If not, I'll just use a styled text logo
                 Text(
                     "M",
                     style = MaterialTheme.typography.displayLarge,
@@ -72,9 +70,9 @@ fun IntroScreen() {
             Spacer(modifier = Modifier.height(24.dp))
             
             Text(
-                "Mapp Lock",
+                "Mapplock",
                 style = MaterialTheme.typography.headlineLarge,
-                color = Color.White,
+                color = Color.Black,
                 fontWeight = FontWeight.ExtraBold,
                 letterSpacing = 4.sp,
                 modifier = Modifier.scale(scale)
@@ -83,7 +81,7 @@ fun IntroScreen() {
             Text(
                 "SECURE MAP VAULT",
                 style = MaterialTheme.typography.labelMedium,
-                color = CyberBlue.copy(alpha = 0.7f),
+                color = CyberBlue,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 2.sp,
                 modifier = Modifier.padding(top = 8.dp)

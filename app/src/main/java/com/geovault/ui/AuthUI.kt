@@ -127,7 +127,7 @@ fun AuthUI(
         apps.contains(targetPackage)
     }
     
-    if (relevantVaultId == null && (targetPackage == "com.android.settings" || targetPackage.contains("packageinstaller"))) {
+    if (relevantVaultId == null && (targetPackage.contains("packageinstaller"))) {
         relevantVaultId = allVaultIds.firstOrNull()
     }
     
@@ -139,7 +139,7 @@ fun AuthUI(
     val radius = relevantVaultId?.let { prefs.getFloat("vault_${it}_radius", 0f) } ?: 0f
 
     val isSatelliteMode = remember { prefs.getBoolean("is_satellite_mode", false) }
-    val isFingerprintEnabled = remember { prefs.getBoolean("fingerprint_enabled", false) }
+    val isFingerprintEnabled = remember { prefs.getBoolean("fingerprint_enabled", true) }
     val isDarkMode = remember { prefs.getBoolean("dark_mode", false) }
     var biometricStatusMessage by remember { mutableStateOf<String?>(null) }
     
@@ -179,8 +179,11 @@ fun AuthUI(
         }
     }
 
-    if (autoRequestBiometric && !hasAutoRequestedBiometric && isWithinRadius) {
-        // Auto-request biometric removed as per user request: "fingerprint should only be activated when user taps on it's icon"
+    LaunchedEffect(autoRequestBiometric, isWithinRadius) {
+        if (autoRequestBiometric && !hasAutoRequestedBiometric && isWithinRadius) {
+            hasAutoRequestedBiometric = true
+            onBiometricRequested()
+        }
     }
 
     // Fetch Target App Icon and Name
@@ -243,8 +246,6 @@ fun AuthUI(
                 Text(
                     text = if (!isWithinRadius && radius > 0) {
                         "Location Locked"
-                    } else if (isWithinRadius && radius > 0) {
-                        "Safe Zone: Tap to Unlock"
                     } else {
                         titleOverride ?: when (lockType) {
                             com.geovault.model.LockType.PIN -> "Enter PIN"
@@ -258,23 +259,6 @@ fun AuthUI(
                     fontWeight = FontWeight.Black,
                     textAlign = TextAlign.Center
                 )
-                
-                if (isWithinRadius && radius > 0) {
-                    Spacer(Modifier.width(8.dp))
-                    Surface(
-                        color = AppBlue,
-                        shape = RoundedCornerShape(6.dp),
-                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.3f))
-                    ) {
-                        Text(
-                            "SAFE ZONE",
-                            color = Color.White,
-                            fontSize = 8.sp,
-                            fontWeight = FontWeight.Black,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                        )
-                    }
-                }
             }
 
             Spacer(modifier = Modifier.weight(0.1f))

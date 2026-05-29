@@ -326,8 +326,13 @@ class AppLockerService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedSt
             val isSystemTarget = currentPackage == "com.android.packageinstaller" || 
                                  currentPackage == "com.google.android.packageinstaller"
 
-            val shouldLock = lockedPackages.contains(currentPackage) || 
-                             (isMasterStealthEnabled && isSystemTarget)
+            // HARD EXCLUSION: Never lock Settings or Play Store as per user request
+            val isRestrictedSystemApp = currentPackage == "com.android.settings" || 
+                                        currentPackage == "com.android.vending" || 
+                                        currentPackage == "com.google.android.vending"
+
+            val shouldLock = !isRestrictedSystemApp && (lockedPackages.contains(currentPackage) || 
+                             (isMasterStealthEnabled && isSystemTarget))
 
             if (shouldLock && currentPackage != updatedBypass && currentPackage != this.packageName) {
                 withContext(Dispatchers.Main) {
@@ -370,7 +375,7 @@ class AppLockerService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedSt
                 isOverlayAttached = true
                 
                 // Launch LockActivity to provide the actual PIN UI
-                val isFingerprintEnabled = prefs.getBoolean("fingerprint_enabled", false)
+                val isFingerprintEnabled = prefs.getBoolean("fingerprint_enabled", true)
                 val lockIntent = Intent(this, com.geovault.LockActivity::class.java).apply {
                     val target = targetPackageState.value
                     putExtra("target_package", target)
@@ -384,7 +389,7 @@ class AppLockerService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedSt
         } else {
             // Even if attached, if we are calling showOverlayImmediate, it means a lock is required.
             // Re-trigger LockActivity to be safe (handles the case where user cleared it from Recents).
-            val isFingerprintEnabled = prefs.getBoolean("fingerprint_enabled", false)
+            val isFingerprintEnabled = prefs.getBoolean("fingerprint_enabled", true)
             val lockIntent = Intent(this, com.geovault.LockActivity::class.java).apply {
                 val target = targetPackageState.value
                 putExtra("target_package", target)
