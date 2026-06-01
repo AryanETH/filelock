@@ -27,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.draw.*
+import androidx.compose.ui.zIndex
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -36,6 +37,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -340,11 +342,11 @@ private fun isYesterday(cal1: Calendar, cal2: Calendar): Boolean {
            cal1.get(Calendar.DAY_OF_YEAR) == yesterday.get(Calendar.DAY_OF_YEAR)
 }
 
-private fun formatDuration(ms: Long): String {
+fun formatDuration(ms: Long): String {
     val totalSec = ms / 1000
     val min = totalSec / 60
     val sec = totalSec % 60
-    return String.format("%02d:%02d", min, sec)
+    return String.format(java.util.Locale.US, "%02d:%02d", min, sec)
 }
 
 @UnstableApi
@@ -377,6 +379,9 @@ fun VaultContentScreen(
     onToggleUninstallShield: (Boolean) -> Unit = {},
     onRestoreAndUninstall: () -> Unit = {},
     onCreateFolder: (String) -> Unit = {},
+    onDeleteFolder: (String, Boolean) -> Unit = { _, _ -> },
+    onBulkDelete: (Set<String>) -> Unit = {},
+    onBulkRestore: (Set<String>) -> Unit = {},
     onAddFilesToFolder: (List<Uri>, String) -> Unit = { _, _ -> },
     onStartAction: () -> Unit = {},
     onEndAction: () -> Unit = {}
@@ -399,6 +404,7 @@ fun VaultContentScreen(
     var showCreateFolderDialog by remember { mutableStateOf(false) }
     var newFolderName by remember { mutableStateOf("") }
     var selectedFolderForAdd by remember { mutableStateOf<String?>(null) }
+    var isSelectionActive by remember { mutableStateOf(false) }
 
     val dashboardScrollState = rememberLazyListState()
     val appLockScrollState = rememberLazyListState()
@@ -423,6 +429,10 @@ fun VaultContentScreen(
             currentScreen != ContentScreen.Dashboard -> currentScreen = ContentScreen.Dashboard
             else -> onLockClick()
         }
+    }
+
+    LaunchedEffect(currentScreen) {
+        isSelectionActive = false
     }
 
     var showDashboardTour by remember {
@@ -483,13 +493,22 @@ fun VaultContentScreen(
                                 maxLines = 1
                             )
                         } else {
-                            Text(
-                                title,
-                                fontWeight = FontWeight.Black, 
-                                color = if (isDark) CyberBlue else AppBlue,
-                                fontSize = 26.sp,
-                                letterSpacing = (-0.5).sp
-                            )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                if (currentScreen is ContentScreen.Dashboard) {
+                                    Image(
+                                        painter = painterResource(id = R.drawable.removed_background_18),
+                                        contentDescription = null,
+                                        modifier = Modifier.size(45.dp).padding(end = 8.dp)
+                                    )
+                                }
+                                Text(
+                                    title,
+                                    fontWeight = FontWeight.Black, 
+                                    color = if (isDark) CyberBlue else AppBlue,
+                                    fontSize = 26.sp,
+                                    letterSpacing = (-0.5).sp
+                                )
+                            }
                         }
                     },
                     navigationIcon = {
@@ -523,7 +542,7 @@ fun VaultContentScreen(
             },
             floatingActionButton = {
                 val isIntruderCategory = currentScreen is ContentScreen.CategoryView && (currentScreen as ContentScreen.CategoryView).category == FileCategory.INTRUDER
-                if (!isIntruderCategory && (currentScreen is ContentScreen.Dashboard || currentScreen is ContentScreen.CategoryView || currentScreen is ContentScreen.FolderView)) {
+                if (!isSelectionActive && !isIntruderCategory && (currentScreen is ContentScreen.Dashboard || currentScreen is ContentScreen.CategoryView || currentScreen is ContentScreen.FolderView)) {
                     FloatingActionButton(
                         onClick = { 
                             if (currentScreen == ContentScreen.Dashboard) {
@@ -587,7 +606,6 @@ fun VaultContentScreen(
                 modifier = Modifier
                     .padding(padding)
                     .fillMaxSize()
-                    .then(if (currentScreen is ContentScreen.WebView) Modifier else Modifier.padding(horizontal = 16.dp))
             ) {
                 AnimatedContent(
                     targetState = currentScreen,
@@ -601,6 +619,7 @@ fun VaultContentScreen(
                                 .togetherWith(fadeOut(animationSpec = tween(duration / 2)) + slideOutHorizontally(animationSpec = tween(duration), targetOffsetX = { -it / 5 }))
                         }
                     },
+                    modifier = Modifier.then(if (currentScreen is ContentScreen.WebView) Modifier else Modifier.padding(horizontal = 16.dp)),
                     label = "ContentTransition"
                 ) { screen ->
                     when (screen) {
@@ -610,6 +629,7 @@ fun VaultContentScreen(
                             onAppLockClick = { currentScreen = ContentScreen.AppLock },
                             onCategoryClick = { currentScreen = ContentScreen.CategoryView(it) },
                             onFolderClick = { currentScreen = ContentScreen.FolderView(it) },
+                            onDeleteFolder = onDeleteFolder,
                             onBackupClick = { showBackupDialog = true },
                             onHideAppsRectCaptured = { hideAppsRect = it },
                             onHistoryRectCaptured = { historyRect = it },
@@ -656,7 +676,10 @@ fun VaultContentScreen(
                                 category = screen.category,
                                 files = state.files.filter { it.category == screen.category && it.folderName == null },
                                 gridState = gridState,
-                                onFileClick = { viewingFile = it }
+                                onFileClick = { viewingFile = it },
+                                onSelectionActive = { isSelectionActive = it },
+                                onBulkDelete = onBulkDelete,
+                                onBulkRestore = onBulkRestore
                             )
                         }
                         is ContentScreen.FolderView -> {
@@ -665,7 +688,10 @@ fun VaultContentScreen(
                                 category = FileCategory.OTHER,
                                 files = state.files.filter { it.folderName == screen.folderName },
                                 gridState = gridState,
-                                onFileClick = { viewingFile = it }
+                                onFileClick = { viewingFile = it },
+                                onSelectionActive = { isSelectionActive = it },
+                                onBulkDelete = onBulkDelete,
+                                onBulkRestore = onBulkRestore
                             )
                         }
                         is ContentScreen.LanguageSelection -> LanguageSelectionScreen(
@@ -701,6 +727,7 @@ fun VaultContentScreen(
                 MediaViewerScreen(
                     file = file,
                     allFiles = state.files,
+                    isDarkMode = state.isDarkMode,
                     onBack = { viewingFile = null },
                     onDelete = { id ->
                         onDeleteFile(id)
@@ -902,6 +929,7 @@ fun DashboardContent(
     onAppLockClick: () -> Unit,
     onCategoryClick: (FileCategory) -> Unit,
     onFolderClick: (String) -> Unit,
+    onDeleteFolder: (String, Boolean) -> Unit,
     onBackupClick: () -> Unit,
     onHideAppsRectCaptured: (Rect) -> Unit = {},
     onHistoryRectCaptured: (Rect) -> Unit = {},
@@ -917,15 +945,76 @@ fun DashboardContent(
     val textPrimary = if (isDark) Color.White else Color.Black
     val textSecondary = if (isDark) Color.Gray else LightTextSecondary
     var isGridView by rememberSaveable { mutableStateOf(false) }
+    var folderToDelete by remember { mutableStateOf<String?>(null) }
+
+    if (folderToDelete != null) {
+        AlertDialog(
+            onDismissRequest = { folderToDelete = null },
+            title = { Text("Delete Folder") },
+            text = { Text("Do you want to recover all data to the gallery or delete all data permanently?") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onDeleteFolder(folderToDelete!!, true)
+                        folderToDelete = null
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = CyberBlue)
+                ) { Text("RECOVER ALL") }
+            },
+            dismissButton = {
+                Button(
+                    onClick = {
+                        onDeleteFolder(folderToDelete!!, false)
+                        folderToDelete = null
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                ) { Text("DELETE ALL") }
+            }
+        )
+    }
+
+    val categories = remember(state) {
+        val list = mutableListOf(
+            CategoryData(FileCategory.PHOTO, "", state.photoCount, Icons.Filled.Image, IconBlue, SoftBlue),
+            CategoryData(FileCategory.VIDEO, "", state.videoCount, Icons.Filled.PlayCircle, IconOrange, SoftOrange),
+            CategoryData(FileCategory.AUDIO, "", state.audioCount, Icons.Filled.MusicNote, IconRed, SoftRed),
+            CategoryData(FileCategory.DOCUMENT, "", state.documentCount, Icons.Filled.Description, IconGreen, SoftGreen),
+            CategoryData(FileCategory.INTRUDER, "", state.intruderCount, Icons.Filled.PersonSearch, IconOrange, SoftOrange),
+            CategoryData(FileCategory.RECYCLE_BIN, "", state.recycleBinCount, Icons.Filled.Delete, IconGray, SoftGray)
+        )
+        state.customFolders.forEach { folderName ->
+            val count = state.files.count { it.folderName == folderName }
+            list.add(CategoryData(FileCategory.OTHER, folderName, count, Icons.Default.Folder, IconPurple, SoftPurple, folderName))
+        }
+        list
+    }
+
+    // Since CategoryData is a data class and its title is a String, and we need localized strings, 
+    // we can't easily put stringResource inside remember without current composition.
+    // However, DashboardContent is a Composable.
+    
+    val localizedCategories = categories.map { cat ->
+        cat.copy(title = if (cat.customFolderName != null) cat.title else when(cat.category) {
+            FileCategory.PHOTO -> stringResource(R.string.photos)
+            FileCategory.VIDEO -> stringResource(R.string.videos)
+            FileCategory.AUDIO -> stringResource(R.string.audio)
+            FileCategory.DOCUMENT -> stringResource(R.string.documents)
+            FileCategory.INTRUDER -> stringResource(R.string.wrong_unlocks)
+            FileCategory.RECYCLE_BIN -> stringResource(R.string.recycle_bin)
+            else -> cat.title
+        })
+    }
 
     LazyColumn(
         state = scrollState,
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(vertical = 16.dp)
+        contentPadding = PaddingValues(top = 16.dp, bottom = 100.dp)
     ) {
         item {
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 24.dp),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 DashboardCard(
@@ -934,7 +1023,7 @@ fun DashboardContent(
                     icon = Icons.Default.Shield,
                     modifier = Modifier
                         .weight(1f)
-                        .captureRect { onHideAppsRectCaptured(it) }, // ← TAG
+                        .captureRect { onHideAppsRectCaptured(it) },
                     color = IconGreen,
                     isDark = isDark,
                     onClick = onAppLockClick
@@ -945,13 +1034,12 @@ fun DashboardContent(
                     icon = Icons.Default.History,
                     modifier = Modifier
                         .weight(1f)
-                        .captureRect { onHistoryRectCaptured(it) }, // ← TAG
+                        .captureRect { onHistoryRectCaptured(it) },
                     color = IconBlue,
                     isDark = isDark,
                     onClick = onBackupClick
                 )
             }
-            Spacer(Modifier.height(24.dp))
         }
 
         item {
@@ -959,7 +1047,7 @@ fun DashboardContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 16.dp)
-                    .captureRect { onCategoriesRectCaptured(it) }, // ← TAG
+                    .captureRect { onCategoriesRectCaptured(it) },
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
@@ -971,7 +1059,7 @@ fun DashboardContent(
                 )
                 IconButton(onClick = { isGridView = !isGridView }) {
                     Icon(
-                        if (isGridView) Icons.Default.ViewList else Icons.Default.GridView,
+                        if (isGridView) Icons.AutoMirrored.Filled.ViewList else Icons.Default.GridView,
                         null,
                         tint = textSecondary,
                         modifier = Modifier.size(24.dp)
@@ -980,53 +1068,85 @@ fun DashboardContent(
             }
         }
 
-        item {
-            val categories = mutableListOf(
-                CategoryData(FileCategory.PHOTO, stringResource(R.string.photos), state.photoCount, Icons.Filled.Image, IconBlue, SoftBlue),
-                CategoryData(FileCategory.VIDEO, stringResource(R.string.videos), state.videoCount, Icons.Filled.PlayCircle, IconOrange, SoftOrange),
-                CategoryData(FileCategory.AUDIO, stringResource(R.string.audio), state.audioCount, Icons.Filled.MusicNote, IconRed, SoftRed),
-                CategoryData(FileCategory.DOCUMENT, stringResource(R.string.documents), state.documentCount, Icons.Filled.Description, IconGreen, SoftGreen),
-                CategoryData(FileCategory.INTRUDER, stringResource(R.string.wrong_unlocks), state.intruderCount, Icons.Filled.PersonSearch, IconOrange, SoftOrange),
-                CategoryData(FileCategory.RECYCLE_BIN, stringResource(R.string.recycle_bin), state.recycleBinCount, Icons.Filled.Delete, IconGray, SoftGray)
-            )
-
-            state.customFolders.forEach { folderName ->
-                val count = state.files.count { it.folderName == folderName }
-                categories.add(CategoryData(FileCategory.OTHER, folderName, count, Icons.Default.Folder, IconPurple, SoftPurple, folderName))
-            }
-
-            if (isGridView) {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    for (i in categories.indices step 2) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            val cat1 = categories[i]
-                            CategoryGridItem(cat1.title, cat1.count, cat1.icon, cat1.color, isDark, Modifier.weight(1f)) {
-                                if (cat1.customFolderName != null) onFolderClick(cat1.customFolderName) else onCategoryClick(cat1.category)
-                            }
-                            if (i + 1 < categories.size) {
-                                val cat2 = categories[i + 1]
-                                CategoryGridItem(cat2.title, cat2.count, cat2.icon, cat2.color, isDark, Modifier.weight(1f)) {
-                                    if (cat2.customFolderName != null) onFolderClick(cat2.customFolderName) else onCategoryClick(cat2.category)
+        if (isGridView) {
+            val chunks = localizedCategories.chunked(2)
+            items(chunks) { pair ->
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    pair.forEach { cat ->
+                        val modifier = Modifier.weight(1f)
+                        if (cat.customFolderName != null) {
+                            val dismissState = rememberSwipeToDismissBoxState(
+                                confirmValueChange = {
+                                    if (it == SwipeToDismissBoxValue.EndToStart) {
+                                        folderToDelete = cat.customFolderName
+                                        false
+                                    } else false
                                 }
-                            } else {
-                                Spacer(Modifier.weight(1f))
+                            )
+                            SwipeToDismissBox(
+                                state = dismissState,
+                                modifier = modifier,
+                                enableDismissFromStartToEnd = false,
+                                backgroundContent = {
+                                    Box(
+                                        Modifier.fillMaxSize().clip(RoundedCornerShape(24.dp)).background(Color.Red).padding(horizontal = 20.dp),
+                                        contentAlignment = Alignment.CenterEnd
+                                    ) {
+                                        Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color.White)
+                                    }
+                                }
+                            ) {
+                                CategoryGridItem(cat.title, cat.count, cat.icon, cat.color, isDark) {
+                                    onFolderClick(cat.customFolderName)
+                                }
+                            }
+                        } else {
+                            CategoryGridItem(cat.title, cat.count, cat.icon, cat.color, isDark, modifier) {
+                                onCategoryClick(cat.category)
                             }
                         }
                     }
+                    if (pair.size == 1) Spacer(Modifier.weight(1f))
                 }
-            } else {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    categories.forEach { cat ->
+            }
+        } else {
+            items(localizedCategories) { cat ->
+                Box(modifier = Modifier.padding(bottom = 12.dp)) {
+                    if (cat.customFolderName != null) {
+                        val dismissState = rememberSwipeToDismissBoxState(
+                            confirmValueChange = {
+                                if (it == SwipeToDismissBoxValue.EndToStart) {
+                                    folderToDelete = cat.customFolderName
+                                    false
+                                } else false
+                            }
+                        )
+                        SwipeToDismissBox(
+                            state = dismissState,
+                            enableDismissFromStartToEnd = false,
+                            backgroundContent = {
+                                Box(
+                                    Modifier.fillMaxSize().clip(RoundedCornerShape(24.dp)).background(Color.Red).padding(horizontal = 20.dp),
+                                    contentAlignment = Alignment.CenterEnd
+                                ) {
+                                    Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color.White)
+                                }
+                            }
+                        ) {
+                            CategoryItem(cat.title, cat.count, cat.icon, cat.color, cat.bgColor, isDark) {
+                                onFolderClick(cat.customFolderName)
+                            }
+                        }
+                    } else {
                         CategoryItem(cat.title, cat.count, cat.icon, cat.color, cat.bgColor, isDark) {
-                            if (cat.customFolderName != null) onFolderClick(cat.customFolderName) else onCategoryClick(cat.category)
+                            onCategoryClick(cat.category)
                         }
                     }
                 }
             }
-            Spacer(Modifier.height(80.dp))
         }
     }
 }
@@ -1146,57 +1266,125 @@ fun FileCategoryList(
     category: FileCategory,
     files: List<VaultFile>,
     gridState: LazyGridState = rememberLazyGridState(),
-    onFileClick: (VaultFile) -> Unit
+    onFileClick: (VaultFile) -> Unit,
+    onSelectionActive: (Boolean) -> Unit = {},
+    onBulkDelete: (Set<String>) -> Unit = {},
+    onBulkRestore: (Set<String>) -> Unit = {}
 ) {
     var selectedIds by remember { mutableStateOf(setOf<String>()) }
     
-    if (files.isEmpty()) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                // Branded Mascot-style empty state with illustration
-                IllustrationBox(category)
-                Spacer(Modifier.height(24.dp))
-                Text(
-                    text = when(category) {
-                        FileCategory.INTRUDER -> "Peaceful. No intruders detected."
-                        else -> "Your vault is empty"
-                    },
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Gray
-                )
-                Text(
-                    text = "Tap the + button to secure your items.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray.copy(alpha = 0.6f),
-                    modifier = Modifier.padding(top = 4.dp)
-                )
+    LaunchedEffect(selectedIds) {
+        onSelectionActive(selectedIds.isNotEmpty())
+    }
+    
+    Box(modifier = Modifier.fillMaxSize()) {
+        if (files.isEmpty()) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    // Branded Mascot-style empty state with illustration
+                    IllustrationBox(category)
+                    Spacer(Modifier.height(24.dp))
+                    Text(
+                        text = when(category) {
+                            FileCategory.INTRUDER -> "Peaceful. No intruders detected."
+                            else -> "Your vault is empty"
+                        },
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Gray
+                    )
+                    Text(
+                        text = "Tap the + button to secure your items.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.Gray.copy(alpha = 0.6f),
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
+            }
+        } else {
+            LazyVerticalGrid(
+                state = gridState,
+                columns = GridCells.Fixed(3),
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(top = 16.dp, bottom = 100.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(files) { file ->
+                    FileItem(
+                        file = file,
+                        isSelected = selectedIds.contains(file.id),
+                        onClick = {
+                            if (selectedIds.isNotEmpty()) {
+                                selectedIds = if (selectedIds.contains(file.id)) selectedIds - file.id else selectedIds + file.id
+                            } else {
+                                onFileClick(file)
+                            }
+                        },
+                        onLongClick = {
+                            selectedIds = selectedIds + file.id
+                        }
+                    )
+                }
             }
         }
-    } else {
-        LazyVerticalGrid(
-            state = gridState,
-            columns = GridCells.Fixed(3),
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(vertical = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+
+        // Selection Actions Toolbar (Moved to bottom as requested)
+        AnimatedVisibility(
+            visible = selectedIds.isNotEmpty(),
+            enter = slideInVertically(initialOffsetY = { it }),
+            exit = slideOutVertically(targetOffsetY = { it }),
+            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 16.dp).zIndex(10f)
         ) {
-            items(files) { file ->
-                FileItem(
-                    file = file,
-                    isSelected = selectedIds.contains(file.id),
-                    onClick = {
-                        if (selectedIds.isNotEmpty()) {
-                            selectedIds = if (selectedIds.contains(file.id)) selectedIds - file.id else selectedIds + file.id
-                        } else {
-                            onFileClick(file)
+            Surface(
+                color = CyberDarkBlue,
+                shape = RoundedCornerShape(24.dp),
+                shadowElevation = 12.dp,
+                modifier = Modifier.padding(horizontal = 16.dp).fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        IconButton(onClick = { selectedIds = emptySet() }) {
+                            Icon(Icons.Default.Close, "Cancel", tint = Color.White)
                         }
-                    },
-                    onLongClick = {
-                        selectedIds = selectedIds + file.id
+                        IconButton(onClick = { 
+                            selectedIds = if (selectedIds.size == files.size) emptySet() else files.map { it.id }.toSet()
+                        }) {
+                            Icon(
+                                if (selectedIds.size == files.size) Icons.Default.Deselect else Icons.Default.SelectAll,
+                                "Select All", 
+                                tint = Color.White
+                            )
+                        }
+                        Spacer(Modifier.width(4.dp))
+                        Text(
+                            "${selectedIds.size} Selected",
+                            color = Color.White,
+                            fontWeight = FontWeight.Black,
+                            fontSize = 16.sp
+                        )
                     }
-                )
+                    
+                    Row {
+                        IconButton(onClick = { 
+                            onBulkRestore(selectedIds)
+                            selectedIds = emptySet()
+                        }) {
+                            Icon(Icons.Default.Restore, "Restore", tint = CyberBlue)
+                        }
+                        
+                        IconButton(onClick = { 
+                            onBulkDelete(selectedIds)
+                            selectedIds = emptySet()
+                        }) {
+                            Icon(Icons.Default.Delete, "Delete", tint = Color.Red.copy(alpha = 0.8f))
+                        }
+                    }
+                }
             }
         }
     }
@@ -1553,25 +1741,32 @@ fun CategoryItem(
         shadowElevation = 4.dp
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 20.dp, horizontal = 16.dp),
+            modifier = Modifier.fillMaxWidth().padding(vertical = 20.dp, horizontal = 20.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                icon, 
-                null, 
-                tint = if (isDark) CyberBlue else color, 
-                modifier = Modifier.size(24.dp)
-            )
-            Spacer(Modifier.width(16.dp))
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .background(if (isDark) Color.White.copy(alpha = 0.05f) else color.copy(alpha = 0.1f), CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    icon, 
+                    null, 
+                    tint = if (isDark) CyberBlue else color, 
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+            Spacer(Modifier.width(20.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     title, 
                     color = if (isDark) Color.White else Color.Black.copy(alpha = 0.8f), 
                     fontWeight = FontWeight.Black,
-                    fontSize = 16.sp
+                    fontSize = 18.sp
                 )
                 Text(
-                    stringResource(R.string.items_count, count), 
+                    stringResource(R.string.items_count, count),
                     color = if (isDark) Color.Gray else Color.Gray,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Bold
@@ -1607,6 +1802,7 @@ fun SettingsSection(
     onOpenWebView: (String, String) -> Unit,
     onOpenFAQ: () -> Unit
 ) {
+    val context = LocalContext.current
     val isDark = state.isDarkMode
     val textPrimary = if (isDark) Color.White else Color.Black.copy(alpha = 0.8f)
     val textSecondary = Color.Gray
@@ -1694,7 +1890,17 @@ fun SettingsSection(
                 shadowElevation = 4.dp
             ) {
                 Column {
-                    SettingsActionItem(stringResource(R.string.feedback), Icons.Default.ChatBubbleOutline, isDark) {}
+                    SettingsActionItem(stringResource(R.string.feedback), Icons.Default.ChatBubbleOutline, isDark) {
+                        val intent = Intent(Intent.ACTION_SENDTO).apply {
+                            data = Uri.parse("mailto:hello@aitoyz.in")
+                            putExtra(Intent.EXTRA_SUBJECT, "Feedback for GeoVault")
+                        }
+                        try {
+                            context.startActivity(intent)
+                        } catch (e: Exception) {
+                            Toast.makeText(context, "No email app found", Toast.LENGTH_SHORT).show()
+                        }
+                    }
                     SettingsActionItem(stringResource(R.string.faq), Icons.Default.HelpOutline, isDark) {
                         onOpenFAQ()
                     }

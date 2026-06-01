@@ -61,7 +61,12 @@ fun AuthUI(
     val prefs = remember { secureManager.prefs }
     val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
 
-    var failedAttempts by remember { mutableIntStateOf(prefs.getInt("temp_failed_attempts", 0)) }
+    var failedAttempts by remember { mutableIntStateOf(0) }
+
+    // Reset failed attempts for the current session
+    LaunchedEffect(Unit) {
+        prefs.edit().putInt("temp_failed_attempts", 0).apply()
+    }
 
     // Permission Launchers
     val cameraPermissionLauncher = rememberLauncherForActivityResult(
@@ -96,26 +101,21 @@ fun AuthUI(
         failedAttempts++
         prefs.edit().putInt("temp_failed_attempts", failedAttempts).apply()
         
-        if (failedAttempts >= 3) {
+        if (failedAttempts >= 1) {
             haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
             
-            // Multiple captures for "clicking pictures"
-            repeat(3) { i ->
-                val delayMs = i * 500L
-                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                    IntruderManager.getInstance(context).captureIntruder { uri, thumbPath ->
-                        val id = java.util.UUID.randomUUID().toString()
-                        secureManager.saveFileInfo(
-                            id,
-                            "Intruder_${System.currentTimeMillis()}.jpg",
-                            uri.path ?: "",
-                            com.geovault.model.FileCategory.INTRUDER,
-                            0L,
-                            thumbPath,
-                            null
-                        )
-                    }
-                }, delayMs)
+            // Single capture for immediate feedback without cluttering
+            IntruderManager.getInstance(context).captureIntruder { uri, thumbPath ->
+                val id = java.util.UUID.randomUUID().toString()
+                secureManager.saveFileInfo(
+                    id,
+                    "Intruder_${System.currentTimeMillis()}.jpg",
+                    uri.path ?: "",
+                    com.geovault.model.FileCategory.INTRUDER,
+                    0L,
+                    thumbPath,
+                    null
+                )
             }
         }
     }

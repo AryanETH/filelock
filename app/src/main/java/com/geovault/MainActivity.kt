@@ -48,9 +48,16 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
+import android.content.Context
+import android.content.IntentSender
+import com.google.android.gms.common.api.ResolvableApiException
+import com.google.android.gms.location.LocationSettingsRequest
+import com.google.android.gms.location.LocationSettingsResponse
+import com.google.android.gms.location.SettingsClient
+import com.google.android.gms.tasks.Task
+import android.content.Intent
 import org.maplibre.android.MapLibre
 
-import android.content.Intent
 import android.os.Build
 import android.view.WindowManager
 import androidx.core.view.WindowCompat
@@ -214,12 +221,14 @@ class MainActivity : AppCompatActivity() {
                                     onGrantOverlay = { viewModel.openOverlaySettings() },
                                     onGrantLocation = {
                                         viewModel.setPerformingAction(true)
-                                        permissionLauncher.launch(
-                                            arrayOf(
-                                                Manifest.permission.ACCESS_FINE_LOCATION,
-                                                Manifest.permission.ACCESS_COARSE_LOCATION
+                                        checkLocationSettings(this@MainActivity) {
+                                            permissionLauncher.launch(
+                                                arrayOf(
+                                                    Manifest.permission.ACCESS_FINE_LOCATION,
+                                                    Manifest.permission.ACCESS_COARSE_LOCATION
+                                                )
                                             )
-                                        )
+                                        }
                                     },
                                     onGrantBattery = {
                                         viewModel.openProtectedAppsSettings()
@@ -279,7 +288,11 @@ class MainActivity : AppCompatActivity() {
                                     onCompleteTour = { viewModel.completeTour() },
                                     onToggleScreenshotRestriction = { viewModel.toggleScreenshotRestriction() },
                                     onCreateFolder = { viewModel.createFolder(it) },
+                                    onDeleteFolder = { name, recover -> viewModel.deleteFolder(name, recover) },
+                                    onBulkDelete = { ids -> viewModel.bulkDeleteFiles(ids) },
+                                    onBulkRestore = { ids -> viewModel.bulkRestoreFiles(ids) },
                                     onAddFilesToFolder = { uris, folder -> viewModel.addFilesToVault(uris, com.geovault.model.FileCategory.OTHER, folder) },
+                                    onFetchWeather = { lat, lon -> viewModel.fetchWeatherAndAQI(lat, lon) },
                                     onStartAction = { viewModel.setPerformingAction(true) },
                                     onEndAction = { viewModel.setPerformingAction(false) }
                                 )
@@ -287,6 +300,33 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    private fun checkLocationSettings(context: Context, onAlreadyEnabled: () -> Unit) {
+        val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 5000).build()
+        val builder = LocationSettingsRequest.Builder().addLocationRequest(locationRequest)
+        val client: SettingsClient = LocationServices.getSettingsClient(context)
+        val task: Task<LocationSettingsResponse> = client.checkLocationSettings(builder.build())
+
+        task.addOnSuccessListener {
+            onAlreadyEnabled()
+        }
+
+        task.addOnFailureListener { exception ->
+            if (exception is ResolvableApiException) {
+                try {
+                    // This is for a standard Activity. For ComponentActivity/Compose,
+                    // we might need a different launcher if we want to handle the result,
+                    // but usually, StartIntentSenderForResult is enough for this system dialog.
+                    exception.startResolutionForResult(this@MainActivity, 1001)
+                } catch (sendEx: IntentSender.SendIntentException) {
+                    // Ignore the error.
+                }
+            } else {
+                // Settings are not available
+                onAlreadyEnabled()
             }
         }
     }

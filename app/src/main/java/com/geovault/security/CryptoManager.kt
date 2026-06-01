@@ -72,22 +72,15 @@ class CryptoManager {
         outputStream.write(iv)
 
         val cipherOutputStream = javax.crypto.CipherOutputStream(outputStream, cipher)
-        val buffer = ByteArray(131072) // 128KB buffer for faster IO
+        val buffer = ByteArray(524288) // 512KB ULTRA buffer for blazing fast IO
         var bytesRead: Int
         var totalBytes: Long = 0
-        var lastUpdate: Long = 0
         
         while (inputStream.read(buffer).also { bytesRead = it } != -1) {
             cipherOutputStream.write(buffer, 0, bytesRead)
             totalBytes += bytesRead
-            
-            // Throttle progress updates to avoid flooding
-            if (totalBytes - lastUpdate > 1024 * 512) { // 512KB
-                onProgress(totalBytes)
-                lastUpdate = totalBytes
-            }
+            onProgress(totalBytes)
         }
-        onProgress(totalBytes)
         cipherOutputStream.close()
         return totalBytes
     }
@@ -111,22 +104,15 @@ class CryptoManager {
 
         val cipher = getDecryptCipherForIv(iv)
         val cipherInputStream = javax.crypto.CipherInputStream(inputStream, cipher)
-        val buffer = ByteArray(131072) // 128KB buffer for faster IO
+        val buffer = ByteArray(524288) // 512KB ULTRA buffer for blazing fast IO
         var bytesRead: Int
         var totalBytes: Long = 0
-        var lastUpdate: Long = 0
         
         while (cipherInputStream.read(buffer).also { bytesRead = it } != -1) {
             outputStream.write(buffer, 0, bytesRead)
             totalBytes += bytesRead
-            
-            // Throttle progress updates
-            if (totalBytes - lastUpdate > 1024 * 512) { // 512KB
-                onProgress(totalBytes)
-                lastUpdate = totalBytes
-            }
+            onProgress(totalBytes)
         }
-        onProgress(totalBytes)
         cipherInputStream.close()
         outputStream.flush()
         outputStream.close()

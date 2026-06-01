@@ -1,13 +1,20 @@
 package com.geovault.ui
 
+import android.app.Activity
+import android.content.Context
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.graphics.Bitmap
 import android.graphics.pdf.PdfRenderer
+import android.media.AudioManager
 import android.net.Uri
 import android.os.ParcelFileDescriptor
+import android.view.View
+import android.view.WindowManager
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.gestures.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -34,6 +41,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -42,6 +50,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.core.content.FileProvider
 import androidx.media3.common.MediaItem
+import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
@@ -52,12 +61,18 @@ import com.geovault.model.FileCategory
 import com.geovault.model.VaultFile
 import com.geovault.security.CryptoManager
 import com.geovault.ui.theme.CyberBlue
+import com.geovault.ui.theme.CyberDarkBlue
+import com.geovault.ui.theme.CyberPurple
+import com.geovault.ui.theme.CreamWhite
+import com.geovault.ui.theme.AppBlue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
+import kotlin.math.abs
+import kotlin.math.roundToInt
 
 @UnstableApi
 @OptIn(ExperimentalMaterial3Api::class)
@@ -65,17 +80,29 @@ import java.io.FileOutputStream
 fun MediaViewerScreen(
     file: VaultFile,
     allFiles: List<VaultFile> = emptyList(),
+    isDarkMode: Boolean = true,
     onBack: () -> Unit,
     onDelete: (String) -> Unit,
     onRestore: (String) -> Unit,
     onStartAction: () -> Unit = {},
     onEndAction: () -> Unit = {}
 ) {
+    val context = LocalContext.current
+    val activity = context as? Activity
+
     androidx.activity.compose.BackHandler {
+        // Reset orientation when going back
+        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         onBack()
     }
     
-    val context = LocalContext.current
+    // Ensure portrait when entering (unless video player changes it)
+    DisposableEffect(Unit) {
+        onDispose {
+            activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        }
+    }
+
     val scope = rememberCoroutineScope()
     val cryptoManager = remember { CryptoManager() }
 
@@ -161,8 +188,8 @@ fun MediaViewerScreen(
                                 if (tempFile.exists()) {
                                     onStartAction()
                                     shareFile(context, tempFile)
-                                    // Removed delay to fix slow redirect complaint
-                                    onEndAction()
+                                    // FIX: Do NOT call onEndAction() here, let onResume handle it 
+                                    // to prevent the lock screen from appearing while sharing.
                                 }
                             }
                         }
@@ -226,10 +253,11 @@ fun MediaViewerScreen(
 
                     if (decryptedFile != null) {
                         Box(Modifier.fillMaxSize()) {
+                            val isDark = isDarkMode
                             when (currentFile.category) {
-                                FileCategory.PHOTO, FileCategory.INTRUDER -> PhotoViewer(decryptedFile!!)
-                                FileCategory.VIDEO -> VideoViewer(decryptedFile!!, isVisible)
-                                FileCategory.AUDIO -> AudioViewer(decryptedFile!!, isVisible)
+                                FileCategory.PHOTO, FileCategory.INTRUDER -> PhotoViewer(decryptedFile!!, isDark)
+                                FileCategory.VIDEO -> VideoViewer(decryptedFile!!, isVisible, isDark)
+                                FileCategory.AUDIO -> AudioViewer(decryptedFile!!, isVisible, currentFile.thumbnailPath, isDark)
                                 FileCategory.DOCUMENT -> {
                                     if (currentFile.originalName.lowercase().endsWith(".pdf")) {
                                         PdfViewer(decryptedFile!!)
@@ -288,7 +316,7 @@ fun MediaViewerScreen(
 }
 
 @Composable
-fun PhotoViewer(file: File) {
+fun PhotoViewer(file: File, isDark: Boolean = true) {
     var scale by remember { mutableFloatStateOf(1f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
     
@@ -300,6 +328,7 @@ fun PhotoViewer(file: File) {
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .background(if (isDark) Color.Black else CreamWhite)
             .pointerInput(scale) {
                 if (scale > 1f) {
                     detectDragGestures { change, dragAmount ->
@@ -338,12 +367,43 @@ fun PhotoViewer(file: File) {
 
 @UnstableApi
 @Composable
-fun VideoViewer(file: File, isVisible: Boolean) {
+fun VideoViewer(file: File, isVisible: Boolean, isDark: Boolean = true) {
     val context = LocalContext.current
+    val activity = context as? Activity
+    val view = LocalView.current
+    val audioManager = remember { context.getSystemService(Context.AUDIO_SERVICE) as AudioManager }
+    
     val exoPlayer = remember(file) {
         ExoPlayer.Builder(context).build().apply {
             setMediaItem(MediaItem.fromUri(Uri.fromFile(file)))
             prepare()
+        }
+    }
+
+    var isPlaying by remember { mutableStateOf(false) }
+    var playbackPosition by remember { mutableLongStateOf(0L) }
+    var duration by remember { mutableLongStateOf(0L) }
+    var isControlsVisible by remember { mutableStateOf(true) }
+    
+    // Gestures state
+    var brightness by remember { mutableFloatStateOf(view.context.let { 
+        (it as? Activity)?.window?.attributes?.screenBrightness ?: -1f 
+    }.let { if (it < 0) 0.5f else it }) }
+    
+    var volume by remember { mutableFloatStateOf(
+        audioManager.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat() / 
+        audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+    ) }
+    
+    var gestureType by remember { mutableStateOf<GestureType?>(null) }
+    var gestureValue by remember { mutableFloatStateOf(0f) }
+
+    LaunchedEffect(exoPlayer) {
+        while (true) {
+            playbackPosition = exoPlayer.currentPosition
+            duration = exoPlayer.duration.coerceAtLeast(0L)
+            isPlaying = exoPlayer.isPlaying
+            delay(500)
         }
     }
 
@@ -359,27 +419,206 @@ fun VideoViewer(file: File, isVisible: Boolean) {
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(if (isDark) Color.Black else CreamWhite)
+            .pointerInput(Unit) {
+                detectTapGestures(onTap = { isControlsVisible = !isControlsVisible })
+            }
+            .pointerInput(Unit) {
+                detectVerticalDragGestures(
+                    onDragStart = { offset ->
+                        gestureType = if (offset.x < size.width / 2) GestureType.BRIGHTNESS else GestureType.VOLUME
+                    },
+                    onDragEnd = { 
+                        gestureType = null 
+                    },
+                    onVerticalDrag = { change, dragAmount ->
+                        change.consume()
+                        val delta = -dragAmount / size.height
+                        if (gestureType == GestureType.BRIGHTNESS) {
+                            brightness = (brightness + delta).coerceIn(0f, 1f)
+                            gestureValue = brightness
+                            activity?.window?.let { window ->
+                                val lp = window.attributes
+                                lp.screenBrightness = brightness
+                                window.attributes = lp
+                            }
+                        } else if (gestureType == GestureType.VOLUME) {
+                            volume = (volume + delta).coerceIn(0f, 1f)
+                            gestureValue = volume
+                            val maxVol = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+                            audioManager.setStreamVolume(
+                                AudioManager.STREAM_MUSIC,
+                                (volume * maxVol).roundToInt(),
+                                0
+                            )
+                        }
+                    }
+                )
+            }
+    ) {
         AndroidView(
             factory = { ctx ->
                 PlayerView(ctx).apply {
                     player = exoPlayer
-                    useController = true
+                    useController = false // Custom UI
+                    layoutParams = android.view.ViewGroup.LayoutParams(
+                        android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                        android.view.ViewGroup.LayoutParams.MATCH_PARENT
+                    )
                 }
             },
             modifier = Modifier.fillMaxSize()
         )
+
+        // Modern Controls Overlay
+        AnimatedVisibility(
+            visible = isControlsVisible,
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            Box(modifier = Modifier.fillMaxSize().background((if (isDark) Color.Black else Color.White).copy(alpha = 0.3f))) {
+                // Top Bar
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.TopCenter)
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(file.name, color = if (isDark) Color.White else Color.Black, fontWeight = FontWeight.Bold, maxLines = 1, modifier = Modifier.weight(1f))
+                    IconButton(onClick = {
+                        val current = activity?.requestedOrientation
+                        activity?.requestedOrientation = if (current == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
+                            ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                        } else {
+                            ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                        }
+                    }) {
+                        Icon(Icons.Default.ScreenRotation, null, tint = if (isDark) Color.White else Color.Black)
+                    }
+                }
+
+                // Center Play/Pause
+                IconButton(
+                    onClick = { if (isPlaying) exoPlayer.pause() else exoPlayer.play() },
+                    modifier = Modifier.align(Alignment.Center).size(80.dp).background(if (isDark) Color.White else Color.Black, CircleShape)
+                ) {
+                    Icon(
+                        if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                        null,
+                        tint = if (isDark) Color.Black else Color.White,
+                        modifier = Modifier.size(40.dp)
+                    )
+                }
+
+                // Bottom Controls
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.BottomCenter)
+                        .padding(24.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(formatDuration(playbackPosition), color = if (isDark) Color.White else Color.Black, fontSize = 12.sp)
+                        Text(formatDuration(duration), color = if (isDark) Color.White else Color.Black, fontSize = 12.sp)
+                    }
+                    Slider(
+                        value = if (duration > 0) playbackPosition.toFloat() / duration else 0f,
+                        onValueChange = { exoPlayer.seekTo((it * duration).toLong()) },
+                        colors = SliderDefaults.colors(
+                            thumbColor = if (isDark) Color.White else Color.Black,
+                            activeTrackColor = if (isDark) CyberBlue else AppBlue,
+                            inactiveTrackColor = (if (isDark) Color.White else Color.Black).copy(alpha = 0.3f)
+                        )
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        IconButton(onClick = { exoPlayer.seekTo(exoPlayer.currentPosition - 10000) }) {
+                            Icon(Icons.Default.Replay10, null, tint = if (isDark) Color.White else Color.Black)
+                        }
+                        IconButton(onClick = { exoPlayer.seekTo(exoPlayer.currentPosition + 10000) }) {
+                            Icon(Icons.Default.Forward10, null, tint = if (isDark) Color.White else Color.Black)
+                        }
+                    }
+                }
+            }
+        }
+
+        // "Cool" Gesture HUD
+        AnimatedVisibility(
+            visible = gestureType != null,
+            enter = fadeIn(),
+            exit = fadeOut(),
+            modifier = Modifier.align(Alignment.TopCenter).padding(top = 60.dp)
+        ) {
+            Surface(
+                color = Color.Black.copy(alpha = 0.6f),
+                shape = RoundedCornerShape(20.dp),
+                modifier = Modifier.height(40.dp).width(200.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                ) {
+                    Icon(
+                        if (gestureType == GestureType.VOLUME) Icons.Default.VolumeUp else Icons.Default.BrightnessMedium,
+                        null,
+                        tint = Color.White,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(Modifier.width(12.dp))
+                    LinearProgressIndicator(
+                        progress = { gestureValue },
+                        modifier = Modifier.weight(1f).height(4.dp).clip(CircleShape),
+                        color = Color.White,
+                        trackColor = Color.White.copy(alpha = 0.2f)
+                    )
+                }
+            }
+        }
     }
 }
 
+enum class GestureType { VOLUME, BRIGHTNESS }
+
 @UnstableApi
 @Composable
-fun AudioViewer(file: File, isVisible: Boolean) {
+fun AudioViewer(file: File, isVisible: Boolean, thumbnailPath: String? = null, isDark: Boolean = true) {
     val context = LocalContext.current
+    val audioManager = remember { context.getSystemService(Context.AUDIO_SERVICE) as AudioManager }
+    
     val exoPlayer = remember(file) {
         ExoPlayer.Builder(context).build().apply {
             setMediaItem(MediaItem.fromUri(Uri.fromFile(file)))
             prepare()
+        }
+    }
+
+    var isPlaying by remember { mutableStateOf(false) }
+    var playbackPosition by remember { mutableLongStateOf(0L) }
+    var duration by remember { mutableLongStateOf(0L) }
+    
+    var volume by remember { mutableFloatStateOf(
+        audioManager.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat() / 
+        audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+    ) }
+    var showVolumeHUD by remember { mutableStateOf(false) }
+
+    LaunchedEffect(exoPlayer) {
+        while (true) {
+            playbackPosition = exoPlayer.currentPosition
+            duration = exoPlayer.duration.coerceAtLeast(0L)
+            isPlaying = exoPlayer.isPlaying
+            delay(500)
         }
     }
 
@@ -395,41 +634,181 @@ fun AudioViewer(file: File, isVisible: Boolean) {
         }
     }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+            .background(if (isDark) Brush.verticalGradient(listOf(CyberDarkBlue, Color.Black)) else Brush.verticalGradient(listOf(CreamWhite, Color.White)))
+            .pointerInput(Unit) {
+                detectVerticalDragGestures(
+                    onDragStart = { showVolumeHUD = true },
+                    onDragEnd = { showVolumeHUD = false },
+                    onVerticalDrag = { change, dragAmount ->
+                        change.consume()
+                        val delta = -dragAmount / size.height
+                        volume = (volume + delta).coerceIn(0f, 1f)
+                        val maxVol = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+                        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, (volume * maxVol).roundToInt(), 0)
+                    }
+                )
+            }
     ) {
-        Icon(
-            Icons.Default.MusicNote, 
-            null, 
-            tint = CyberBlue, 
-            modifier = Modifier.size(120.dp)
-        )
-        Spacer(Modifier.height(24.dp))
-        Text(
-            file.name, 
-            color = Color.White, 
-            fontSize = 20.sp, 
-            fontWeight = FontWeight.Black, 
-            textAlign = TextAlign.Center
-        )
-        Spacer(Modifier.height(48.dp))
-        AndroidView(
-            factory = { ctx ->
-                PlayerView(ctx).apply {
-                    player = exoPlayer
-                    useController = true
-                    controllerHideOnTouch = false
-                    controllerShowTimeoutMs = 0
+        Column(
+            modifier = Modifier.fillMaxSize().padding(32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            val infiniteTransition = rememberInfiniteTransition(label = "disc_rotation")
+            val rotation by infiniteTransition.animateFloat(
+                initialValue = 0f,
+                targetValue = 360f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(15000, easing = LinearEasing),
+                    repeatMode = RepeatMode.Restart
+                ),
+                label = "rotation"
+            )
+            val color1 by infiniteTransition.animateColor(
+                initialValue = CyberPurple,
+                targetValue = CyberBlue,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(3000, easing = LinearEasing),
+                    repeatMode = RepeatMode.Reverse
+                ),
+                label = "color1"
+            )
+            val color2 by infiniteTransition.animateColor(
+                initialValue = CyberBlue,
+                targetValue = CyberPurple,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(3000, easing = LinearEasing),
+                    repeatMode = RepeatMode.Reverse
+                ),
+                label = "color2"
+            )
+
+            // Modern Disc UI
+            Surface(
+                modifier = Modifier
+                    .size(260.dp)
+                    .graphicsLayer { rotationZ = if (isPlaying) rotation else 0f },
+                shape = CircleShape,
+                color = if (isDark) CyberDarkBlue else Color.White,
+                shadowElevation = 20.dp,
+                border = BorderStroke(4.dp, Brush.linearGradient(listOf(color1, color2)))
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    if (thumbnailPath != null && File(thumbnailPath).exists()) {
+                        AsyncImage(
+                            model = File(thumbnailPath),
+                            contentDescription = null,
+                            modifier = Modifier.fillMaxSize().clip(CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Icon(
+                            Icons.Default.MusicNote, 
+                            null, 
+                            tint = (if (isDark) Color.White else Color.Black).copy(alpha = 0.2f), 
+                            modifier = Modifier.fillMaxSize().padding(60.dp)
+                        )
+                    }
                 }
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(100.dp)
-        )
+            }
+
+            Spacer(Modifier.height(48.dp))
+            
+            Text(
+                file.name, 
+                color = if (isDark) Color.White else Color.Black, 
+                fontSize = 24.sp, 
+                fontWeight = FontWeight.Black, 
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                modifier = Modifier
+                    .padding(horizontal = 32.dp)
+                    .basicMarquee()
+            )
+
+            Spacer(Modifier.height(48.dp))
+
+            // Progress Slider
+            Slider(
+                value = if (duration > 0) playbackPosition.toFloat() / duration else 0f,
+                onValueChange = { exoPlayer.seekTo((it * duration).toLong()) },
+                colors = SliderDefaults.colors(
+                    thumbColor = if (isDark) Color.White else Color.Black,
+                    activeTrackColor = CyberPurple,
+                    inactiveTrackColor = (if (isDark) Color.White else Color.Black).copy(alpha = 0.1f)
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(formatDuration(playbackPosition), color = Color.Gray, fontSize = 12.sp)
+                Text(formatDuration(duration), color = Color.Gray, fontSize = 12.sp)
+            }
+
+            Spacer(Modifier.height(32.dp))
+
+            // Controls
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = { exoPlayer.seekTo(exoPlayer.currentPosition - 10000) }) {
+                    Icon(Icons.Default.SkipPrevious, null, tint = if (isDark) Color.White else Color.Black, modifier = Modifier.size(32.dp))
+                }
+                Surface(
+                    onClick = { if (isPlaying) exoPlayer.pause() else exoPlayer.play() },
+                    shape = CircleShape,
+                    color = if (isDark) Color.White else Color.Black,
+                    modifier = Modifier.size(64.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                            null,
+                            tint = if (isDark) Color.Black else Color.White,
+                            modifier = Modifier.size(32.dp)
+                        )
+                    }
+                }
+                IconButton(onClick = { exoPlayer.seekTo(exoPlayer.currentPosition + 10000) }) {
+                    Icon(Icons.Default.SkipNext, null, tint = if (isDark) Color.White else Color.Black, modifier = Modifier.size(32.dp))
+                }
+            }
+        }
+
+        // Volume HUD
+        AnimatedVisibility(
+            visible = showVolumeHUD,
+            enter = fadeIn(),
+            exit = fadeOut(),
+            modifier = Modifier.align(Alignment.TopCenter).padding(top = 60.dp)
+        ) {
+            Surface(
+                color = Color.Black.copy(alpha = 0.6f),
+                shape = RoundedCornerShape(20.dp),
+                modifier = Modifier.height(40.dp).width(200.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                ) {
+                    Icon(Icons.Default.VolumeUp, null, tint = Color.White, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(12.dp))
+                    LinearProgressIndicator(
+                        progress = { volume },
+                        modifier = Modifier.weight(1f).height(4.dp).clip(CircleShape),
+                        color = Color.White,
+                        trackColor = Color.White.copy(alpha = 0.2f)
+                    )
+                }
+            }
+        }
     }
 }
 

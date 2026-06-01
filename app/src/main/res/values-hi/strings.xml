@@ -23,8 +23,11 @@
 <string name="search_languages">भाषा खोजें...</string>
 
 <!-- Permission Screen -->
-<string name="security_clearance">अनुमति दें</string>
-<string name="security_clearance_desc">ऐप को सही से चलाने के लिए हमें कुछ अनुमति चाहिए। कृपया इन्हें Allow करें।</string>
+<string name="security_clearance">अनुमति गाइड</string>
+<string name="security_clearance_desc">अनुमतियाँ केवल आवश्यकता होने पर ही मांगी जाती हैं</string>
+<string name="privacy_note">हम आपकी कोई भी व्यक्तिगत जानकारी एकत्र, सुरक्षित या साझा नहीं करते हैं</string>
+<string name="ads_note">इस क्रिया में विज्ञापन हो सकते हैं</string>
+
 <string name="permission_usage_access">ऐप्स की निगरानी</string>
 <string name="permission_usage_access_desc">यह देखने के लिए कि आपने लॉक किया गया ऐप कब खोला।</string>
 <string name="permission_overlay_access">अन्य ऐप्स के ऊपर दिखाएं</string>

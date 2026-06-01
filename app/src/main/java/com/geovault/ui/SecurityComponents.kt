@@ -101,9 +101,9 @@ fun CompactPinPad(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Row(
-                horizontalArrangement = Arrangement.Center,
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth().animateContentSize()
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp).animateContentSize()
             ) {
                 repeat(4) { index ->
                     val filled = index < pin.length
@@ -116,13 +116,14 @@ fun CompactPinPad(
 
                     Box(
                         modifier = Modifier
-                            .padding(horizontal = 10.dp)
-                            .size(dotSize * 1.3f), // Larger container to prevent clipping
+                            .weight(1f)
+                            .aspectRatio(1f)
+                            .requiredHeight(dotSize * 1.3f),
                         contentAlignment = Alignment.Center
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(dotSize)
+                                .requiredSize(dotSize)
                                 .scale(scale)
                                 .background(
                                     if (filled) AppBlue else surfaceColor,

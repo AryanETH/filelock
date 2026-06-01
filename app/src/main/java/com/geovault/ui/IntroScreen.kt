@@ -58,12 +58,10 @@ fun IntroScreen() {
                     .background(CyberBlue.copy(alpha = 0.1f * opacity), shape = androidx.compose.foundation.shape.CircleShape),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    "M",
-                    style = MaterialTheme.typography.displayLarge,
-                    color = CyberBlue,
-                    fontWeight = FontWeight.Black,
-                    modifier = Modifier.scale(scale)
+                Image(
+                    painter = painterResource(id = R.drawable.removed_background_18),
+                    contentDescription = "Logo",
+                    modifier = Modifier.size(100.dp).scale(scale)
                 )
             }
             

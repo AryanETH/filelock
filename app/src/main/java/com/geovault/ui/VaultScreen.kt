@@ -6,6 +6,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.compose.BackHandler
 import androidx.compose.ui.draw.rotate
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
@@ -47,7 +48,9 @@ import androidx.compose.ui.window.Dialog
 import androidx.core.graphics.drawable.toBitmap
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.res.painterResource
 import com.geovault.R
 import androidx.compose.ui.res.stringResource
 import com.geovault.location.LocationHelper
@@ -55,6 +58,7 @@ import com.geovault.map.MapStyleHelper
 import com.geovault.model.AppInfo
 import com.geovault.model.GeoPoint
 import com.geovault.model.LockType
+import com.geovault.model.FileCategory
 import com.geovault.model.VaultState
 import com.geovault.ui.theme.*
 import kotlinx.coroutines.Dispatchers
@@ -77,9 +81,14 @@ import com.google.android.gms.location.LocationServices
 import org.maplibre.android.location.LocationComponentActivationOptions
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.ui.draw.blur
 import androidx.biometric.BiometricManager
 import android.content.Intent
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.widget.Toast
 import com.geovault.security.IntruderManager
 import androidx.lifecycle.compose.LocalLifecycleOwner as LifecycleOwnerCompose
@@ -87,8 +96,10 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import android.view.HapticFeedbackConstants
 import androidx.compose.animation.core.AnimationVector1D
+import androidx.media3.common.util.UnstableApi
 
-@OptIn(ExperimentalMaterial3Api::class, androidx.media3.common.util.UnstableApi::class)
+@UnstableApi
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VaultScreen(
     state: VaultState,
@@ -101,7 +112,7 @@ fun VaultScreen(
     onOpenOverlaySettings: () -> Unit,
     onOpenProtectedApps: () -> Unit,
     onToggleMasterStealth: () -> Unit,
-    onAddFiles: (List<android.net.Uri>, com.geovault.model.FileCategory) -> Unit,
+    onAddFiles: (List<android.net.Uri>, FileCategory) -> Unit,
     onToggleAppLock: (String) -> Unit,
     onRemoveVault: (String) -> Unit,
     onClearAllVaults: () -> Unit,
@@ -110,7 +121,7 @@ fun VaultScreen(
     onGrantFullStorage: () -> Unit,
     onDeleteFile: (String) -> Unit,
     onRestoreFile: (String) -> Unit,
-    onFetchGalleryItems: (com.geovault.model.FileCategory) -> Unit,
+    onFetchGalleryItems: (FileCategory) -> Unit,
     onRemoveAppFromVault: (String, String) -> Unit = { _, _ -> },
     onToggleDarkMode: () -> Unit,
     onToggleFingerprint: () -> Unit,
@@ -120,7 +131,11 @@ fun VaultScreen(
     onToggleUninstallShield: (Boolean) -> Unit = {},
     onRestoreAndUninstall: () -> Unit = {},
     onCreateFolder: (String) -> Unit = {},
+    onDeleteFolder: (String, Boolean) -> Unit = { _, _ -> },
+    onBulkDelete: (Set<String>) -> Unit = {},
+    onBulkRestore: (Set<String>) -> Unit = {},
     onAddFilesToFolder: (List<android.net.Uri>, String) -> Unit = { _, _ -> },
+    onFetchWeather: (Double, Double) -> Unit = { _, _ -> },
     onStartAction: () -> Unit = {},
     onEndAction: () -> Unit = {}
 ) {
@@ -149,12 +164,14 @@ fun VaultScreen(
     val context = LocalContext.current
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
     
+    var isCenteredOnUser by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
     var searchSuggestions by remember { mutableStateOf<List<Pair<String, LatLng>>>(emptyList()) }
     var showOfflineDialog by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     
     val haptic = LocalHapticFeedback.current
+    var showWeatherPanel by remember { mutableStateOf(false) }
     
     LaunchedEffect(searchQuery) {
         searchSuggestions = if (searchQuery.length > 2) {
@@ -169,8 +186,6 @@ fun VaultScreen(
         }
     }
 
-    var isCenteredOnUser by remember { mutableStateOf(false) }
-    
     LaunchedEffect(isCenteredOnUser) {
         mapLibreMap?.let { map ->
             if (isCenteredOnUser) {
@@ -216,10 +231,11 @@ fun VaultScreen(
         }
     }
 
-    BackHandler(enabled = state.isLocked && (showDirectionsPanel || searchQuery.isNotEmpty() || showUnlockPrompt || showSetupDialog)) {
+    BackHandler(enabled = state.isLocked && (showDirectionsPanel || searchQuery.isNotEmpty() || showUnlockPrompt || showSetupDialog || showWeatherPanel)) {
         when {
             showUnlockPrompt -> showUnlockPrompt = false
             showSetupDialog -> showSetupDialog = false
+            showWeatherPanel -> showWeatherPanel = false
             showDirectionsPanel -> {
                 showDirectionsPanel = false
                 fromLocation = null
@@ -348,6 +364,14 @@ fun VaultScreen(
                                         mapBearing = map.cameraPosition.bearing.toFloat()
                                         currentMapZoom = map.cameraPosition.zoom
                                         map.cameraPosition.target?.let { currentMapLat = it.latitude }
+                                    }
+
+                                    map.addOnCameraIdleListener {
+                                        if (map.cameraPosition.zoom >= 14.0) { // Approx 2km scale
+                                            map.cameraPosition.target?.let { target ->
+                                                onFetchWeather(target.latitude, target.longitude)
+                                            }
+                                        }
                                     }
 
                                     val gestureDetector = android.view.GestureDetector(ctx, object : android.view.GestureDetector.SimpleOnGestureListener() {
@@ -486,7 +510,17 @@ fun VaultScreen(
                             mapBearing = mapBearing,
                             onCompassClick = {
                                 HapticHelper.vibrate(context, 1)
-                                mapLibreMap?.animateCamera(CameraUpdateFactory.bearingTo(0.0))
+                                if (isCenteredOnUser) {
+                                    mapLibreMap?.animateCamera(CameraUpdateFactory.bearingTo(0.0))
+                                } else {
+                                    isCenteredOnUser = true
+                                    mapLibreMap?.locationComponent?.cameraMode = org.maplibre.android.location.modes.CameraMode.TRACKING_COMPASS
+                                    fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                                        location?.let {
+                                            mapLibreMap?.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(it.latitude, it.longitude), 17.0), 1000)
+                                        }
+                                    }
+                                }
                             }
                         )
                         
@@ -496,8 +530,8 @@ fun VaultScreen(
                                     .fillMaxWidth()
                                     .padding(top = 4.dp),
                                 shape = RoundedCornerShape(12.dp),
-                                color = (if (isDark) CyberDarkBlue else MaterialTheme.colorScheme.surface).copy(alpha = 0.95f),
-                                shadowElevation = 4.dp
+                                color = if (isDark) CyberDarkBlue else Color.White,
+                                shadowElevation = 8.dp
                             ) {
                                 Column {
                                     searchSuggestions.take(5).forEach { suggestion ->
@@ -516,9 +550,9 @@ fun VaultScreen(
                                                 }
                                                 .padding(16.dp),
                                             style = MaterialTheme.typography.bodyMedium,
-                                            color = if (isDark) Color.White else MaterialTheme.colorScheme.onSurface
+                                            color = if (isDark) Color.White else Color.Black
                                         )
-                                        HorizontalDivider(color = (if (isDark) Color.White else MaterialTheme.colorScheme.onSurface).copy(alpha = 0.05f))
+                                        HorizontalDivider(color = (if (isDark) Color.White else Color.Black).copy(alpha = 0.05f))
                                     }
                                 }
                             }
@@ -558,20 +592,11 @@ fun VaultScreen(
                     ) {
                         Column(
                             modifier = Modifier
-                                .padding(end = 16.dp, bottom = 64.dp)
+                                .padding(end = 16.dp, bottom = 32.dp)
                                 .onGloballyPositioned { fabColumnRect = it.boundsInWindow() },
                             verticalArrangement = Arrangement.spacedBy(12.dp),
                             horizontalAlignment = Alignment.End
                         ) {
-                            SmallMapFab(icon = Icons.Default.Directions, active = showDirectionsPanel) {
-                                HapticHelper.vibrate(context, 1)
-                                showDirectionsPanel = !showDirectionsPanel
-                                if (!showDirectionsPanel) {
-                                    fromLocation = null
-                                    toLocation = null
-                                }
-                            }
-
                             SmallMapFab(icon = Icons.Default.Add, active = false) {
                                 HapticHelper.vibrate(context, 1)
                                 mapLibreMap?.animateCamera(CameraUpdateFactory.zoomIn())
@@ -583,13 +608,16 @@ fun VaultScreen(
                             }
 
                             SmallMapFab(icon = Icons.Default.MyLocation, active = isCenteredOnUser) {
-                                if (!isCenteredOnUser) HapticHelper.vibrate(context, 1)
-                                if (state.hasLocationPermission) {
+                                if (!isCenteredOnUser) {
+                                    HapticHelper.vibrate(context, 1)
                                     isCenteredOnUser = true
+                                    mapLibreMap?.locationComponent?.cameraMode = org.maplibre.android.location.modes.CameraMode.TRACKING_COMPASS
+                                }
+                                if (state.hasLocationPermission) {
                                     try {
                                         fusedLocationClient.lastLocation.addOnSuccessListener { location ->
                                             location?.let {
-                                                mapLibreMap?.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(it.latitude, it.longitude), 18.0), 2000)
+                                                mapLibreMap?.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(it.latitude, it.longitude), 17.0), 1500)
                                             }
                                         }
                                     } catch (e: SecurityException) {}
@@ -597,6 +625,11 @@ fun VaultScreen(
                                     onStartAction()
                                     locationPermissionLauncher.launch(arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION))
                                 }
+                            }
+
+                            SmallMapFab(icon = Icons.Default.MoreVert, active = showWeatherPanel) {
+                                HapticHelper.vibrate(context, 1)
+                                showWeatherPanel = true
                             }
                         }
                     }
@@ -661,6 +694,24 @@ fun VaultScreen(
                             onClose = { showDirectionsPanel = false }
                         )
                     }
+
+                    // Weather Panel (Slide up)
+                    AnimatedVisibility(
+                        visible = showWeatherPanel,
+                        enter = slideInVertically(initialOffsetY = { it }),
+                        exit = slideOutVertically(targetOffsetY = { it }),
+                        modifier = Modifier.align(Alignment.BottomCenter)
+                    ) {
+                        WeatherPanel(
+                            weatherInfo = state.weatherInfo,
+                            isDark = isDark,
+                            onDismiss = { showWeatherPanel = false },
+                            onDirectionsClick = {
+                                showWeatherPanel = false
+                                showDirectionsPanel = true
+                            }
+                        )
+                    }
                 }
             } else {
                 VaultContentScreen(
@@ -690,6 +741,9 @@ fun VaultScreen(
                     onRestoreAndUninstall = onRestoreAndUninstall,
                     onFetchGalleryItems = onFetchGalleryItems,
                     onCreateFolder = onCreateFolder,
+                    onDeleteFolder = onDeleteFolder,
+                    onBulkDelete = onBulkDelete,
+                    onBulkRestore = onBulkRestore,
                     onAddFilesToFolder = onAddFilesToFolder,
                     onStartAction = onStartAction,
                     onEndAction = onEndAction
@@ -735,22 +789,22 @@ fun VaultUnlockDialog(
     
     Dialog(onDismissRequest = onDismiss) {
         Surface(
-            shape = RoundedCornerShape(32.dp),
+            shape = RoundedCornerShape(24.dp),
             color = if (isDark) CyberDarkBlue else CreamWhite,
-            shadowElevation = 0.dp, // Reduced elevation to remove square shadows
-            modifier = Modifier.width(320.dp)
+            shadowElevation = 8.dp,
+            modifier = Modifier.width(300.dp)
         ) {
             Column(
-                modifier = Modifier.padding(24.dp),
+                modifier = Modifier.padding(20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
                     if (vault.lockType == LockType.PIN) stringResource(R.string.enter_pin) else stringResource(R.string.draw_pattern),
-                    color = if (isDark) CyberBlue else AppBlue,
-                    fontWeight = FontWeight.Black,
-                    style = MaterialTheme.typography.titleSmall
+                    color = (if (isDark) CyberBlue else AppBlue).copy(alpha = 0.8f),
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.titleMedium
                 )
-                Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(20.dp))
                 if (vault.lockType == LockType.PIN) {
                     CompactPinPad(
                         correctPin = vault.secret, 
@@ -778,8 +832,8 @@ fun VaultUnlockDialog(
                         }
                     )
                 }
-                Spacer(Modifier.height(16.dp))
-                TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel), color = Color.Gray, fontWeight = FontWeight.Bold) }
+                Spacer(Modifier.height(12.dp))
+                TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel), color = Color.Gray) }
             }
         }
     }
@@ -798,42 +852,43 @@ fun VaultSetupDialog(
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
-            modifier = Modifier.fillMaxWidth().wrapContentHeight(),
-            shape = RoundedCornerShape(32.dp),
+            modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(16.dp),
+            shape = RoundedCornerShape(24.dp),
             color = if (isDark) CyberDarkBlue else CreamWhite,
-            shadowElevation = 0.dp
+            shadowElevation = 8.dp
         ) {
             Column(
-                modifier = Modifier.padding(24.dp),
+                modifier = Modifier.padding(20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(stringResource(R.string.setup_lock), style = MaterialTheme.typography.titleLarge, color = if (isDark) CyberBlue else AppBlue, fontWeight = FontWeight.Black, letterSpacing = 1.sp)
-                Spacer(Modifier.height(20.dp))
+                Text(stringResource(R.string.setup_lock), style = MaterialTheme.typography.titleLarge, color = if (isDark) CyberBlue else AppBlue, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(16.dp))
                 if (isNativeEligible) {
                     Row(
-                        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background((if (isDark) CyberBlue else AppBlue).copy(alpha = 0.08f)).padding(16.dp),
+                        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background((if (isDark) CyberBlue else AppBlue).copy(alpha = 0.05f)).padding(12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Native Mode", fontWeight = FontWeight.Black, color = if (isDark) CyberBlue else AppBlue, modifier = Modifier.weight(1f))
+                        Text("Native Mode", fontWeight = FontWeight.Bold, color = if (isDark) CyberBlue else AppBlue, modifier = Modifier.weight(1f))
                         Switch(checked = isNativeEnabled, onCheckedChange = { isNativeEnabled = it })
                     }
                     if (isNativeEnabled) {
                         Slider(value = radius, onValueChange = { radius = it }, valueRange = 100f..2000f, steps = 19)
-                        Text("${radius.toInt()}m", color = if (isDark) CyberBlue else AppBlue, fontWeight = FontWeight.Black)
+                        Text("${radius.toInt()}m", color = if (isDark) CyberBlue else AppBlue, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                     }
+                    Spacer(Modifier.height(12.dp))
                 }
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     VaultLockTypeButton(stringResource(R.string.lock_type_pin), lockType == LockType.PIN, isDark) { lockType = LockType.PIN }
                     VaultLockTypeButton(stringResource(R.string.lock_type_pattern), lockType == LockType.PATTERN, isDark) { lockType = LockType.PATTERN }
                 }
-                Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(20.dp))
                 if (lockType == LockType.PIN) {
                     CompactPinPad(isLightTheme = !isDark, autoConfirm = false, onPinComplete = { onConfirm(it, emptySet(), lockType, if (isNativeEnabled) radius else 0f) })
                 } else {
                     CompactPatternGrid(isLightTheme = !isDark, showConfirmButton = true, onPatternComplete = { onConfirm(it, emptySet(), lockType, if (isNativeEnabled) radius else 0f) })
                 }
-                Spacer(Modifier.height(16.dp))
-                TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel), color = Color.Gray, fontWeight = FontWeight.Bold) }
+                Spacer(Modifier.height(12.dp))
+                TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel), color = Color.Gray) }
             }
         }
     }
@@ -856,9 +911,9 @@ fun SmallMapFab(icon: ImageVector, active: Boolean, modifier: Modifier = Modifie
         onClick = onClick,
         modifier = modifier.size(44.dp),
         shape = CircleShape,
-        color = if (active) (if (isDark) CyberBlue else AppBlue) else (if (isDark) CyberDarkBlue else CreamWhite),
+        color = if (active) (if (isDark) CyberBlue else AppBlue) else (if (isDark) CyberDarkBlue else Color.White),
         contentColor = if (active) Color.White else (if (isDark) Color.White else Color.Black).copy(alpha = 0.8f),
-        shadowElevation = 0.dp // Fix square shadow
+        shadowElevation = 6.dp
     ) {
         Box(contentAlignment = Alignment.Center) { Icon(icon, null, modifier = Modifier.size(20.dp)) }
     }
@@ -954,13 +1009,16 @@ fun DirectionsPanel(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 380.dp) // Ensure enough height
-            .navigationBarsPadding(),
+            .heightIn(min = 380.dp),
         shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
         color = if (isDark) CyberDarkBlue else CreamWhite,
         shadowElevation = 24.dp
     ) {
-        Column(modifier = Modifier.padding(top = 12.dp, start = 24.dp, end = 24.dp, bottom = 24.dp)) {
+        Column(
+            modifier = Modifier
+                .windowInsetsPadding(WindowInsets.navigationBars)
+                .padding(top = 12.dp, start = 24.dp, end = 24.dp, bottom = 24.dp)
+        ) {
             Box(
                 modifier = Modifier
                     .width(40.dp)
@@ -968,6 +1026,14 @@ fun DirectionsPanel(
                     .clip(CircleShape)
                     .background(Color.Gray.copy(alpha = 0.2f))
                     .align(Alignment.CenterHorizontally)
+                    .pointerInput(Unit) {
+                        detectVerticalDragGestures { change, dragAmount ->
+                            if (dragAmount > 15f) {
+                                change.consume()
+                                onClose()
+                            }
+                        }
+                    }
             )
             Spacer(Modifier.height(16.dp))
             Row(
@@ -1144,6 +1210,136 @@ fun DirectionSearchBox(
 }
 
 @Composable
+fun WeatherPanel(
+    weatherInfo: com.geovault.model.WeatherInfo,
+    isDark: Boolean,
+    onDismiss: () -> Unit,
+    onDirectionsClick: () -> Unit
+) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .wrapContentHeight(),
+        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+        color = if (isDark) CyberDarkBlue else Color.White,
+        shadowElevation = 24.dp
+    ) {
+        Column(
+            modifier = Modifier
+                .windowInsetsPadding(WindowInsets.navigationBars)
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Box(
+                modifier = Modifier
+                    .width(40.dp)
+                    .height(4.dp)
+                    .clip(CircleShape)
+                    .background(Color.Gray.copy(alpha = 0.2f))
+                    .pointerInput(Unit) {
+                        detectVerticalDragGestures { change, dragAmount ->
+                            if (dragAmount > 15f) {
+                                change.consume()
+                                onDismiss()
+                            }
+                        }
+                    }
+            )
+            
+            Spacer(Modifier.height(20.dp))
+            
+            Text(
+                weatherInfo.cityName ?: "Detecting City...",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                color = if (isDark) Color.White else Color.Black
+            )
+            
+            Spacer(Modifier.height(24.dp))
+            
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                WeatherInfoCard(
+                    label = "AQI",
+                    value = weatherInfo.aqi?.toString() ?: "--",
+                    icon = Icons.Default.Air,
+                    color = if (isDark) CyberBlue else AppBlue,
+                    modifier = Modifier.weight(1f)
+                )
+                
+                WeatherInfoCard(
+                    label = "Temp",
+                    value = if (weatherInfo.temperature != null) "${weatherInfo.temperature?.toInt()}°" else "--",
+                    icon = Icons.Default.WbSunny,
+                    color = IconOrange,
+                    modifier = Modifier.weight(1f)
+                )
+                
+                WeatherInfoCard(
+                    label = "Humidity",
+                    value = if (weatherInfo.humidity != null) "${weatherInfo.humidity}%" else "--",
+                    icon = Icons.Default.WaterDrop,
+                    color = IconBlue,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+            
+            Spacer(Modifier.height(24.dp))
+
+            Button(
+                onClick = onDirectionsClick,
+                modifier = Modifier.fillMaxWidth().height(52.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = (if (isDark) CyberBlue else AppBlue).copy(alpha = 0.1f),
+                    contentColor = if (isDark) CyberBlue else AppBlue
+                ),
+                elevation = null
+            ) {
+                Icon(Icons.Default.Directions, null)
+                Spacer(Modifier.width(8.dp))
+                Text("Directions", fontWeight = FontWeight.Bold)
+            }
+            
+            Spacer(Modifier.height(16.dp))
+            
+            TextButton(onClick = onDismiss) {
+                Text("CLOSE", fontWeight = FontWeight.Bold, color = Color.Gray)
+            }
+        }
+    }
+}
+
+@Composable
+fun WeatherInfoCard(
+    label: String,
+    value: String,
+    icon: ImageVector,
+    color: Color,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(20.dp),
+        color = color.copy(alpha = 0.1f),
+        border = BorderStroke(1.dp, color.copy(alpha = 0.2f))
+    ) {
+        Column(
+            modifier = Modifier.padding(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(icon, null, tint = color, modifier = Modifier.size(24.dp))
+            Spacer(Modifier.height(8.dp))
+            Text(value, fontWeight = FontWeight.Black, fontSize = 18.sp, color = color)
+            Text(label, fontSize = 10.sp, color = color.copy(alpha = 0.7f), fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+@Composable
 fun MapScaleBar(zoom: Double, latitude: Double, modifier: Modifier = Modifier) {
     val density = androidx.compose.ui.platform.LocalDensity.current
     val metersPerPixel = (Math.cos(latitude * Math.PI / 180) * 2 * Math.PI * 6378137) / (256 * Math.pow(2.0, zoom))
@@ -1171,25 +1367,65 @@ fun MapSearchBar(
     modifier: Modifier = Modifier
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
+    val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
+    var isFocused by remember { mutableStateOf(false) }
+
     Row(verticalAlignment = Alignment.CenterVertically, modifier = modifier.fillMaxWidth()) {
-        Surface(modifier = Modifier.weight(1f).height(60.dp), shape = RoundedCornerShape(30.dp), color = if (isDark) CyberDarkBlue else CreamWhite, shadowElevation = 0.dp) {
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp)) {
-                Icon(Icons.Default.Search, null, tint = Color.Gray, modifier = Modifier.size(20.dp))
-                Spacer(Modifier.width(12.dp))
-                androidx.compose.foundation.text.BasicTextField(
-                    value = query,
-                    onValueChange = onQueryChange,
-                    modifier = Modifier.weight(1f),
-                    textStyle = androidx.compose.ui.text.TextStyle(color = if (isDark) Color.White else Color.Black, fontSize = 16.sp, fontWeight = FontWeight.Bold),
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                    keyboardActions = androidx.compose.foundation.text.KeyboardActions(onSearch = { onSearch(query); keyboardController?.hide() }),
-                    decorationBox = { if (query.isEmpty()) Text(stringResource(R.string.search_places), color = Color.Gray, fontWeight = FontWeight.Medium) else it() }
+        Surface(
+            modifier = Modifier.weight(1f).height(60.dp), 
+            shape = RoundedCornerShape(30.dp), 
+            color = if (isDark) CyberDarkBlue else Color.White, 
+            shadowElevation = 8.dp
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().padding(start = 12.dp, end = 24.dp)) {
+                Image(
+                    painter = painterResource(id = R.drawable.removed_background_18),
+                    contentDescription = null,
+                    modifier = Modifier.size(42.dp)
                 )
-                if (query.isNotEmpty()) IconButton(onClick = { onQueryChange("") }) { Icon(Icons.Default.Close, null, tint = Color.Gray) }
+                Spacer(Modifier.width(8.dp))
+
+                Box(contentAlignment = Alignment.CenterStart, modifier = Modifier.weight(1f)) {
+                    // Initial Search Icon (Visible when not focused and empty)
+                    androidx.compose.animation.AnimatedVisibility(
+                        visible = !isFocused && query.isEmpty(),
+                        enter = fadeIn(),
+                        exit = fadeOut()
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Search, null, tint = Color.Gray, modifier = Modifier.size(20.dp))
+                            Spacer(Modifier.width(12.dp))
+                            Text(stringResource(R.string.search_places), color = Color.Gray, fontWeight = FontWeight.Medium)
+                        }
+                    }
+
+                    androidx.compose.foundation.text.BasicTextField(
+                        value = query,
+                        onValueChange = onQueryChange,
+                        modifier = Modifier.fillMaxWidth().onFocusChanged { isFocused = it.isFocused },
+                        textStyle = androidx.compose.ui.text.TextStyle(color = if (isDark) Color.White else Color.Black, fontSize = 16.sp, fontWeight = FontWeight.Bold),
+                        singleLine = true,
+                        cursorBrush = androidx.compose.ui.graphics.SolidColor(AppBlue),
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                        keyboardActions = androidx.compose.foundation.text.KeyboardActions(onSearch = { onSearch(query); keyboardController?.hide(); focusManager.clearFocus() })
+                    )
+                }
+                
+                if (query.isNotEmpty() || isFocused) {
+                    IconButton(onClick = { 
+                        if (query.isNotEmpty()) {
+                            onQueryChange("")
+                        } else {
+                            focusManager.clearFocus()
+                            keyboardController?.hide()
+                        }
+                    }) { 
+                        Icon(Icons.Default.Close, null, tint = Color.Gray) 
+                    }
+                }
             }
         }
         Spacer(Modifier.width(8.dp))
-        SmallMapFab(icon = Icons.Default.Explore, active = false, modifier = Modifier.rotate(-mapBearing)) { onCompassClick() }
+        SmallMapFab(icon = Icons.Default.Explore, active = false, isDark = isDark, modifier = Modifier.rotate(-mapBearing)) { onCompassClick() }
     }
 }

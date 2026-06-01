@@ -92,7 +92,18 @@ data class VaultState(
     val pendingDeleteIntent: android.app.PendingIntent? = null,
     
     // Import/Export Progress
-    val operationProgress: OperationProgress? = null
+    val operationProgress: OperationProgress? = null,
+
+    // Weather and AQI
+    val weatherInfo: WeatherInfo = WeatherInfo()
+)
+
+data class WeatherInfo(
+    val temperature: Double? = null,
+    val humidity: Int? = null,
+    val aqi: Int? = null,
+    val cityName: String? = null,
+    val lastUpdated: Long = 0
 )
 
 data class OperationProgress(

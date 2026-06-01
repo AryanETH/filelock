@@ -35,6 +35,9 @@ import org.maplibre.android.geometry.LatLngBounds
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
+import java.net.URL
+import org.json.JSONObject
+import org.json.JSONArray
 import java.util.UUID
 import android.app.admin.DevicePolicyManager
 import android.content.ContentValues
@@ -115,7 +118,8 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
     fun addIntruderFile(uri: Uri, thumbPath: String? = null) {
         viewModelScope.launch(Dispatchers.IO) {
             val fileId = UUID.randomUUID().toString()
-            val fileName = "Intruder_${System.currentTimeMillis()}.jpg"
+            val name = java.text.SimpleDateFormat("yyyy-MM-dd_HH-mm", java.util.Locale.US).format(java.util.Date())
+            val fileName = "Intruder_$name.jpg"
             saveFileInfo(fileId, fileName, uri.path ?: "", FileCategory.INTRUDER, 0L, thumbPath)
             updateFileCounts()
         }
@@ -232,6 +236,42 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
         folders.add(name)
         prefs.edit().putStringSet("custom_folders", folders).apply()
         updateFileCounts()
+    }
+
+    fun deleteFolder(name: String, recoverFiles: Boolean) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val folders = (prefs.getStringSet("custom_folders", emptySet()) ?: emptySet()).toMutableSet()
+            folders.remove(name)
+            prefs.edit().putStringSet("custom_folders", folders).apply()
+
+            val folderFiles = _uiState.value.files.filter { it.folderName == name }
+            folderFiles.forEach { file ->
+                if (recoverFiles) {
+                    restoreFileToGallerySync(file.id)
+                } else {
+                    removeFileFromVault(file.id)
+                }
+            }
+            updateFileCounts()
+        }
+    }
+
+    fun bulkDeleteFiles(fileIds: Set<String>) {
+        viewModelScope.launch(Dispatchers.IO) {
+            fileIds.forEach { id ->
+                com.geovault.security.SecureManager.getInstance(getApplication()).removeFileInfo(id)
+            }
+            updateFileCounts()
+        }
+    }
+
+    fun bulkRestoreFiles(fileIds: Set<String>) {
+        viewModelScope.launch(Dispatchers.IO) {
+            fileIds.forEach { id ->
+                restoreFileToGallerySync(id)
+            }
+            updateFileCounts()
+        }
     }
 
     private fun requestDeletion(context: Context, items: List<Triple<Uri, Long, String?>>) {
@@ -478,7 +518,8 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
                         FileCategory.AUDIO -> Environment.DIRECTORY_MUSIC
                         else -> Environment.DIRECTORY_DOWNLOADS 
                     }
-                    put(MediaStore.MediaColumns.RELATIVE_PATH, "$relPath/MapLockRestored")
+                    put(MediaStore.MediaColumns.RELATIVE_PATH, "$relPath/GeoVaultRestored")
+                    put(MediaStore.MediaColumns.IS_PENDING, 1)
                 }
             }
             
@@ -490,8 +531,13 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
             }
             
             context.contentResolver.insert(collection, contentValues)?.let { uri ->
-                context.contentResolver.openOutputStream(uri)?.use { 
-                    cryptoManager.decryptToStream(encryptedFile.inputStream(), it) 
+                context.contentResolver.openOutputStream(uri)?.use { os ->
+                    cryptoManager.decryptToStream(encryptedFile.inputStream(), os) 
+                }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    contentValues.clear()
+                    contentValues.put(MediaStore.MediaColumns.IS_PENDING, 0)
+                    context.contentResolver.update(uri, contentValues, null, null)
                 }
                 com.geovault.security.SecureManager.getInstance(context).removeFileInfo(fileId)
             }
@@ -598,6 +644,53 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
         val isIndia = latitude in 8.4..37.6 && longitude in 68.7..97.2
         _uiState.update { it.copy(currentLocation = GeoPoint(latitude, longitude), isIndiaRegion = isIndia) }
         if (!_uiState.value.isFirstRun) ensureOffline(GeoPoint(latitude, longitude))
+        
+        // Fetch weather and AQI if network is available
+        if (isNetworkAvailable(getApplication())) {
+            fetchWeatherAndAQI(latitude, longitude)
+        }
+    }
+
+    fun fetchWeatherAndAQI(lat: Double, lon: Double) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                // 1. Get City Name (Reverse Geocoding)
+                val cityUrl = URL("https://nominatim.openstreetmap.org/reverse?lat=$lat&lon=$lon&format=json")
+                val cityConn = cityUrl.openConnection()
+                cityConn.setRequestProperty("User-Agent", "GeoVault")
+                val cityResponse = cityConn.getInputStream().bufferedReader().use { it.readText() }
+                val cityJson = JSONObject(cityResponse)
+                val address = cityJson.optJSONObject("address")
+                val city = address?.optString("city") ?: address?.optString("town") ?: address?.optString("village") ?: "Unknown"
+
+                // 2. Get Weather (Temperature & Humidity)
+                val weatherUrl = URL("https://api.open-meteo.com/v1/forecast?latitude=$lat&longitude=$lon&current=temperature_2m,relative_humidity_2m")
+                val weatherResponse = weatherUrl.openStream().bufferedReader().use { it.readText() }
+                val weatherJson = JSONObject(weatherResponse)
+                val current = weatherJson.getJSONObject("current")
+                val temp = current.getDouble("temperature_2m")
+                val humidity = current.getInt("relative_humidity_2m")
+
+                // 3. Get AQI
+                val aqiUrl = URL("https://air-quality-api.open-meteo.com/v1/air-quality?latitude=$lat&longitude=$lon&current=us_aqi")
+                val aqiResponse = aqiUrl.openStream().bufferedReader().use { it.readText() }
+                val aqiJson = JSONObject(aqiResponse)
+                val aqiCurrent = aqiJson.getJSONObject("current")
+                val aqi = aqiCurrent.getInt("us_aqi")
+
+                _uiState.update { state ->
+                    state.copy(weatherInfo = WeatherInfo(
+                        temperature = temp,
+                        humidity = humidity,
+                        aqi = aqi,
+                        cityName = city,
+                        lastUpdated = System.currentTimeMillis()
+                    ))
+                }
+            } catch (e: Exception) {
+                // Keep old data if fetch fails
+            }
+        }
     }
 
     fun attemptUnlockAtLocation(tapLat: Double, tapLon: Double, pin: String): Boolean {

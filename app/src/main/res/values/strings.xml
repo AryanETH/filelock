@@ -23,8 +23,11 @@
     <string name="search_languages">Search languages...</string>
 
     <!-- Permission Screen -->
-    <string name="security_clearance">Allow Permissions</string>
-    <string name="security_clearance_desc">We need some permissions to keep your data safe. Please allow them to continue.</string>
+    <string name="security_clearance">Permission Guide</string>
+    <string name="security_clearance_desc">Permissions are only requested when needed</string>
+    <string name="privacy_note">We do not collect, store, or share any of your personal information</string>
+    <string name="ads_note">This action may contain ads</string>
+
     <string name="permission_usage_access">App Monitoring</string>
     <string name="permission_usage_access_desc">To see when you open a locked app.</string>
     <string name="permission_overlay_access">Display Over Other Apps</string>
@@ -39,28 +42,30 @@
     <string name="permission_background_activity_desc">To keep the app working 24/7 for your safety.</string>
     <string name="system_ready">All Set!</string>
     <string name="authorize">Allow</string>
-    <string name="usage_access">App Access</string>
-    <string name="usage_access_desc">To see when you open a locked app.</string>
-    <string name="overlay_access">Over Other Apps</string>
-    <string name="overlay_access_desc">To show the lock screen.</string>
+    <string name="usage_access">App Monitoring</string>
+    <string name="usage_access_desc">To see when you open a locked app</string>
+    <string name="overlay_access">Display Over Apps</string>
+    <string name="overlay_access_desc">Required to show the lock screen interface</string>
     <string name="location_access">Location</string>
-    <string name="location_access_desc">To know when you are in a safe zone.</string>
-    <string name="background_activity">Background</string>
-    <string name="background_activity_desc">To keep protection always ON.</string>
-    <string name="full_storage_access">Full Storage Access</string>
-    <string name="full_storage_access_desc">Required to delete files from gallery without multiple prompts.</string>
+    <string name="location_access_desc">Needed for GPS, nearby places, and navigation</string>
+    <string name="background_activity">Background Activity</string>
+    <string name="background_activity_desc">To keep protection active at all times</string>
+    <string name="full_storage_access">Storage Access</string>
+    <string name="full_storage_access_desc">Required to encrypt and hide your files</string>
+
 
     <!-- Onboarding -->
-    <string name="onboarding_1_title">MAPPLOCK</string>
-    <string name="onboarding_1_desc">High security hidden behind a real map. Nobody will know it\'s a lock.</string>
-    <string name="onboarding_2_title">SECRET ENTRY</string>
+    <string name="onboarding_1_title">Live Satellite View</string>
+    <string name="onboarding_1_desc">See real time satellite views and discover places with HD live maps</string>
+    <string name="onboarding_2_title">Secret Entry</string>
     <string name="onboarding_2_desc">No icons or passwords. Long-press your secret point on the map to see your files.</string>
-    <string name="onboarding_3_title">HIDE APPS</string>
+    <string name="onboarding_3_title">Vault Protection</string>
     <string name="onboarding_3_desc">Lock any app. They will only open when you are in your safe zone.</string>
-    <string name="onboarding_4_title">FILE SAFETY</string>
-    <string name="onboarding_4_desc">Your photos and videos are hidden and saved safely.</string>
-    <string name="initialize_system">START</string>
-    <string name="next">NEXT</string>
+    <string name="onboarding_4_title">Global Security</string>
+    <string name="onboarding_4_desc">Your photos and videos are hidden and saved safely with local encryption.</string>
+    <string name="initialize_system">Get Started</string>
+    <string name="next">Continue</string>
+
 
     <!-- Map Screen -->
     <string name="verify_pin">ENTER PIN</string>
@@ -70,7 +75,7 @@
     <string name="select_apps">CHOOSE APPS</string>
     <string name="save_lock">SAVE</string>
     <string name="back">BACK</string>
-    <string name="search_places">Search for a place...</string>
+    <string name="search_places">Search place...</string>
 
     <!-- Dashboard -->
     <string name="app_lock_title">Hide Apps</string>
