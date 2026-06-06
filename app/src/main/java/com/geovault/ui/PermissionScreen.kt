@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import com.geovault.ui.theme.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -39,12 +40,18 @@ fun PermissionScreen(
     onGrantLocation: () -> Unit,
     onGrantBattery: () -> Unit,
     onGrantFullStorage: () -> Unit,
-) {
+    onGrantBackgroundPopups: () -> Unit,
+    onGrantCamera: () -> Unit,
+    onGrantStorage: () -> Unit,
+){
     val allGranted = state.hasUsageStatsPermission &&
-                state.hasOverlayPermission &&
-                state.hasLocationPermission &&
-                state.hasBatteryOptimizationPermission &&
-                (android.os.Build.VERSION.SDK_INT < 30 || state.hasFullStoragePermission)
+            state.hasOverlayPermission &&
+            state.hasLocationPermission &&
+            state.hasBatteryOptimizationPermission &&
+            state.hasBackgroundPopupsPermission &&
+            state.hasCameraPermission &&
+            state.hasStoragePermission &&
+            (android.os.Build.VERSION.SDK_INT < 30 || state.hasFullStoragePermission)
 
     Scaffold(
         containerColor = Color.White,
@@ -58,17 +65,21 @@ fun PermissionScreen(
                 Button(
                     onClick = { 
                         if (!allGranted) {
-                            if (!state.hasUsageStatsPermission) onGrantUsage()
+                            if (!state.hasLocationPermission) onGrantLocation()
+                            else if (!state.hasUsageStatsPermission) onGrantUsage()
                             else if (!state.hasOverlayPermission) onGrantOverlay()
-                            else if (!state.hasLocationPermission) onGrantLocation()
+                            else if (!state.hasBackgroundPopupsPermission) onGrantBackgroundPopups()
                             else if (!state.hasBatteryOptimizationPermission) onGrantBattery()
-                            else if (android.os.Build.VERSION.SDK_INT >= 30 && !state.hasFullStoragePermission) onGrantFullStorage()
+                            else if (!state.hasCameraPermission) onGrantCamera()
+                            else if (!state.hasStoragePermission) onGrantStorage()
+                            else if (android.os.Build.VERSION.SDK_INT >= 30 && !state.hasFullStoragePermission)
+                                onGrantFullStorage()
                         }
                     },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0047FF)),
+                    colors = ButtonDefaults.buttonColors(containerColor = CyberBlue),
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Text(stringResource(R.string.next), color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
@@ -158,13 +169,45 @@ fun PermissionScreen(
             )
 
             PermissionGuideRow(
+                title = stringResource(R.string.background_popups),
+                desc = stringResource(R.string.background_popups_desc),
+                icon = Icons.Default.Launch,
+                iconBgColor = Color(0xFFF1F8E9),
+                iconColor = Color(0xFF8BC34A),
+                granted = state.hasBackgroundPopupsPermission,
+                onClick = onGrantBackgroundPopups
+            )
+
+            PermissionGuideRow(
                 title = stringResource(R.string.background_activity),
-                desc = stringResource(R.string.background_activity_desc),
+                desc = if (android.os.Build.MANUFACTURER.equals("Realme", true) || android.os.Build.MANUFACTURER.equals("Oppo", true)) 
+                    "Crucial for Realme: Enable 'Auto-start' and 'Background Activity' in settings."
+                else stringResource(R.string.background_activity_desc),
                 icon = Icons.Default.BatteryChargingFull,
                 iconBgColor = Color(0xFFFFF8E1),
                 iconColor = Color(0xFFFFC107),
                 granted = state.hasBatteryOptimizationPermission,
                 onClick = onGrantBattery
+            )
+
+            PermissionGuideRow(
+                title = stringResource(R.string.permission_camera),
+                desc = stringResource(R.string.permission_camera_desc),
+                icon = Icons.Default.CameraAlt,
+                iconBgColor = Color(0xFFF1F8E9),
+                iconColor = Color(0xFF4CAF50),
+                granted = state.hasCameraPermission,
+                onClick = onGrantCamera
+            )
+
+            PermissionGuideRow(
+                title = stringResource(R.string.permission_storage_access),
+                desc = stringResource(R.string.permission_storage_access_desc),
+                icon = Icons.Default.Collections,
+                iconBgColor = Color(0xFFE3F2FD),
+                iconColor = Color(0xFF2196F3),
+                granted = state.hasStoragePermission,
+                onClick = onGrantStorage
             )
 
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
@@ -227,7 +270,7 @@ fun PermissionGuideRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { if (!granted) onClick() }
+            .clickable { onClick() }
             .padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

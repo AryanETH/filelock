@@ -65,6 +65,7 @@ data class VaultState(
     val hasStoragePermission: Boolean = false,
     val hasFullStoragePermission: Boolean = false,
     val hasBatteryOptimizationPermission: Boolean = false,
+    val hasBackgroundPopupsPermission: Boolean = false,
 
     // Files
     val files: List<VaultFile> = emptyList(),
@@ -89,6 +90,7 @@ data class VaultState(
     val isScreenshotRestricted: Boolean = true,
     val isIndiaRegion: Boolean = false,
     val isUninstallShieldEnabled: Boolean = false,
+    val showBackgroundPopupGuide: Boolean = false,
     val pendingDeleteIntent: android.app.PendingIntent? = null,
     
     // Import/Export Progress
@@ -115,4 +117,3 @@ data class OperationProgress(
     val speedMbps: Double = 0.0,
     val timeRemainingSeconds: Long = 0
 )
-

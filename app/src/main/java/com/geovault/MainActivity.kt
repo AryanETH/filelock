@@ -26,6 +26,7 @@ import com.geovault.ui.OnboardingScreen
 import com.geovault.ui.PermissionScreen
 import com.geovault.ui.IntroScreen
 import com.geovault.ui.LanguageOnboardingScreen
+import com.geovault.ui.BackgroundPopupGuideDialog
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -43,6 +44,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import com.geovault.ui.theme.GeoVaultTheme
 import com.geovault.ui.theme.CyberBlue
+import com.geovault.ui.theme.CyberNavy
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
@@ -65,11 +67,20 @@ import androidx.core.content.edit
 
 import androidx.appcompat.app.AppCompatActivity
 import com.geovault.security.SecurityUtils
+import com.geovault.security.LocaleManager
 import android.widget.Toast
+import androidx.annotation.OptIn
+import androidx.media3.common.util.UnstableApi
 
 class MainActivity : AppCompatActivity() {
     private val viewModel: VaultViewModel by viewModels()
 
+    override fun attachBaseContext(newBase: Context) {
+        val lang = LocaleManager.getLanguage(newBase)
+        super.attachBaseContext(LocaleManager.getLocaleContext(newBase, lang))
+    }
+
+    @OptIn(UnstableApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -78,11 +89,17 @@ class MainActivity : AppCompatActivity() {
 
         // Root Detection
         if (SecurityUtils.isDeviceRooted()) {
-            Toast.makeText(this, "Security Alert: Rooted device detected. Some features may be disabled.", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "Security Alert: Rooted device detected.", Toast.LENGTH_LONG).show()
         }
 
         WindowCompat.setDecorFitsSystemWindows(window, false)
-        MapLibre.getInstance(this)
+        
+        try {
+            MapLibre.getInstance(this)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
         setContent {
             val uiState by viewModel.uiState.collectAsState()
             var showSplash by remember { mutableStateOf(true) }
@@ -110,7 +127,15 @@ class MainActivity : AppCompatActivity() {
                     viewModel.checkPermissions()
                     
                     if (results[Manifest.permission.ACCESS_FINE_LOCATION] == false) {
-                        Toast.makeText(this@MainActivity, "Please turn on Location to access Map-Gate", Toast.LENGTH_LONG).show()
+                        Toast.makeText(this@MainActivity, "Location is required for Map Security", Toast.LENGTH_LONG).show()
+                    }
+                }
+
+                val resolutionLauncher = rememberLauncherForActivityResult(
+                    contract = ActivityResultContracts.StartIntentSenderForResult()
+                ) { result ->
+                    if (result.resultCode == RESULT_OK) {
+                        viewModel.checkPermissions()
                     }
                 }
 
@@ -118,9 +143,6 @@ class MainActivity : AppCompatActivity() {
                     contract = ActivityResultContracts.StartIntentSenderForResult()
                 ) { _ ->
                     viewModel.setPerformingAction(false)
-                    // if (result.resultCode == RESULT_OK) {
-                    //     // Deletion confirmed
-                    // }
                     viewModel.clearPendingDelete()
                 }
 
@@ -134,8 +156,6 @@ class MainActivity : AppCompatActivity() {
 
                 LaunchedEffect(Unit) {
                     val permissions = mutableListOf<String>()
-                    
-                    // ALL permissions at once as requested
                     permissions.add(Manifest.permission.ACCESS_FINE_LOCATION)
                     permissions.add(Manifest.permission.ACCESS_COARSE_LOCATION)
                     permissions.add(Manifest.permission.CAMERA)
@@ -157,17 +177,20 @@ class MainActivity : AppCompatActivity() {
                     permissionLauncher.launch(permissions.toTypedArray())
                 }
 
-                // Tracking location
                 LaunchedEffect(Unit) {
                     viewModel.checkPermissions()
-                    // Re-start the service to ensure it's active
                     val serviceIntent = Intent(context, com.geovault.service.AppLockerService::class.java)
                     context.startService(serviceIntent)
                 }
 
                 LaunchedEffect(uiState.vaults) {
+                    if (uiState.vaults.isEmpty()) return@LaunchedEffect
+                    
                     val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
-                    val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 5000).build()
+                    // BATTERY OPTIMIZATION: Reduce interval to 15 seconds instead of 5, and use BALANCED power
+                    val locationRequest = LocationRequest.Builder(Priority.PRIORITY_BALANCED_POWER_ACCURACY, 15000)
+                        .setMinUpdateIntervalMillis(10000)
+                        .build()
                     
                     val locationCallback = object : LocationCallback() {
                         override fun onLocationResult(result: LocationResult) {
@@ -191,8 +214,19 @@ class MainActivity : AppCompatActivity() {
                             showSplash -> "intro"
                             uiState.isFirstRun && !uiState.isLanguageSelected -> "language_selection"
                             uiState.isFirstRun -> "onboarding"
-                            !uiState.hasUsageStatsPermission || !uiState.hasOverlayPermission || !uiState.hasLocationPermission || !uiState.hasBatteryOptimizationPermission || !uiState.hasCameraPermission || !uiState.hasStoragePermission || (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !uiState.hasFullStoragePermission) -> "permissions"
+
+                            !uiState.hasUsageStatsPermission ||
+                                    !uiState.hasOverlayPermission ||
+                                    !uiState.hasLocationPermission ||
+                                    !uiState.hasBatteryOptimizationPermission ||
+                                    !uiState.hasCameraPermission ||
+                                    !uiState.hasStoragePermission ||
+                                    !uiState.hasBackgroundPopupsPermission ||
+                                    (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !uiState.hasFullStoragePermission)
+                                -> "permissions"
+
                             uiState.isMapDownloading -> "downloading"
+
                             else -> "vault"
                         },
                         transitionSpec = {
@@ -219,9 +253,10 @@ class MainActivity : AppCompatActivity() {
                                     state = uiState,
                                     onGrantUsage = { viewModel.openUsageStatsSettings() },
                                     onGrantOverlay = { viewModel.openOverlaySettings() },
+                                    onGrantBackgroundPopups = { viewModel.setShowBackgroundPopupGuide(true) },
                                     onGrantLocation = {
                                         viewModel.setPerformingAction(true)
-                                        checkLocationSettings(this@MainActivity) {
+                                        checkLocationSettings(this@MainActivity, resolutionLauncher) {
                                             permissionLauncher.launch(
                                                 arrayOf(
                                                     Manifest.permission.ACCESS_FINE_LOCATION,
@@ -232,6 +267,18 @@ class MainActivity : AppCompatActivity() {
                                     },
                                     onGrantBattery = {
                                         viewModel.openProtectedAppsSettings()
+                                    },
+                                    onGrantCamera = {
+                                        viewModel.setPerformingAction(true)
+                                        permissionLauncher.launch(arrayOf(Manifest.permission.CAMERA))
+                                    },
+                                    onGrantStorage = {
+                                        viewModel.setPerformingAction(true)
+                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                            permissionLauncher.launch(arrayOf(Manifest.permission.READ_MEDIA_IMAGES))
+                                        } else {
+                                            permissionLauncher.launch(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE))
+                                        }
                                     },
                                     onGrantFullStorage = {
                                         viewModel.openFullStorageSettings()
@@ -278,6 +325,7 @@ class MainActivity : AppCompatActivity() {
                                     onGrantFullStorage = {
                                         viewModel.openFullStorageSettings()
                                     },
+                                    onGrantBackgroundPopups = { viewModel.setShowBackgroundPopupGuide(true) },
                                     onDeleteFile = { fileId -> viewModel.removeFileFromVault(fileId) },
                                     onRestoreFile = { fileId -> viewModel.restoreFileToGallery(fileId) },
                                     onRemoveAppFromVault = { vaultId, pkg -> viewModel.removeAppFromSpecificVault(vaultId, pkg) },
@@ -294,17 +342,34 @@ class MainActivity : AppCompatActivity() {
                                     onAddFilesToFolder = { uris, folder -> viewModel.addFilesToVault(uris, com.geovault.model.FileCategory.OTHER, folder) },
                                     onFetchWeather = { lat, lon -> viewModel.fetchWeatherAndAQI(lat, lon) },
                                     onStartAction = { viewModel.setPerformingAction(true) },
-                                    onEndAction = { viewModel.setPerformingAction(false) }
+                                    onEndAction = { viewModel.setPerformingAction(false) },
+                                    onRequestGps = { onEnabled ->
+                                        checkLocationSettings(this@MainActivity, resolutionLauncher) {
+                                            onEnabled()
+                                        }
+                                    }
                                 )
                             }
                         }
                     }
                 }
+
+                if (uiState.showBackgroundPopupGuide) {
+                    BackgroundPopupGuideDialog(
+                        onDismiss = {
+                            viewModel.openBackgroundPopupSettings()
+                        }
+                    )
+                }
             }
         }
     }
 
-    private fun checkLocationSettings(context: Context, onAlreadyEnabled: () -> Unit) {
+    private fun checkLocationSettings(
+        context: Context,
+        launcher: androidx.activity.result.ActivityResultLauncher<androidx.activity.result.IntentSenderRequest>,
+        onAlreadyEnabled: () -> Unit
+    ) {
         val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 5000).build()
         val builder = LocationSettingsRequest.Builder().addLocationRequest(locationRequest)
         val client: SettingsClient = LocationServices.getSettingsClient(context)
@@ -317,15 +382,11 @@ class MainActivity : AppCompatActivity() {
         task.addOnFailureListener { exception ->
             if (exception is ResolvableApiException) {
                 try {
-                    // This is for a standard Activity. For ComponentActivity/Compose,
-                    // we might need a different launcher if we want to handle the result,
-                    // but usually, StartIntentSenderForResult is enough for this system dialog.
-                    exception.startResolutionForResult(this@MainActivity, 1001)
+                    val intentSenderRequest = androidx.activity.result.IntentSenderRequest.Builder(exception.resolution).build()
+                    launcher.launch(intentSenderRequest)
                 } catch (sendEx: IntentSender.SendIntentException) {
-                    // Ignore the error.
                 }
             } else {
-                // Settings are not available
                 onAlreadyEnabled()
             }
         }
@@ -333,10 +394,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
-        
-        // BUG FIX: Only lock if we are NOT performing an internal action (like picking files or sharing)
         if (!viewModel.isPerformingAction()) {
-            // Clear any bypass token when user leaves the main app
             com.geovault.security.SecureManager.getInstance(this).prefs.edit {
                 remove("bypass_package")
             }
@@ -364,9 +422,8 @@ class MainActivity : AppCompatActivity() {
             contentAlignment = Alignment.Center
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                // Circular loading as requested in "start animation downloading map"
                 CircularProgressIndicator(
-                    color = CyberBlue,
+                    color = CyberNavy,
                     modifier = Modifier.size(64.dp),
                     strokeWidth = 6.dp
                 )

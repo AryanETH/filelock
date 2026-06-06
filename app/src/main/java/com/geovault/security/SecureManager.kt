@@ -12,13 +12,25 @@ class SecureManager(context: Context) {
         .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
         .build()
 
-    val prefs: SharedPreferences = EncryptedSharedPreferences.create(
-        context,
-        "secure_vault_prefs",
-        masterKey,
-        EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-        EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-    )
+    val prefs: SharedPreferences = try {
+        EncryptedSharedPreferences.create(
+            context,
+            "secure_vault_prefs",
+            masterKey,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
+    } catch (e: Exception) {
+        // Recovery: If encrypted prefs are corrupted, clear and re-create
+        context.getSharedPreferences("secure_vault_prefs", Context.MODE_PRIVATE).edit().clear().apply()
+        EncryptedSharedPreferences.create(
+            context,
+            "secure_vault_prefs",
+            masterKey,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
+    }
 
     fun saveFileInfo(id: String, name: String, path: String, category: FileCategory, size: Long, thumbPath: String? = null, folderName: String? = null) {
         val fileIds = (prefs.getStringSet("vault_file_ids", emptySet()) ?: emptySet()).toMutableSet()

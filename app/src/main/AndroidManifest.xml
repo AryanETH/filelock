@@ -2,37 +2,47 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- 📷 Camera - Required for Intruder Selfie -->
+    <!--  📷 Camera - Required for Intruder Selfie  -->
     <uses-permission android:name="android.permission.CAMERA" />
-    <uses-feature android:name="android.hardware.camera" android:required="false" />
-    <uses-feature android:name="android.hardware.camera.front" android:required="false" />
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.camera.front"
+        android:required="false" />
 
-    <!-- 📁 Storage - Required for File Vault (Scoped Storage used where possible) -->
-    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" tools:ignore="ScopedStorage" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29" />
+    <!--  📁 Storage - Required for File Vault (Scoped Storage used where possible)  -->
+    <uses-permission
+        android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
+        tools:ignore="ScopedStorage" />
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="29" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
 
-    <!-- 🌐 Network - Required for Map Tiles (OpenFreeMap) -->
+    <!--  🌐 Network - Required for Map Tiles (OpenFreeMap)  -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
-    <!-- 📍 Location - Required for Coordinate-Based Locking -->
+    <!--  📍 Location - Required for Coordinate-Based Locking  -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
 
-    <!-- 🔑 Biometric - Required for Secure Unlock -->
+    <!--  🔑 Biometric - Required for Secure Unlock  -->
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
     <uses-permission android:name="android.permission.USE_FINGERPRINT" />
 
-    <!-- 🔔 Notifications & Feedback -->
+    <!--  🔔 Notifications & Feedback  -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.VIBRATE" />
 
-    <!-- 🔋 Background Control - Required for Active Monitoring -->
+    <!--  🔋 Background Control - Required for Active Monitoring  -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
@@ -40,12 +50,16 @@
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
-    <!-- 🪟 System Overlay - Required for App Locking UI -->
+    <!--  🪟 System Overlay - Required for App Locking UI  -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
-    <!-- 📦 App Management - Required to Detect Launched Apps -->
-    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" tools:ignore="QueryAllPackagesPermission" />
-    <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" tools:ignore="ProtectedPermissions" />
+    <!--  📦 App Management - Required to Detect Launched Apps  -->
+    <uses-permission
+        android:name="android.permission.QUERY_ALL_PACKAGES"
+        tools:ignore="QueryAllPackagesPermission" />
+    <uses-permission
+        android:name="android.permission.PACKAGE_USAGE_STATS"
+        tools:ignore="ProtectedPermissions" />
 
     <application
         android:name=".GeoVaultApp"
@@ -68,6 +82,18 @@
             </intent-filter>
         </activity>
 
+        <service
+            android:name="androidx.appcompat.app.AppLocalesMetadataHolderService"
+            android:enabled="false"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="androidx.appcompat.app.AppLocalesMetadataHolderService" />
+            </intent-filter>
+            <meta-data
+                android:name="auto_store_locales"
+                android:value="true" />
+        </service>
+
         <activity
             android:name=".LockActivity"
             android:exported="false"
@@ -77,8 +103,7 @@
             android:noHistory="true"
             android:taskAffinity="com.geovault.lockstack"
             android:launchMode="singleTask"
-            android:configChanges="locale|layoutDirection|orientation|screenSize|keyboardHidden">
-        </activity>
+            android:configChanges="locale|layoutDirection|orientation|screenSize|keyboardHidden"> </activity>
 
         <service
             android:name=".service.WindowChangeDetector"
@@ -96,11 +121,17 @@
             android:name=".service.AppLockerService"
             android:exported="false"
             android:foregroundServiceType="specialUse">
-            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value="App usage monitoring for security and privacy protection" />
-            <property android:name="android.app.PROPERTY_SPECIAL_USE_FQS_REASON" android:value="This service monitors app launches to provide real-time security overlays for user-selected applications." />
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="App usage monitoring for security and privacy protection" />
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FQS_REASON"
+                android:value="This service monitors app launches to provide real-time security overlays for user-selected applications." />
         </service>
 
-        <receiver android:name=".service.BootReceiver" android:exported="true">
+        <receiver
+            android:name=".service.BootReceiver"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
@@ -133,12 +164,20 @@
             android:name=".core.ProxyActivity"
             android:exported="false"
             android:theme="@style/Theme.GeoVault"
-            android:configChanges="orientation|screenSize|keyboardHidden">
-        </activity>
+            android:configChanges="orientation|screenSize|keyboardHidden"> </activity>
 
-        <activity android:name=".core.ProxyActivity$Stub1" android:theme="@style/Theme.GeoVault" android:exported="false" />
-        <activity android:name=".core.ProxyActivity$Stub2" android:theme="@style/Theme.GeoVault" android:exported="false" />
-        <activity android:name=".core.ProxyActivity$Stub3" android:theme="@style/Theme.GeoVault" android:exported="false" />
+        <activity
+            android:name=".core.ProxyActivity$Stub1"
+            android:theme="@style/Theme.GeoVault"
+            android:exported="false" />
+        <activity
+            android:name=".core.ProxyActivity$Stub2"
+            android:theme="@style/Theme.GeoVault"
+            android:exported="false" />
+        <activity
+            android:name=".core.ProxyActivity$Stub3"
+            android:theme="@style/Theme.GeoVault"
+            android:exported="false" />
 
         <provider
             android:name="androidx.core.content.FileProvider"
@@ -149,7 +188,5 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
-
     </application>
-
 </manifest>

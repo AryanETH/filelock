@@ -55,6 +55,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import coil.compose.AsyncImage
+import com.geovault.ui.theme.*
 import com.geovault.R
 import androidx.compose.ui.res.stringResource
 import com.geovault.model.FileCategory
@@ -80,13 +81,16 @@ import kotlin.math.roundToInt
 fun MediaViewerScreen(
     file: VaultFile,
     allFiles: List<VaultFile> = emptyList(),
-    isDarkMode: Boolean = true,
+    isDarkMode: Boolean = true, // Still kept for signature, but will be ignored for players
     onBack: () -> Unit,
     onDelete: (String) -> Unit,
     onRestore: (String) -> Unit,
     onStartAction: () -> Unit = {},
     onEndAction: () -> Unit = {}
 ) {
+    // FORCE DARK THEME for players as requested
+    val forcedDarkTheme = true
+    
     val context = LocalContext.current
     val activity = context as? Activity
 
@@ -144,8 +148,8 @@ fun MediaViewerScreen(
                 if (!tempFile.exists()) {
                     try {
                         cryptoManager.decryptToStream(
-                            File(f.encryptedPath).inputStream().buffered(1024 * 256),
-                            FileOutputStream(tempFile).buffered(1024 * 256)
+                            File(f.encryptedPath).inputStream().buffered(1024 * 512), // Larger buffer for speed
+                            FileOutputStream(tempFile).buffered(1024 * 512)
                         )
                     } catch (e: Exception) {}
                 }
@@ -241,8 +245,8 @@ fun MediaViewerScreen(
                                 // We use a high-speed buffer and check existence first.
                                 if (!tempFile.exists()) {
                                     cryptoManager.decryptToStream(
-                                        File(currentFile.encryptedPath).inputStream().buffered(1024 * 256), // 256KB buffer
-                                        FileOutputStream(tempFile).buffered(1024 * 256)
+                                        File(currentFile.encryptedPath).inputStream().buffered(1024 * 512), // 512KB buffer
+                                        FileOutputStream(tempFile).buffered(1024 * 512)
                                     )
                                 }
                                 decryptedFile = tempFile
@@ -253,20 +257,26 @@ fun MediaViewerScreen(
 
                     if (decryptedFile != null) {
                         Box(Modifier.fillMaxSize()) {
-                            val isDark = isDarkMode
-                            when (currentFile.category) {
-                                FileCategory.PHOTO, FileCategory.INTRUDER -> PhotoViewer(decryptedFile!!, isDark)
-                                FileCategory.VIDEO -> VideoViewer(decryptedFile!!, isVisible, isDark)
-                                FileCategory.AUDIO -> AudioViewer(decryptedFile!!, isVisible, currentFile.thumbnailPath, isDark)
-                                FileCategory.DOCUMENT -> {
-                                    if (currentFile.originalName.lowercase().endsWith(".pdf")) {
-                                        PdfViewer(decryptedFile!!)
-                                    } else {
-                                        ExternalViewer(currentFile.originalName)
-                                    }
+                            val isDark = forcedDarkTheme
+                                val displayCategory = if (currentFile.category == FileCategory.OTHER) {
+                                    inferCategoryFromFileName(currentFile.originalName)
+                                } else {
+                                    currentFile.category
                                 }
-                                else -> ExternalViewer(currentFile.originalName)
-                            }
+
+                                when (displayCategory) {
+                                    FileCategory.PHOTO, FileCategory.INTRUDER -> PhotoViewer(decryptedFile!!, isDark)
+                                    FileCategory.VIDEO -> VideoViewer(decryptedFile!!, isVisible, isDark)
+                                    FileCategory.AUDIO -> AudioViewer(decryptedFile!!, isVisible, currentFile.thumbnailPath, isDark)
+                                    FileCategory.DOCUMENT -> {
+                                        if (currentFile.originalName.lowercase().endsWith(".pdf")) {
+                                            PdfViewer(decryptedFile!!)
+                                        } else {
+                                            ExternalViewer(currentFile.originalName)
+                                        }
+                                    }
+                                    else -> ExternalViewer(currentFile.originalName)
+                                }
                         }
                     } else if (isDecrypting) {
                         Box(contentAlignment = Alignment.Center) {
@@ -498,19 +508,19 @@ fun VideoViewer(file: File, isVisible: Boolean, isDark: Boolean = true) {
                             ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
                         }
                     }) {
-                        Icon(Icons.Default.ScreenRotation, null, tint = if (isDark) Color.White else Color.Black)
+                        Icon(Icons.Default.ScreenRotation, null, tint = if (isDark) Color.White else CyberBlue)
                     }
                 }
 
                 // Center Play/Pause
                 IconButton(
                     onClick = { if (isPlaying) exoPlayer.pause() else exoPlayer.play() },
-                    modifier = Modifier.align(Alignment.Center).size(80.dp).background(if (isDark) Color.White else Color.Black, CircleShape)
+                    modifier = Modifier.align(Alignment.Center).size(80.dp).background(if (isDark) Color.White else LightPrimary, CircleShape)
                 ) {
                     Icon(
                         if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
                         null,
-                        tint = if (isDark) Color.Black else Color.White,
+                        tint = if (isDark) CyberBlue else Color.White,
                         modifier = Modifier.size(40.dp)
                     )
                 }
@@ -534,7 +544,7 @@ fun VideoViewer(file: File, isVisible: Boolean, isDark: Boolean = true) {
                         onValueChange = { exoPlayer.seekTo((it * duration).toLong()) },
                         colors = SliderDefaults.colors(
                             thumbColor = if (isDark) Color.White else Color.Black,
-                            activeTrackColor = if (isDark) CyberBlue else AppBlue,
+                            activeTrackColor = CyberBlue,
                             inactiveTrackColor = (if (isDark) Color.White else Color.Black).copy(alpha = 0.3f)
                         )
                     )
@@ -668,7 +678,7 @@ fun AudioViewer(file: File, isVisible: Boolean, thumbnailPath: String? = null, i
                 label = "rotation"
             )
             val color1 by infiniteTransition.animateColor(
-                initialValue = CyberPurple,
+                initialValue = CyberBlue,
                 targetValue = CyberBlue,
                 animationSpec = infiniteRepeatable(
                     animation = tween(3000, easing = LinearEasing),
@@ -678,7 +688,7 @@ fun AudioViewer(file: File, isVisible: Boolean, thumbnailPath: String? = null, i
             )
             val color2 by infiniteTransition.animateColor(
                 initialValue = CyberBlue,
-                targetValue = CyberPurple,
+                targetValue = CyberBlue,
                 animationSpec = infiniteRepeatable(
                     animation = tween(3000, easing = LinearEasing),
                     repeatMode = RepeatMode.Reverse
@@ -737,7 +747,7 @@ fun AudioViewer(file: File, isVisible: Boolean, thumbnailPath: String? = null, i
                 onValueChange = { exoPlayer.seekTo((it * duration).toLong()) },
                 colors = SliderDefaults.colors(
                     thumbColor = if (isDark) Color.White else Color.Black,
-                    activeTrackColor = CyberPurple,
+                    activeTrackColor = CyberBlue,
                     inactiveTrackColor = (if (isDark) Color.White else Color.Black).copy(alpha = 0.1f)
                 ),
                 modifier = Modifier.fillMaxWidth()
@@ -771,7 +781,7 @@ fun AudioViewer(file: File, isVisible: Boolean, thumbnailPath: String? = null, i
                         Icon(
                             if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
                             null,
-                            tint = if (isDark) Color.Black else Color.White,
+                            tint = if (isDark) CyberBlue else Color.White,
                             modifier = Modifier.size(32.dp)
                         )
                     }
@@ -908,5 +918,16 @@ private fun shareFile(context: android.content.Context, file: File) {
         context.startActivity(Intent.createChooser(intent, "Open with").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     } catch (e: Exception) {
         android.widget.Toast.makeText(context, "No app found", android.widget.Toast.LENGTH_SHORT).show()
+    }
+}
+
+private fun inferCategoryFromFileName(fileName: String): FileCategory {
+    val ext = fileName.lowercase().substringAfterLast(".", "")
+    return when (ext) {
+        "jpg", "jpeg", "png", "webp", "gif", "bmp" -> FileCategory.PHOTO
+        "mp4", "mkv", "mov", "avi", "3gp", "webm" -> FileCategory.VIDEO
+        "mp3", "wav", "m4a", "aac", "ogg", "flac" -> FileCategory.AUDIO
+        "pdf", "doc", "docx", "txt", "xls", "xlsx", "ppt", "pptx" -> FileCategory.DOCUMENT
+        else -> FileCategory.OTHER
     }
 }

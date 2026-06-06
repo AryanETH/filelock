@@ -3,7 +3,7 @@
 <string name="app_name">मैप लॉक</string>
 <string name="accessibility_description">आपके लॉक किए गए ऐप्स की सुरक्षा के लिए।</string>
 
-<!-- Simplified Jargon -->
+<!--  Simplified Jargon  -->
 <string name="vault">सुरक्षित क्षेत्र</string>
 <string name="vault_plural">सुरक्षित क्षेत्र</string>
 <string name="hidden_files">गुप्त फाइलें</string>
@@ -13,7 +13,7 @@
 <string name="global_lock">सब लॉक करें</string>
 <string name="stealth_entry">गुप्त एंट्री</string>
 
-<!-- Language Screen -->
+<!--  Language Screen  -->
 <string name="select_language">भाषा चुनें</string>
 <string name="english">English</string>
 <string name="hindi">हिन्दी</string>
@@ -22,7 +22,7 @@
 <string name="language">भाषा</string>
 <string name="search_languages">भाषा खोजें...</string>
 
-<!-- Permission Screen -->
+<!--  Permission Screen  -->
 <string name="security_clearance">अनुमति गाइड</string>
 <string name="security_clearance_desc">अनुमतियाँ केवल आवश्यकता होने पर ही मांगी जाती हैं</string>
 <string name="privacy_note">हम आपकी कोई भी व्यक्तिगत जानकारी एकत्र, सुरक्षित या साझा नहीं करते हैं</string>
@@ -38,8 +38,8 @@
 <string name="permission_location_access_desc">ताकि सुरक्षित क्षेत्र में ऐप अपने आप लॉक/अनलॉक हो सकें।</string>
 <string name="permission_storage_access">स्टोरेज</string>
 <string name="permission_storage_access_desc">आपकी फोटो और वीडियो को सुरक्षित छिपाने के लिए।</string>
-<string name="permission_background_activity">बैकग्राउंड में चलाएं</string>
-<string name="permission_background_activity_desc">ऐप को हमेशा चालू रखने के लिए ताकि आप सुरक्षित रहें।</string>
+<string name="permission_background_activity">बैटरी अनुकूलन रोकें</string>
+<string name="permission_background_activity_desc">लॉक सेवा को सिस्टम द्वारा बंद किए बिना चलाने की अनुमति देता है।</string>
 <string name="system_ready">सब तैयार है!</string>
 <string name="authorize">अनुमति दें</string>
 <string name="usage_access">ऐप एक्सेस</string>
@@ -48,10 +48,10 @@
 <string name="overlay_access_desc">लॉक स्क्रीन दिखाने के लिए।</string>
 <string name="location_access">लोकेशन</string>
 <string name="location_access_desc">यह जानने के लिए कि आप सुरक्षित जगह पर हैं।</string>
-<string name="background_activity">बैकग्राउंड</string>
-<string name="background_activity_desc">सुरक्षा को हमेशा चालू रखने के लिए।</string>
+<string name="background_activity">बैटरी अनुकूलन रोकें</string>
+<string name="background_activity_desc">लॉक सेवा को सिस्टम द्वारा बंद किए बिना चलाने की अनुमति देता है।</string>
 
-<!-- Onboarding -->
+<!--  Onboarding  -->
 <string name="onboarding_1_title">MAP LOCK</string>
 <string name="onboarding_1_desc">असली मैप के पीछे छिपी तगड़ी सुरक्षा। किसी को पता भी नहीं चलेगा।</string>
 <string name="onboarding_2_title">गुप्त एंट्री</string>
@@ -63,7 +63,7 @@
 <string name="initialize_system">शुरू करें</string>
 <string name="next">अगला</string>
 
-<!-- Map Screen -->
+<!--  Map Screen  -->
 <string name="verify_pin">पिन डालें</string>
 <string name="verify_pattern">पैटर्न बनाएं</string>
 <string name="cancel">रद्द करें</string>
@@ -73,7 +73,7 @@
 <string name="back">पीछे</string>
 <string name="search_places">जगह खोजें...</string>
 
-<!-- Dashboard -->
+<!--  Dashboard  -->
 <string name="app_lock_title">ऐप्स छिपाएं</string>
 <string name="app_lock_subtitle">अपने ऐप्स को प्राइवेट रखें</string>
 <string name="history_title">लॉक ऐप्स</string>
@@ -87,7 +87,7 @@
 <string name="recycle_bin">रीसायकल बिन</string>
 <string name="items_count">%1$d आइटम</string>
 
-<!-- media viewer screen -->
+<!--  media viewer screen  -->
 <string name="save_to_gallery">गैलरी में सेव करें</string>
 <string name="open_in">इसमें खोलें</string>
 <string name="restore">वापस लाएं</string>
@@ -104,7 +104,7 @@
 <string name="no_preview">No preview for %1$s</string>
 <string name="open_in_hint">दूसरे ऐप से देखने के लिए \'Open In\' का उपयोग करें।</string>
 
-<!-- Settings -->
+<!--  Settings  -->
 <string name="system_permissions">अनुमतियाँ (Permissions)</string>
 <string name="permission_app_detection">ऐप पहचान</string>
 <string name="permission_app_detection_desc">लॉक ऐप्स को पहचानने के लिए।</string>
@@ -122,8 +122,12 @@
 <string name="global_lock_desc">सभी चुने हुए ऐप्स को एक साथ लॉक करें।</string>
 <string name="dark_mode">डार्क मोड</string>
 <string name="dark_mode_desc">लाइट और डार्क थीम बदलें।</string>
+<string name="full_storage_access">स्टोरेज एक्सेस</string>
+<string name="full_storage_access_desc">आपकी फ़ाइलों को एन्क्रिप्ट और छिपाने के लिए आवश्यक है।</string>
+<string name="background_popups">बैकग्राउंड पॉप-अप</string>
+<string name="background_popups_desc">यहाँ टैप करें → Special app access → Display pop-ups while in background → Allow करें</string>
 
-<!-- Tour -->
+<!--  Tour  -->
 <string name="tour_skip">छोड़ें</string>
 <string name="tour_next">अगला</string>
 <string name="tour_welcome">स्वागत है! आपकी प्राइवेसी अब मैप पर छिपी है।</string>
@@ -146,12 +150,13 @@
 <string name="fingerprint_unlock">फिंगरप्रिंट</string>
 <string name="fingerprint_unlock_desc">लॉक खोलने के लिए फिंगरप्रिंट का उपयोग करें।</string>
 <string name="support_links">सहायता और कानूनी</string>
+<string name="tutorial">ट्यूटोरियल (वीडियो देखें)</string>
 <string name="feedback">फीडबैक भेजें</string>
 <string name="terms_of_use">उपयोग की शर्तें</string>
 <string name="faq">सवाल और जवाब</string>
 <string name="privacy_policy">प्राइवेसी पॉलिसी</string>
 
-<!-- VaultContentScreen -->
+<!--  VaultContentScreen  -->
 <string name="settings">सेटिंग्स</string>
 <string name="lock">लॉक</string>
 <string name="add">जोड़ें</string>
@@ -177,7 +182,7 @@
 <string name="grant">अनुमति दें</string>
 <string name="vault_id_label">क्षेत्र %1$s</string>
 
-<!-- MapSelectionScreen -->
+<!--  MapSelectionScreen  -->
 <string name="access_granted">एक्सेस मिल गया</string>
 <string name="zone_restricted">एक्सेस मना है</string>
 <string name="system_initialization">सेटअप हो रहा है...</string>
@@ -199,7 +204,7 @@
 <string name="fingerprint">फिंगरप्रिंट</string>
 <string name="tap_target_coordinates">अपनी गुप्त मैप जगह पर टैप करें</string>
 
-<!-- Dashboard Tour -->
+<!--  Dashboard Tour  -->
 <string name="tour_dash_welcome_title">मैप लॉक में आपका स्वागत है</string>
 <string name="tour_dash_welcome_desc">आपकी प्राइवेसी हमारे पास सुरक्षित है। चलिए एक छोटा दौरा करते हैं।</string>
 <string name="tour_dash_hide_apps_title">ऐप्स छिपाएं</string>

@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.geovault.ui.theme.CyberBlack
 import com.geovault.ui.theme.CyberBlue
+import com.geovault.ui.theme.CyberNavy
 import com.geovault.R
 
 @Composable
@@ -55,7 +56,7 @@ fun IntroScreen() {
                 modifier = Modifier
                     .size(120.dp)
                     .scale(scale)
-                    .background(CyberBlue.copy(alpha = 0.1f * opacity), shape = androidx.compose.foundation.shape.CircleShape),
+                    .background(CyberNavy.copy(alpha = 0.1f * opacity), shape = androidx.compose.foundation.shape.CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Image(
@@ -64,26 +65,6 @@ fun IntroScreen() {
                     modifier = Modifier.size(100.dp).scale(scale)
                 )
             }
-            
-            Spacer(modifier = Modifier.height(24.dp))
-            
-            Text(
-                "Mapplock",
-                style = MaterialTheme.typography.headlineLarge,
-                color = Color.Black,
-                fontWeight = FontWeight.ExtraBold,
-                letterSpacing = 4.sp,
-                modifier = Modifier.scale(scale)
-            )
-            
-            Text(
-                "SECURE MAP VAULT",
-                style = MaterialTheme.typography.labelMedium,
-                color = CyberBlue,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 2.sp,
-                modifier = Modifier.padding(top = 8.dp)
-            )
         }
     }
 }

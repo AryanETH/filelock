@@ -13,6 +13,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.geovault.model.supportedLanguages
+import com.geovault.ui.theme.*
 import com.geovault.ui.theme.CyberBlue
 
 @OptIn(ExperimentalMaterial3Api::class)

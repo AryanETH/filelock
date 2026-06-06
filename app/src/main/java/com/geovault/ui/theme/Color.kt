@@ -2,19 +2,27 @@ package com.geovault.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Brand Colors
-val ElectricBlue = Color(0xFF09A4FC)
-val PrimaryBlue = Color(0xFF0467DD)
-val RoyalBlue = Color(0xFF0A4AB3)
-val DeepNavyBlue = Color(0xFF113489)
+// Unified Primary Brand Color (Cyber Blue)
+val CyberBlue = Color(0xFF09A4FC)
+val PrimaryBrandColor = CyberBlue
+
+// Legacy Aliases (pointing to unified color)
+val ElectricBlue = CyberBlue
+val BrandBlue = CyberBlue
+val PrimaryBlue = CyberBlue
+val RoyalBlue = CyberBlue
+val DeepNavyBlue = CyberBlue
+val AppBlue = CyberBlue
+val LightPrimary = CyberBlue
+
 val CyanHighlight = Color(0xFF3FCDFC)
 val SoftBlueGray = Color(0xFF86A3D3)
 val LightBackgroundTint = Color(0xFFDEE4F2)
 
-// Cyber Security Palette (Keep for Dark Theme or specific elements)
+// Cyber Security Palette
 val CyberBlack = Color(0xFF0A0E14)
 val CyberDarkBlue = Color(0xFF101720)
-val CyberBlue = ElectricBlue
+val CyberNavy = CyberDarkBlue
 val CyberPurple = Color(0xFF7000FF)
 val CyberNeonGreen = Color(0xFF00FF94)
 val CyberNeonRed = Color(0xFFFF3131)
@@ -31,9 +39,10 @@ val LightTextPrimary = Color(0xFF1A1C1E)
 val LightTextSecondary = Color(0xFF44474E)
 val LightSurfaceVariant = Color(0xFFE1E2EC)
 val LightOutline = Color(0xFF74777F)
+val LightBackground = Color(0xFFFDFBF7)
+val LightSurface = Color(0xFFFFFFFF)
 
-// New UI Palette based on screenshots
-val AppBlue = PrimaryBlue
+// New UI Palette components
 val FolderPurple = Color(0xFF5416FA)
 val LightGrayBackground = Color(0xFFF1F3F4)
 val SurfaceCard = Color(0xFFFFFFFF)
@@ -49,7 +58,7 @@ val SoftPurple = Color(0xFFF3E5F5)
 val SoftGray = Color(0xFFECEFF1)
 
 // Icon Colors
-val IconBlue = Color(0xFF42A5F5)
+val IconBlue = CyberBlue
 val IconOrange = Color(0xFFFFA726)
 val IconRed = Color(0xFFEF5350)
 val IconGreen = Color(0xFF66BB6A)

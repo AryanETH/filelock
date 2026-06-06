@@ -68,6 +68,7 @@ fun LocalFilePicker(
     initialCategory: FileCategory,
     galleryItems: List<GalleryItem>,
     isFetching: Boolean,
+    isDark: Boolean,
     onCategoryChanged: (FileCategory) -> Unit,
     onHide: (List<Uri>) -> Unit,
     onCancel: () -> Unit
@@ -172,10 +173,10 @@ fun LocalFilePicker(
                     Button(
                         onClick = { showPreviewSheet = true },
                         modifier = Modifier.fillMaxWidth().height(56.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = CyberPurple),
+                        colors = ButtonDefaults.buttonColors(containerColor = CyberBlue),
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text("PREVIEW & HIDE (${selectedUris.size})", fontWeight = FontWeight.Black, fontSize = 18.sp)
+                        Text("PREVIEW & HIDE (${selectedUris.size})", fontWeight = FontWeight.Black, fontSize = 18.sp, color = Color.White)
                     }
                 }
             }
@@ -196,7 +197,7 @@ fun LocalFilePicker(
                         label = { Text(folder) },
                         colors = FilterChipDefaults.filterChipColors(
                             containerColor = Color.Transparent,
-                            selectedContainerColor = CyberPurple,
+                            selectedContainerColor = CyberBlue,
                             labelColor = Color.Gray,
                             selectedLabelColor = Color.White
                         ),
@@ -245,6 +246,7 @@ fun LocalFilePicker(
                                 item = item,
                                 category = currentCategory,
                                 isSelected = selectedUris.contains(item.uri),
+                                isDark = true,
                                 onToggle = {
                                     selectedUris = if (selectedUris.contains(item.uri)) selectedUris - item.uri else selectedUris + item.uri
                                 }
@@ -258,7 +260,7 @@ fun LocalFilePicker(
 }
 
 @Composable
-fun GalleryGridItem(item: GalleryItem, category: FileCategory, isSelected: Boolean, onToggle: () -> Unit) {
+fun GalleryGridItem(item: GalleryItem, category: FileCategory, isSelected: Boolean, isDark: Boolean, onToggle: () -> Unit) {
     val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
     Box(
         modifier = Modifier
@@ -276,7 +278,7 @@ fun GalleryGridItem(item: GalleryItem, category: FileCategory, isSelected: Boole
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(CyberDarkBlue),
+                    .background(if (isDark) CyberDarkBlue else SoftGray),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -315,7 +317,7 @@ fun GalleryGridItem(item: GalleryItem, category: FileCategory, isSelected: Boole
             Icon(
                 Icons.Default.CheckCircle,
                 null,
-                tint = CyberPurple,
+                tint = CyberBlue,
                 modifier = Modifier.align(Alignment.TopEnd).padding(8.dp).size(24.dp).background(Color.White, CircleShape)
             )
         }
@@ -367,6 +369,7 @@ fun VaultContentScreen(
     onGrantCamera: () -> Unit,
     onGrantStorage: () -> Unit,
     onGrantFullStorage: () -> Unit,
+    onGrantBackgroundPopups: () -> Unit = {},
     onFetchGalleryItems: (FileCategory) -> Unit,
     onDeleteFile: (String) -> Unit,
     onRestoreFile: (String) -> Unit,
@@ -488,7 +491,7 @@ fun VaultContentScreen(
                             Text(
                                 (currentScreen as ContentScreen.WebView).title,
                                 fontWeight = FontWeight.Black, 
-                                color = if (isDark) CyberBlue else AppBlue,
+                                color = CyberBlue,
                                 fontSize = 20.sp,
                                 maxLines = 1
                             )
@@ -504,7 +507,7 @@ fun VaultContentScreen(
                                 Text(
                                     title,
                                     fontWeight = FontWeight.Black, 
-                                    color = if (isDark) CyberBlue else AppBlue,
+                                    color = CyberBlue,
                                     fontSize = 26.sp,
                                     letterSpacing = (-0.5).sp
                                 )
@@ -520,7 +523,7 @@ fun VaultContentScreen(
                                     else -> ContentScreen.Dashboard
                                 }
                             }) {
-                                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = if (isDark) Color.White else Color.Black)
+                                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = if (isDark) Color.White else CyberBlue)
                             }
                         }
                     },
@@ -530,11 +533,11 @@ fun VaultContentScreen(
                                 onClick = { currentScreen = ContentScreen.Settings },
                                 modifier = Modifier.captureRect { settingsRect = it }
                             ) {
-                                Icon(Icons.Default.Settings, contentDescription = "Settings", tint = if (isDark) Color.White.copy(alpha = 0.7f) else Color.Black.copy(alpha = 0.7f))
+                                Icon(Icons.Default.Settings, contentDescription = "Settings", tint = if (isDark) Color.White.copy(alpha = 0.7f) else Color.Black)
                             }
                         }
                         IconButton(onClick = onLockClick) {
-                            Icon(Icons.Default.LocationOn, contentDescription = "Lock", tint = if (isDark) CyberBlue else AppBlue)
+                            Icon(Icons.Default.LocationOn, contentDescription = "Lock", tint = CyberBlue)
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
@@ -656,6 +659,7 @@ fun VaultContentScreen(
                             onOpenUsageSettings = onOpenUsageSettings,
                             onOpenOverlaySettings = onOpenOverlaySettings,
                             onOpenProtectedApps = onOpenProtectedApps,
+                            onGrantBackgroundPopups = onGrantBackgroundPopups,
                             onToggleMasterStealth = onToggleMasterStealth,
                             onGrantCamera = onGrantCamera,
                             onGrantStorage = onGrantStorage,
@@ -675,6 +679,7 @@ fun VaultContentScreen(
                             FileCategoryList(
                                 category = screen.category,
                                 files = state.files.filter { it.category == screen.category && it.folderName == null },
+                                isDark = isDark,
                                 gridState = gridState,
                                 onFileClick = { viewingFile = it },
                                 onSelectionActive = { isSelectionActive = it },
@@ -687,6 +692,7 @@ fun VaultContentScreen(
                             FileCategoryList(
                                 category = FileCategory.OTHER,
                                 files = state.files.filter { it.folderName == screen.folderName },
+                                isDark = isDark,
                                 gridState = gridState,
                                 onFileClick = { viewingFile = it },
                                 onSelectionActive = { isSelectionActive = it },
@@ -753,6 +759,7 @@ fun VaultContentScreen(
                 initialCategory = cat,
                 galleryItems = state.galleryItems,
                 isFetching = state.isFetchingGallery,
+                isDark = isDark,
                 onCategoryChanged = { 
                     if (selectedCategoryForAdd != null) {
                         selectedCategoryForAdd = it
@@ -908,6 +915,12 @@ fun VaultContentScreen(
                 onCompleteTour()
             }
         )
+        
+        // Show interactive guide after tour
+        InteractiveUserGuide(
+            onDismiss = { /* Already handled by tour completion usually */ },
+            isDark = isDark
+        )
     }
 }
 
@@ -942,8 +955,8 @@ fun DashboardContent(
         return
     }
 
-    val textPrimary = if (isDark) Color.White else Color.Black
-    val textSecondary = if (isDark) Color.Gray else LightTextSecondary
+    val textPrimary = if (isDark) Color.White else LightTextPrimary
+    val textSecondary = if (isDark) TextSecondary else LightTextSecondary
     var isGridView by rememberSaveable { mutableStateOf(false) }
     var folderToDelete by remember { mutableStateOf<String?>(null) }
 
@@ -1020,11 +1033,11 @@ fun DashboardContent(
                 DashboardCard(
                     title = stringResource(R.string.app_lock_title),
                     subtitle = stringResource(R.string.app_lock_subtitle),
-                    icon = Icons.Default.Shield,
+                    icon = Icons.Default.Lock,
                     modifier = Modifier
                         .weight(1f)
                         .captureRect { onHideAppsRectCaptured(it) },
-                    color = IconGreen,
+                    color = CyberBlue,
                     isDark = isDark,
                     onClick = onAppLockClick
                 )
@@ -1199,7 +1212,7 @@ fun CategoryGridItem(
             Spacer(Modifier.height(10.dp))
             Text(
                 title, 
-                color = if (isDark) Color.White else Color.Black.copy(alpha = 0.8f), 
+                color = if (isDark) Color.White else LightTextPrimary, 
                 fontWeight = FontWeight.Black,
                 fontSize = 14.sp,
                 textAlign = TextAlign.Center,
@@ -1210,7 +1223,7 @@ fun CategoryGridItem(
             Spacer(Modifier.height(2.dp))
             Text(
                 stringResource(R.string.items_count, count), 
-                color = Color.Gray,
+                color = if (isDark) Color.Gray else LightTextSecondary,
                 fontSize = 12.sp,
                 textAlign = TextAlign.Center,
                 fontWeight = FontWeight.Bold
@@ -1222,9 +1235,9 @@ fun CategoryGridItem(
 
 
 @Composable
-fun IllustrationBox(category: FileCategory) {
+fun IllustrationBox(category: FileCategory, isDark: Boolean) {
     val color = when(category) {
-        FileCategory.PHOTO -> IconBlue
+        FileCategory.PHOTO -> CyberBlue
         FileCategory.VIDEO -> IconOrange
         FileCategory.AUDIO -> IconRed
         FileCategory.DOCUMENT -> IconGreen
@@ -1235,11 +1248,11 @@ fun IllustrationBox(category: FileCategory) {
     Box(contentAlignment = Alignment.Center, modifier = Modifier.size(150.dp)) {
         Canvas(modifier = Modifier.size(120.dp)) {
             drawCircle(
-                color = color.copy(alpha = 0.05f),
+                color = color.copy(alpha = 0.1f),
                 radius = size.minDimension / 2
             )
             drawCircle(
-                color = color.copy(alpha = 0.1f),
+                color = color.copy(alpha = 0.2f),
                 radius = size.minDimension / 3,
                 center = Offset(size.width * 0.7f, size.height * 0.3f)
             )
@@ -1256,7 +1269,7 @@ fun IllustrationBox(category: FileCategory) {
             },
             contentDescription = null,
             modifier = Modifier.size(72.dp),
-            tint = color.copy(alpha = 0.6f)
+            tint = color
         )
     }
 }
@@ -1265,6 +1278,7 @@ fun IllustrationBox(category: FileCategory) {
 fun FileCategoryList(
     category: FileCategory,
     files: List<VaultFile>,
+    isDark: Boolean,
     gridState: LazyGridState = rememberLazyGridState(),
     onFileClick: (VaultFile) -> Unit,
     onSelectionActive: (Boolean) -> Unit = {},
@@ -1282,7 +1296,7 @@ fun FileCategoryList(
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     // Branded Mascot-style empty state with illustration
-                    IllustrationBox(category)
+                    IllustrationBox(category, isDark)
                     Spacer(Modifier.height(24.dp))
                     Text(
                         text = when(category) {
@@ -1314,6 +1328,7 @@ fun FileCategoryList(
                     FileItem(
                         file = file,
                         isSelected = selectedIds.contains(file.id),
+                        isDark = isDark,
                         onClick = {
                             if (selectedIds.isNotEmpty()) {
                                 selectedIds = if (selectedIds.contains(file.id)) selectedIds - file.id else selectedIds + file.id
@@ -1337,10 +1352,11 @@ fun FileCategoryList(
             modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 16.dp).zIndex(10f)
         ) {
             Surface(
-                color = CyberDarkBlue,
+                color = if (isDark) CyberDarkBlue else LightSurface,
                 shape = RoundedCornerShape(24.dp),
                 shadowElevation = 12.dp,
-                modifier = Modifier.padding(horizontal = 16.dp).fillMaxWidth()
+                modifier = Modifier.padding(horizontal = 16.dp).fillMaxWidth(),
+                border = if (!isDark) BorderStroke(1.dp, Color.LightGray.copy(alpha = 0.5f)) else null
             ) {
                 Row(
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
@@ -1349,7 +1365,7 @@ fun FileCategoryList(
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         IconButton(onClick = { selectedIds = emptySet() }) {
-                            Icon(Icons.Default.Close, "Cancel", tint = Color.White)
+                            Icon(Icons.Default.Close, "Cancel", tint = if (isDark) Color.White else LightTextPrimary)
                         }
                         IconButton(onClick = { 
                             selectedIds = if (selectedIds.size == files.size) emptySet() else files.map { it.id }.toSet()
@@ -1357,13 +1373,13 @@ fun FileCategoryList(
                             Icon(
                                 if (selectedIds.size == files.size) Icons.Default.Deselect else Icons.Default.SelectAll,
                                 "Select All", 
-                                tint = Color.White
+                                tint = if (isDark) Color.White else LightTextPrimary
                             )
                         }
                         Spacer(Modifier.width(4.dp))
                         Text(
                             "${selectedIds.size} Selected",
-                            color = Color.White,
+                            color = if (isDark) Color.White else LightTextPrimary,
                             fontWeight = FontWeight.Black,
                             fontSize = 16.sp
                         )
@@ -1391,7 +1407,7 @@ fun FileCategoryList(
 }
 
 @Composable
-fun FileItem(file: VaultFile, isSelected: Boolean = false, onClick: () -> Unit, onLongClick: () -> Unit = {}) {
+fun FileItem(file: VaultFile, isSelected: Boolean = false, isDark: Boolean, onClick: () -> Unit, onLongClick: () -> Unit = {}) {
     val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
     Card(
         modifier = Modifier
@@ -1406,10 +1422,10 @@ fun FileItem(file: VaultFile, isSelected: Boolean = false, onClick: () -> Unit, 
             ),
         shape = RoundedCornerShape(12.dp),
         border = if (isSelected) BorderStroke(3.dp, CyberBlue) else null,
-        colors = CardDefaults.cardColors(containerColor = CyberDarkBlue)
+        colors = CardDefaults.cardColors(containerColor = if (isDark) CyberDarkBlue else SoftGray)
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
-            FileThumbnail(file)
+            FileThumbnail(file, isDark)
             
             if (isSelected) {
                 Box(modifier = Modifier.fillMaxSize().background(CyberBlue.copy(alpha = 0.3f)))
@@ -1440,7 +1456,7 @@ fun FileItem(file: VaultFile, isSelected: Boolean = false, onClick: () -> Unit, 
 }
 
 @Composable
-fun FileThumbnail(file: VaultFile) {
+fun FileThumbnail(file: VaultFile, isDark: Boolean) {
     if (file.thumbnailPath != null && File(file.thumbnailPath).exists()) {
         AsyncImage(
             model = File(file.thumbnailPath),
@@ -1457,7 +1473,7 @@ fun FileThumbnail(file: VaultFile) {
                 FileCategory.DOCUMENT -> Icons.AutoMirrored.Filled.InsertDriveFile
                 else -> Icons.Default.InsertDriveFile
             }
-            Icon(icon, null, tint = Color.Gray.copy(alpha = 0.5f), modifier = Modifier.size(32.dp))
+            Icon(icon, null, tint = if (isDark) Color.Gray.copy(alpha = 0.5f) else LightOutline.copy(alpha = 0.5f), modifier = Modifier.size(32.dp))
         }
     }
 }
@@ -1470,8 +1486,8 @@ fun AppLockManagement(
     onHideApp: (String) -> Unit
 ) {
     val isDark = state.isDarkMode
-    val textPrimary = if (isDark) Color.White else Color.Black
-    val textSecondary = if (isDark) Color.Gray else LightTextSecondary
+    val textPrimary = if (isDark) Color.White else LightTextPrimary
+    val textSecondary = if (isDark) TextSecondary else LightTextSecondary
     
     var searchQuery by remember { mutableStateOf("") }
     
@@ -1520,7 +1536,7 @@ fun AppLockManagement(
                         "RECOMMENDED",
                         modifier = Modifier.padding(vertical = 8.dp),
                         style = MaterialTheme.typography.labelMedium,
-                        color = (if (isDark) CyberBlue else AppBlue).copy(alpha = 0.7f),
+                        color = CyberBlue.copy(alpha = 0.7f),
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -1531,6 +1547,7 @@ fun AppLockManagement(
                         stats = appStats[app.packageName] ?: 95,
                         textPrimary = textPrimary,
                         textSecondary = textSecondary,
+                        isDark = isDark,
                         onToggleLock = { onToggleAppLock(app.packageName) },
                         onHideApp = { onHideApp(app.packageName) }
                     )
@@ -1554,6 +1571,7 @@ fun AppLockManagement(
                         stats = null,
                         textPrimary = textPrimary,
                         textSecondary = textSecondary,
+                        isDark = isDark,
                         onToggleLock = { onToggleAppLock(app.packageName) },
                         onHideApp = { onHideApp(app.packageName) }
                     )
@@ -1570,6 +1588,7 @@ fun AppLockItem(
     stats: Int?,
     textPrimary: Color,
     textSecondary: Color,
+    isDark: Boolean,
     onToggleLock: () -> Unit,
     onHideApp: () -> Unit
 ) {
@@ -1589,14 +1608,15 @@ fun AppLockItem(
                     text = buildAnnotatedString {
                         append("OVER ")
                         withStyle(
-                            SpanStyle(color = AppBlue, fontWeight = FontWeight.Black)
+                            SpanStyle(color = CyberBlue, fontWeight = FontWeight.Black)
                         ) {
                             append("$stats%")
                         }
                         append(" OF USERS HAVE IT LOCKED")
                     },
                     fontSize = 9.sp,
-                    letterSpacing = 0.2.sp
+                    letterSpacing = 0.2.sp,
+                    color = textSecondary
                 )
             }
         }
@@ -1656,7 +1676,7 @@ fun DashboardCard(
     subtitle: String,
     icon: ImageVector,
     modifier: Modifier = Modifier,
-    color: Color = AppBlue,
+    color: Color = CyberBlue,
     isDark: Boolean,
     onClick: () -> Unit
 ) {
@@ -1705,14 +1725,14 @@ fun DashboardCard(
             Column {
                 Text(
                     title, 
-                    color = if (isDark) Color.White else Color.Black.copy(alpha = 0.8f), 
+                    color = if (isDark) Color.White else LightTextPrimary, 
                     fontWeight = FontWeight.Black, 
                     fontSize = 18.sp,
                     maxLines = 1
                 )
                 Text(
                     subtitle, 
-                    color = if (isDark) Color.Gray else Color.Gray, 
+                    color = if (isDark) TextSecondary else LightTextSecondary,
                     fontSize = 12.sp,
                     lineHeight = 16.sp,
                     maxLines = 2,
@@ -1747,7 +1767,7 @@ fun CategoryItem(
             Box(
                 modifier = Modifier
                     .size(44.dp)
-                    .background(if (isDark) Color.White.copy(alpha = 0.05f) else color.copy(alpha = 0.1f), CircleShape),
+                    .background(if (isDark) Color.White.copy(alpha = 0.05f) else color.copy(alpha = 0.15f), CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -1761,13 +1781,13 @@ fun CategoryItem(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     title, 
-                    color = if (isDark) Color.White else Color.Black.copy(alpha = 0.8f), 
+                    color = if (isDark) Color.White else LightTextPrimary, 
                     fontWeight = FontWeight.Black,
                     fontSize = 18.sp
                 )
                 Text(
                     stringResource(R.string.items_count, count),
-                    color = if (isDark) Color.Gray else Color.Gray,
+                    color = if (isDark) Color.Gray else LightTextSecondary,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -1775,7 +1795,7 @@ fun CategoryItem(
             Icon(
                 Icons.Default.ChevronRight, 
                 null, 
-                tint = if (isDark) Color.Gray.copy(alpha = 0.5f) else Color.Gray.copy(alpha = 0.5f),
+                tint = if (isDark) Color.Gray.copy(alpha = 0.5f) else LightOutline,
                 modifier = Modifier.size(20.dp)
             )
         }
@@ -1792,6 +1812,7 @@ fun SettingsSection(
     onGrantCamera: () -> Unit,
     onGrantStorage: () -> Unit,
     onGrantFullStorage: () -> Unit,
+    onGrantBackgroundPopups: () -> Unit = {},
     onToggleDarkMode: () -> Unit,
     onToggleFingerprint: () -> Unit,
     onSetLanguage: (String) -> Unit,
@@ -1804,7 +1825,7 @@ fun SettingsSection(
 ) {
     val context = LocalContext.current
     val isDark = state.isDarkMode
-    val textPrimary = if (isDark) Color.White else Color.Black.copy(alpha = 0.8f)
+    val textPrimary = if (isDark) Color.White else LightTextPrimary
     val textSecondary = Color.Gray
     val surfaceColor = if (isDark) CyberDarkBlue else CreamWhite.copy(alpha = 0.95f)
 
@@ -1815,17 +1836,19 @@ fun SettingsSection(
         Spacer(Modifier.height(8.dp))
 
             // Other necessary permissions hidden in screenshots but needed
-            if (!state.hasUsageStatsPermission || !state.hasOverlayPermission || (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !state.hasFullStoragePermission)) {
-                Text(stringResource(R.string.system_permissions), color = if (isDark) CyberBlue else AppBlue, fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 8.dp))
+            if (!state.hasUsageStatsPermission || !state.hasOverlayPermission || !state.hasBatteryOptimizationPermission || !state.hasBackgroundPopupsPermission || (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !state.hasFullStoragePermission)) {
+                Text(stringResource(R.string.system_permissions), color = CyberBlue, fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 8.dp))
                 if (!state.hasUsageStatsPermission) PermissionItem("App Usage Access", "Required to detect app launches", false, isDark, onOpenUsageSettings)
                 if (!state.hasOverlayPermission) PermissionItem("Overlay Permission", "Required to show lock screen", false, isDark, onOpenOverlaySettings)
+                if (!state.hasBackgroundPopupsPermission) PermissionItem("Background Pop-ups", "Allows lock to appear in background", false, isDark, onGrantBackgroundPopups)
+                if (!state.hasBatteryOptimizationPermission) PermissionItem("Battery Optimization", "Allows protection to run 24/7", false, isDark, onOpenProtectedApps)
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !state.hasFullStoragePermission) PermissionItem("Full Storage Access", "Required to delete files from gallery", false, isDark, onGrantFullStorage)
             }
 
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
                     stringResource(R.string.lock_options), 
-                    color = if (isDark) CyberBlue else AppBlue, 
+                    color = CyberBlue,
                     fontSize = 16.sp, 
                     fontWeight = FontWeight.Black,
                     modifier = Modifier.padding(bottom = 4.dp)
@@ -1877,7 +1900,7 @@ fun SettingsSection(
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
                 stringResource(R.string.support_links), 
-                color = if (isDark) CyberBlue else AppBlue, 
+                color = CyberBlue, 
                 fontSize = 14.sp, 
                 fontWeight = FontWeight.Black,
                 modifier = Modifier.padding(bottom = 4.dp)
@@ -1890,6 +1913,10 @@ fun SettingsSection(
                 shadowElevation = 4.dp
             ) {
                 Column {
+                    SettingsActionItem(stringResource(R.string.tutorial), Icons.Default.PlayCircleOutline, isDark) {
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.youtube.com/watch?v=YOUR_VIDEO_ID"))
+                        context.startActivity(intent)
+                    }
                     SettingsActionItem(stringResource(R.string.feedback), Icons.Default.ChatBubbleOutline, isDark) {
                         val intent = Intent(Intent.ACTION_SENDTO).apply {
                             data = Uri.parse("mailto:hello@aitoyz.in")
@@ -1985,7 +2012,7 @@ fun FAQScreen(isDark: Boolean) {
                         Icon(
                             imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                             contentDescription = null,
-                            tint = if (isDark) CyberBlue else AppBlue
+                            tint = CyberBlue
                         )
                     }
                     if (expanded) {
@@ -2037,13 +2064,13 @@ fun PermissionItem(title: String, subtitle: String, isGranted: Boolean, isDark: 
             Icon(
                 if (isGranted) Icons.Default.CheckCircle else Icons.Default.ErrorOutline, 
                 null, 
-                tint = if (isGranted) IconGreen else Color.Gray,
+                tint = if (isGranted) IconGreen else (if (isDark) Color.Gray else LightOutline),
                 modifier = Modifier.size(24.dp)
             )
             Spacer(Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(title, color = if (isDark) Color.White else Color.Black.copy(alpha = 0.8f), fontWeight = FontWeight.Black, fontSize = 16.sp)
-                Text(subtitle, color = if (isDark) Color.Gray else Color.Gray, fontSize = 12.sp)
+                Text(title, color = if (isDark) Color.White else LightTextPrimary, fontWeight = FontWeight.Black, fontSize = 16.sp)
+                Text(subtitle, color = if (isDark) Color.Gray else LightTextSecondary, fontSize = 12.sp)
             }
         }
     }
@@ -2065,20 +2092,20 @@ fun SettingsToggleItem(title: String, subtitle: String, icon: ImageVector, check
         Icon(
             imageVector = icon, 
             contentDescription = null, 
-            tint = if (checked) (if (isDark) CyberBlue else AppBlue) else Color.Gray, 
+            tint = if (checked) CyberBlue else (if (isDark) Color.Gray else LightOutline.copy(alpha = 0.6f)), 
             modifier = Modifier.size(24.dp).scale(if (checked) 1.1f else 1.0f)
         )
         Spacer(Modifier.width(16.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(title, color = if (isDark) Color.White else Color.Black.copy(alpha = 0.8f), fontWeight = FontWeight.Black, fontSize = 16.sp)
-            Text(subtitle, color = if (isDark) Color.Gray else Color.Gray, fontSize = 12.sp)
+            Text(title, color = if (isDark) Color.White else LightTextPrimary, fontWeight = FontWeight.Black, fontSize = 16.sp)
+            Text(subtitle, color = if (isDark) Color.Gray else LightTextSecondary, fontSize = 12.sp)
         }
         Switch(
             checked = checked,
             onCheckedChange = onCheckedChange,
             colors = SwitchDefaults.colors(
                 checkedThumbColor = Color.White,
-                checkedTrackColor = if (isDark) CyberBlue else AppBlue,
+                checkedTrackColor = CyberBlue,
                 uncheckedThumbColor = if (isDark) Color.Gray else Color.White,
                 uncheckedTrackColor = if (isDark) Color.DarkGray else Color.LightGray
             )
@@ -2092,13 +2119,13 @@ fun SettingsLinkItem(title: String, subtitle: String, icon: ImageVector, isDark:
         modifier = Modifier.fillMaxWidth().clickable { onClick() }.padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(icon, null, tint = if (isDark) CyberBlue else AppBlue, modifier = Modifier.size(24.dp))
+        Icon(icon, null, tint = CyberBlue, modifier = Modifier.size(24.dp))
         Spacer(Modifier.width(16.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(title, color = if (isDark) Color.White else Color.Black.copy(alpha = 0.8f), fontWeight = FontWeight.Black, fontSize = 16.sp)
-            Text(subtitle, color = if (isDark) Color.Gray else Color.Gray, fontSize = 12.sp)
+            Text(title, color = if (isDark) Color.White else LightTextPrimary, fontWeight = FontWeight.Black, fontSize = 16.sp)
+            Text(subtitle, color = if (isDark) Color.Gray else LightTextSecondary, fontSize = 12.sp)
         }
-        Icon(Icons.Default.ChevronRight, null, tint = if (isDark) Color.Gray else Color.LightGray)
+        Icon(Icons.Default.ChevronRight, null, tint = if (isDark) Color.Gray else LightOutline)
     }
 }
 
@@ -2108,10 +2135,10 @@ fun SettingsActionItem(title: String, icon: ImageVector, isDark: Boolean, onClic
         modifier = Modifier.fillMaxWidth().clickable { onClick() }.padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(icon, null, tint = if (isDark) CyberBlue else AppBlue, modifier = Modifier.size(24.dp))
+        Icon(icon, null, tint = CyberBlue, modifier = Modifier.size(24.dp))
         Spacer(Modifier.width(16.dp))
-        Text(title, color = if (isDark) Color.White else Color.Black.copy(alpha = 0.8f), fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))
-        Icon(Icons.Default.OpenInNew, null, tint = if (isDark) Color.Gray else Color.LightGray, modifier = Modifier.size(18.dp))
+        Text(title, color = if (isDark) Color.White else LightTextPrimary, fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))
+        Icon(Icons.Default.OpenInNew, null, tint = if (isDark) Color.Gray else LightOutline, modifier = Modifier.size(18.dp))
     }
 }
 
@@ -2205,7 +2232,7 @@ fun BackupManagementDialog(
                                             Icon(
                                                 Icons.Default.VisibilityOff,
                                                 contentDescription = "Unhide",
-                                                tint = (if (state.isDarkMode) Color.Gray else Color.LightGray).copy(alpha = 0.6f),
+                                                tint = CyberBlue,
                                                 modifier = Modifier.size(20.dp)
                                             )
                                         }
@@ -2264,7 +2291,7 @@ fun copyToClipboard(context: Context, lat: Double, lon: Double) {
 }
 
 @Composable
-fun InteractiveUserGuide(onDismiss: () -> Unit) {
+fun InteractiveUserGuide(onDismiss: () -> Unit, isDark: Boolean) {
     var step by remember { mutableIntStateOf(0) }
     val steps = listOf(
         GuideStep(
@@ -2297,8 +2324,8 @@ fun InteractiveUserGuide(onDismiss: () -> Unit) {
     Dialog(onDismissRequest = onDismiss) {
         Surface(
             shape = RoundedCornerShape(28.dp),
-            color = Color.White,
-            border = BorderStroke(1.dp, Color.Black.copy(alpha = 0.05f)),
+            color = if (isDark) CyberDarkBlue else LightSurface,
+            border = BorderStroke(1.dp, (if (isDark) Color.White else Color.Black).copy(alpha = 0.05f)),
             modifier = Modifier.fillMaxWidth().padding(16.dp),
             shadowElevation = 8.dp
         ) {
@@ -2319,7 +2346,7 @@ fun InteractiveUserGuide(onDismiss: () -> Unit) {
                 
                 Text(
                     currentStep.title,
-                    color = Color.Black,
+                    color = if (isDark) Color.White else LightTextPrimary,
                     fontWeight = FontWeight.Black,
                     fontSize = 20.sp,
                     textAlign = TextAlign.Center
@@ -2329,7 +2356,7 @@ fun InteractiveUserGuide(onDismiss: () -> Unit) {
                 
                 Text(
                     currentStep.description,
-                    color = Color.DarkGray,
+                    color = if (isDark) Color.Gray else LightTextSecondary,
                     fontSize = 14.sp,
                     textAlign = TextAlign.Center,
                     lineHeight = 20.sp
@@ -2362,7 +2389,7 @@ data class GuideStep(val title: String, val description: String, val icon: Image
 @Composable
 fun OperationProgressOverlay(progress: OperationProgress, isDark: Boolean) {
     val surfaceColor = if (isDark) Color(0xFF1A1A1A) else Color.White
-    val contentColor = if (isDark) Color.White else Color.Black
+    val contentColor = if (isDark) Color.White else LightTextPrimary
     
     Box(
         modifier = Modifier

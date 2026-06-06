@@ -13,6 +13,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.geovault.ui.theme.*
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -97,7 +98,7 @@ fun OnboardingScreen(onFinished: () -> Unit) {
                                 .width(if (active) 32.dp else 16.dp)
                                 .height(4.dp)
                                 .clip(RoundedCornerShape(2.dp))
-                                .background(if (active) Color(0xFF5D78FF) else Color.LightGray)
+                                .background(if (active) CyberBlue else Color.LightGray)
                         )
                     }
                 }
@@ -113,7 +114,7 @@ fun OnboardingScreen(onFinished: () -> Unit) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0047FF)),
+                    colors = ButtonDefaults.buttonColors(containerColor = CyberBlue),
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Text(
@@ -165,7 +166,7 @@ fun OnboardingSlideContent(slide: OnboardingSlide) {
                     imageVector = slide.icon,
                     contentDescription = null,
                     modifier = Modifier.size(120.dp),
-                    tint = Color(0xFF0047FF).copy(alpha = 0.8f)
+                    tint = CyberBlue
                 )
             }
         }

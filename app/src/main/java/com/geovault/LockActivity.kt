@@ -50,10 +50,16 @@ import android.graphics.Color as AndroidColor
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Build
 
+import com.geovault.security.LocaleManager
 import com.geovault.security.SecurityUtils
 import android.widget.Toast
 
 class LockActivity : AppCompatActivity() {
+
+    override fun attachBaseContext(newBase: Context) {
+        val lang = LocaleManager.getLanguage(newBase)
+        super.attachBaseContext(LocaleManager.getLocaleContext(newBase, lang))
+    }
 
     private var isUnlocked = false
     private val targetPackageState = mutableStateOf("")
@@ -61,6 +67,7 @@ class LockActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        android.util.Log.e("LOCK_DEBUG", "LOCK ACTIVITY CREATED")
         
         // Professional Security: Prevent screenshots and recent app previews
         window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
@@ -76,7 +83,7 @@ class LockActivity : AppCompatActivity() {
 
         // Mark lock as active for Accessibility interception
         val prefs = com.geovault.security.SecureManager.getInstance(this).prefs
-        prefs.edit().putBoolean("lock_active_right_now", true).apply()
+        prefs.edit().putBoolean("lock_active_right_now", true).commit()
 
         // Fullscreen Immersive
         val controller = WindowCompat.getInsetsController(window, window.decorView)
@@ -96,7 +103,8 @@ class LockActivity : AppCompatActivity() {
         }
 
         setContent {
-            val isRestricted = remember { prefs.getBoolean("screenshot_restriction", true) }
+            val isRestricted = remember { prefs.getBoolean("screenshot_restriction", false) }
+            val isDark = remember { prefs.getBoolean("is_dark_mode", false) }
             val currentTargetPackage by targetPackageState
             
             // Notify service to hide white overlay once UI is ready
@@ -105,10 +113,10 @@ class LockActivity : AppCompatActivity() {
                 sendBroadcast(Intent("com.geovault.HIDE_OVERLAY"))
             }
 
-            GeoVaultTheme(darkTheme = false) {
+            GeoVaultTheme(darkTheme = isDark) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = Color.White,
+                    color = if (isDark) CyberBlack else Color.White,
                 ) {
                     // Apply FLAG_SECURE dynamically
                     SideEffect {
@@ -126,7 +134,7 @@ class LockActivity : AppCompatActivity() {
                         onAuthenticated = {
                             isUnlocked = true
                             val authPrefs = com.geovault.security.SecureManager.getInstance(this).prefs
-                            authPrefs.edit().putString("bypass_package", currentTargetPackage).apply()
+                            authPrefs.edit().putString("bypass_package", currentTargetPackage).commit()
                             unlock(currentTargetPackage)
                         },
                     ) {
@@ -155,7 +163,7 @@ class LockActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         com.geovault.security.SecureManager.getInstance(this).prefs.edit()
-            .putBoolean("lock_active_right_now", false).apply()
+            .putBoolean("lock_active_right_now", false).commit()
         IntruderManager.getInstance(this).stopSession()
     }
 
@@ -169,8 +177,10 @@ class LockActivity : AppCompatActivity() {
                     super.onAuthenticationSucceeded(result)
                     isUnlocked = true
                     val prefs = com.geovault.security.SecureManager.getInstance(this@LockActivity).prefs
-                    prefs.edit().putString("bypass_package", targetPackage).apply()
-                    unlock(targetPackage)
+                    prefs.edit()
+                        .putString("bypass_package", targetPackage)
+                        .commit()
+                    finish()
                 }
             }
         )

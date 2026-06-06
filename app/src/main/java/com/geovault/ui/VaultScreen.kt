@@ -84,7 +84,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.ui.draw.blur
 import androidx.biometric.BiometricManager
-import android.content.Intent
+import android.content.Context
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
@@ -97,6 +97,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import android.view.HapticFeedbackConstants
 import androidx.compose.animation.core.AnimationVector1D
 import androidx.media3.common.util.UnstableApi
+import android.content.Intent
 
 @UnstableApi
 @OptIn(ExperimentalMaterial3Api::class)
@@ -119,6 +120,7 @@ fun VaultScreen(
     onGrantCamera: () -> Unit,
     onGrantStorage: () -> Unit,
     onGrantFullStorage: () -> Unit,
+    onGrantBackgroundPopups: () -> Unit,
     onDeleteFile: (String) -> Unit,
     onRestoreFile: (String) -> Unit,
     onFetchGalleryItems: (FileCategory) -> Unit,
@@ -137,7 +139,8 @@ fun VaultScreen(
     onAddFilesToFolder: (List<android.net.Uri>, String) -> Unit = { _, _ -> },
     onFetchWeather: (Double, Double) -> Unit = { _, _ -> },
     onStartAction: () -> Unit = {},
-    onEndAction: () -> Unit = {}
+    onEndAction: () -> Unit = {},
+    onRequestGps: (() -> Unit) -> Unit = { it() }
 ) {
     val currentVaults by rememberUpdatedState(state.vaults)
     
@@ -380,20 +383,19 @@ fun VaultScreen(
                                         }
 
                                         override fun onDoubleTap(e: android.view.MotionEvent): Boolean {
-                                            if (map.cameraPosition.zoom < 16.0) {
-                                                android.widget.Toast.makeText(ctx, "Zoom in closer to unlock (100m scale)", android.widget.Toast.LENGTH_SHORT).show()
-                                                return false
-                                            }
                                             val point = map.projection.fromScreenLocation(android.graphics.PointF(e.x, e.y))
                                             val vault = currentVaults.find { v ->
                                                 val dist = LocationHelper.calculateDistance(point.latitude, point.longitude, v.location.latitude, v.location.longitude)
-                                                dist <= 100f
+                                                dist <= 1000f // 1km radius as requested
                                             }
                                             if (vault != null) {
                                                 selectedVaultForUnlock = vault
                                                 showUnlockPrompt = true
                                                 return true
                                             } else {
+                                                if (map.cameraPosition.zoom < 16.0) {
+                                                    android.widget.Toast.makeText(ctx, "Zoom in closer (100m scale)", android.widget.Toast.LENGTH_SHORT).show()
+                                                }
                                                 return false
                                             }
                                         }
@@ -550,9 +552,9 @@ fun VaultScreen(
                                                 }
                                                 .padding(16.dp),
                                             style = MaterialTheme.typography.bodyMedium,
-                                            color = if (isDark) Color.White else Color.Black
+                                            color = if (isDark) Color.White else LightTextPrimary
                                         )
-                                        HorizontalDivider(color = (if (isDark) Color.White else Color.Black).copy(alpha = 0.05f))
+                                        HorizontalDivider(color = (if (isDark) Color.White else CyberBlue).copy(alpha = 0.05f))
                                     }
                                 }
                             }
@@ -592,7 +594,8 @@ fun VaultScreen(
                     ) {
                         Column(
                             modifier = Modifier
-                                .padding(end = 16.dp, bottom = 32.dp)
+                                .padding(end = 16.dp, bottom = 48.dp) // Increased padding to avoid overlap
+                                .navigationBarsPadding() // FIX: Avoid overlap with system nav buttons
                                 .onGloballyPositioned { fabColumnRect = it.boundsInWindow() },
                             verticalArrangement = Arrangement.spacedBy(12.dp),
                             horizontalAlignment = Alignment.End
@@ -614,13 +617,15 @@ fun VaultScreen(
                                     mapLibreMap?.locationComponent?.cameraMode = org.maplibre.android.location.modes.CameraMode.TRACKING_COMPASS
                                 }
                                 if (state.hasLocationPermission) {
-                                    try {
-                                        fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-                                            location?.let {
-                                                mapLibreMap?.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(it.latitude, it.longitude), 17.0), 1500)
+                                    onRequestGps {
+                                        try {
+                                            fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                                                location?.let {
+                                                    mapLibreMap?.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(it.latitude, it.longitude), 17.0), 1500)
+                                                }
                                             }
-                                        }
-                                    } catch (e: SecurityException) {}
+                                        } catch (e: SecurityException) {}
+                                    }
                                 } else {
                                     onStartAction()
                                     locationPermissionLauncher.launch(arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION))
@@ -729,6 +734,7 @@ fun VaultScreen(
                     onGrantCamera = onGrantCamera,
                     onGrantStorage = onGrantStorage,
                     onGrantFullStorage = onGrantFullStorage,
+                    onGrantBackgroundPopups = onGrantBackgroundPopups,
                     onDeleteFile = onDeleteFile,
                     onRestoreFile = onRestoreFile,
                     onRemoveAppFromVault = onRemoveAppFromVault,
@@ -749,6 +755,10 @@ fun VaultScreen(
                     onEndAction = onEndAction
                 )
             }
+        }
+
+        if (state.showBackgroundPopupGuide) {
+            BackgroundPopupGuideDialog(onDismiss = { onGrantBackgroundPopups() })
         }
     }
 }
@@ -800,7 +810,7 @@ fun VaultUnlockDialog(
             ) {
                 Text(
                     if (vault.lockType == LockType.PIN) stringResource(R.string.enter_pin) else stringResource(R.string.draw_pattern),
-                    color = (if (isDark) CyberBlue else AppBlue).copy(alpha = 0.8f),
+                    color = CyberBlue,
                     fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.titleMedium
                 )
@@ -861,19 +871,19 @@ fun VaultSetupDialog(
                 modifier = Modifier.padding(20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(stringResource(R.string.setup_lock), style = MaterialTheme.typography.titleLarge, color = if (isDark) CyberBlue else AppBlue, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.setup_lock), style = MaterialTheme.typography.titleLarge, color = CyberBlue, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.height(16.dp))
                 if (isNativeEligible) {
                     Row(
-                        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background((if (isDark) CyberBlue else AppBlue).copy(alpha = 0.05f)).padding(12.dp),
+                        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(CyberBlue.copy(alpha = 0.05f)).padding(12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Native Mode", fontWeight = FontWeight.Bold, color = if (isDark) CyberBlue else AppBlue, modifier = Modifier.weight(1f))
+                        Text("Native Mode", fontWeight = FontWeight.Bold, color = CyberBlue, modifier = Modifier.weight(1f))
                         Switch(checked = isNativeEnabled, onCheckedChange = { isNativeEnabled = it })
                     }
                     if (isNativeEnabled) {
                         Slider(value = radius, onValueChange = { radius = it }, valueRange = 100f..2000f, steps = 19)
-                        Text("${radius.toInt()}m", color = if (isDark) CyberBlue else AppBlue, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        Text("${radius.toInt()}m", color = CyberBlue, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                     }
                     Spacer(Modifier.height(12.dp))
                 }
@@ -898,7 +908,7 @@ fun VaultSetupDialog(
 fun RowScope.VaultLockTypeButton(text: String, selected: Boolean, isDark: Boolean, onClick: () -> Unit) {
     Button(
         onClick = onClick,
-        colors = ButtonDefaults.buttonColors(containerColor = if (selected) (if (isDark) CyberBlue else AppBlue).copy(alpha = 0.15f) else Color.Transparent, contentColor = if (selected) (if (isDark) CyberBlue else AppBlue) else Color.Gray),
+        colors = ButtonDefaults.buttonColors(containerColor = if (selected) CyberBlue.copy(alpha = 0.15f) else Color.Transparent, contentColor = if (selected) CyberBlue else Color.Gray),
         modifier = Modifier.height(40.dp).weight(1f),
         shape = RoundedCornerShape(12.dp),
         elevation = null // Fix square shadow
@@ -911,8 +921,8 @@ fun SmallMapFab(icon: ImageVector, active: Boolean, modifier: Modifier = Modifie
         onClick = onClick,
         modifier = modifier.size(44.dp),
         shape = CircleShape,
-        color = if (active) (if (isDark) CyberBlue else AppBlue) else (if (isDark) CyberDarkBlue else Color.White),
-        contentColor = if (active) Color.White else (if (isDark) Color.White else Color.Black).copy(alpha = 0.8f),
+        color = if (active) Color.Black else (if (isDark) CyberDarkBlue else Color.White),
+        contentColor = if (active) Color.White else (if (isDark) Color.White else Color.Black),
         shadowElevation = 6.dp
     ) {
         Box(contentAlignment = Alignment.Center) { Icon(icon, null, modifier = Modifier.size(20.dp)) }
@@ -1044,7 +1054,7 @@ fun DirectionsPanel(
                     "Directions",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Black,
-                    color = if (isDark) ElectricBlue else DeepNavyBlue,
+                    color = CyberBlue,
                     modifier = Modifier.weight(1f)
                 )
                 IconButton(onClick = onClose) {
@@ -1094,16 +1104,16 @@ fun DirectionsPanel(
                     },
                     modifier = Modifier
                         .size(44.dp)
-                        .background((if (isDark) CyberBlue else AppBlue).copy(alpha = 0.1f), CircleShape)
+                        .background(CyberBlue.copy(alpha = 0.1f), CircleShape)
                 ) {
-                    Icon(Icons.Default.SwapVert, null, tint = if (isDark) CyberBlue else AppBlue)
+                    Icon(Icons.Default.SwapVert, null, tint = CyberBlue)
                 }
             }
 
             if (distance != null) {
                 Spacer(Modifier.height(20.dp))
                 Surface(
-                    color = (if (isDark) CyberBlue else AppBlue).copy(alpha = 0.1f),
+                    color = CyberBlue.copy(alpha = 0.1f),
                     shape = RoundedCornerShape(16.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -1111,18 +1121,18 @@ fun DirectionsPanel(
                         modifier = Modifier.padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(Icons.Default.Route, null, tint = if (isDark) CyberBlue else AppBlue)
+                        Icon(Icons.Default.Route, null, tint = CyberBlue)
                         Spacer(Modifier.width(12.dp))
                         Text(
                             text = if (distance >= 1000) String.format("%.2f km", distance / 1000) else String.format("%.0f m", distance),
                             fontWeight = FontWeight.Black,
                             fontSize = 18.sp,
-                            color = if (isDark) CyberBlue else AppBlue
+                            color = CyberBlue
                         )
                         Spacer(Modifier.weight(1f))
                         Button(
                             onClick = onClose,
-                            colors = ButtonDefaults.buttonColors(containerColor = if (isDark) CyberBlue else AppBlue),
+                            colors = ButtonDefaults.buttonColors(containerColor = CyberBlue),
                             shape = RoundedCornerShape(12.dp)
                         ) {
                             Text("GO", fontWeight = FontWeight.Black)
@@ -1145,7 +1155,7 @@ fun DirectionsPanel(
                         }
                     },
                     modifier = Modifier.fillMaxWidth().height(56.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = if (isDark) CyberBlue else AppBlue),
+                    colors = ButtonDefaults.buttonColors(containerColor = CyberBlue),
                     shape = RoundedCornerShape(16.dp)
                 ) {
                     Text("GO", fontWeight = FontWeight.Black, fontSize = 18.sp)
@@ -1172,12 +1182,12 @@ fun DirectionSearchBox(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
             colors = TextFieldDefaults.colors(
-                focusedContainerColor = (if (isDark) Color.White else Color.Black).copy(alpha = 0.05f),
-                unfocusedContainerColor = (if (isDark) Color.White else Color.Black).copy(alpha = 0.05f),
+                focusedContainerColor = (if (isDark) Color.White else CyberBlue).copy(alpha = 0.05f),
+                unfocusedContainerColor = (if (isDark) Color.White else CyberBlue).copy(alpha = 0.05f),
                 focusedIndicatorColor = Color.Transparent,
                 unfocusedIndicatorColor = Color.Transparent,
-                focusedTextColor = if (isDark) Color.White else Color.Black,
-                unfocusedTextColor = if (isDark) Color.White else Color.Black
+                focusedTextColor = if (isDark) Color.White else LightTextPrimary,
+                unfocusedTextColor = if (isDark) Color.White else LightTextPrimary
             ),
             singleLine = true,
             textStyle = androidx.compose.ui.text.TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Bold)
@@ -1199,7 +1209,7 @@ fun DirectionSearchBox(
                                 .padding(12.dp),
                             fontSize = 12.sp,
                             maxLines = 1,
-                            color = if (isDark) Color.White else Color.Black,
+                            color = if (isDark) Color.White else CyberBlue,
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -1252,7 +1262,7 @@ fun WeatherPanel(
                 weatherInfo.cityName ?: "Detecting City...",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
-                color = if (isDark) Color.White else Color.Black
+                color = if (isDark) Color.White else LightTextPrimary
             )
             
             Spacer(Modifier.height(24.dp))
@@ -1265,7 +1275,7 @@ fun WeatherPanel(
                     label = "AQI",
                     value = weatherInfo.aqi?.toString() ?: "--",
                     icon = Icons.Default.Air,
-                    color = if (isDark) CyberBlue else AppBlue,
+                    color = CyberBlue,
                     modifier = Modifier.weight(1f)
                 )
                 
@@ -1293,8 +1303,8 @@ fun WeatherPanel(
                 modifier = Modifier.fillMaxWidth().height(52.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = (if (isDark) CyberBlue else AppBlue).copy(alpha = 0.1f),
-                    contentColor = if (isDark) CyberBlue else AppBlue
+                    containerColor = CyberBlue.copy(alpha = 0.1f),
+                    contentColor = CyberBlue
                 ),
                 elevation = null
             ) {
@@ -1403,9 +1413,9 @@ fun MapSearchBar(
                         value = query,
                         onValueChange = onQueryChange,
                         modifier = Modifier.fillMaxWidth().onFocusChanged { isFocused = it.isFocused },
-                        textStyle = androidx.compose.ui.text.TextStyle(color = if (isDark) Color.White else Color.Black, fontSize = 16.sp, fontWeight = FontWeight.Bold),
+                        textStyle = androidx.compose.ui.text.TextStyle(color = if (isDark) Color.White else LightTextPrimary, fontSize = 16.sp, fontWeight = FontWeight.Bold),
                         singleLine = true,
-                        cursorBrush = androidx.compose.ui.graphics.SolidColor(AppBlue),
+                        cursorBrush = androidx.compose.ui.graphics.SolidColor(CyberBlue),
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                         keyboardActions = androidx.compose.foundation.text.KeyboardActions(onSearch = { onSearch(query); keyboardController?.hide(); focusManager.clearFocus() })
                     )

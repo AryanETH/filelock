@@ -13,8 +13,8 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 private val DarkColorScheme = darkColorScheme(
-    primary = ElectricBlue,
-    secondary = RoyalBlue,
+    primary = CyberBlue,
+    secondary = CyberBlue,
     tertiary = CyanHighlight,
     background = CyberBlack,
     surface = CyberDarkBlue,
@@ -30,12 +30,12 @@ private val DarkColorScheme = darkColorScheme(
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = PrimaryBlue,
-    secondary = DeepNavyBlue,
+    primary = CyberBlue,
+    secondary = CyberBlue,
     tertiary = CyanHighlight,
-    background = LightBackgroundTint,
-    surface = Color.White,
-    surfaceVariant = Color(0xFFF1F4F9),
+    background = LightBackground,
+    surface = LightSurface,
+    surfaceVariant = LightSurfaceVariant,
     onPrimary = Color.White,
     onSecondary = Color.White,
     onTertiary = Color.Black,

@@ -45,6 +45,8 @@ import android.os.Environment
 import android.graphics.pdf.PdfRenderer
 import android.os.ParcelFileDescriptor
 import android.provider.MediaStore
+import android.widget.Toast
+import com.geovault.R
 import kotlinx.coroutines.withContext
 
 class VaultViewModel(application: Application) : AndroidViewModel(application) {
@@ -436,22 +438,26 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
         val hasCamera = androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
         val hasLocation = androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
         val hasBattery = hasBatteryOptimizationPermission(context)
+        val hasBackgroundPopups = prefs.getBoolean("perm_background_popups", false)
         val hasStorage = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_MEDIA_IMAGES) == PackageManager.PERMISSION_GRANTED else androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
         val hasFullStorage = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) Environment.isExternalStorageManager() else true
         
         val isDeviceAdmin = false // Force disabled
 
         if (hasLocation && !_uiState.value.hasLocationPermission) startMapDownload()
-        _uiState.update { it.copy(
-            hasUsageStatsPermission = hasUsage, 
-            hasOverlayPermission = hasOverlay, 
-            hasCameraPermission = hasCamera, 
-            hasLocationPermission = hasLocation, 
-            hasStoragePermission = hasStorage, 
-            hasFullStoragePermission = hasFullStorage, 
-            hasBatteryOptimizationPermission = hasBattery,
-            isUninstallShieldEnabled = isDeviceAdmin
-        ) }
+        _uiState.update {
+            it.copy(
+                hasUsageStatsPermission = hasUsage,
+                hasOverlayPermission = hasOverlay,
+                hasCameraPermission = hasCamera,
+                hasLocationPermission = hasLocation,
+                hasStoragePermission = hasStorage,
+                hasFullStoragePermission = hasFullStorage,
+                hasBatteryOptimizationPermission = hasBattery,
+                hasBackgroundPopupsPermission = hasBackgroundPopups,
+                isUninstallShieldEnabled = isDeviceAdmin
+            )
+        }
     }
 
     fun toggleUninstallShield(enable: Boolean) {
@@ -557,10 +563,70 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
     fun openOverlaySettings() { getApplication<Application>().startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:${getApplication<Application>().packageName}")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
     fun openProtectedAppsSettings() {
         val context = getApplication<Application>()
-        if (!hasBatteryOptimizationPermission(context)) {
-            try { context.startActivity(Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:${context.packageName}")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)); return } catch (e: Exception) {}
+        
+        // Try manufacturer specific settings first (Realme/Oppo/Vivo/Xiaomi)
+        val intents = listOf(
+            // Realme / Oppo Auto-start
+            Intent().apply { component = ComponentName("com.coloros.safecenter", "com.coloros.safecenter.startupapp.StartupAppListActivity") },
+            Intent().apply { component = ComponentName("com.coloros.safecenter", "com.coloros.safecenter.permission.startup.StartupAppListActivity") },
+            Intent().apply { component = ComponentName("com.oppo.safe", "com.oppo.safe.permission.startup.StartupAppListActivity") },
+            // Xiaomi Auto-start
+            Intent().apply { component = ComponentName("com.miui.securitycenter", "com.miui.permcenter.autostart.AutoStartManagementActivity") },
+            // Vivo Auto-start
+            Intent().apply { component = ComponentName("com.vivo.permissionmanager", "com.vivo.permissionmanager.activity.BgStartUpManagerActivity") },
+            Intent().apply { component = ComponentName("com.iqoo.secure", "com.iqoo.secure.ui.phoneoptimize.BgStartUpManager") },
+            // Samsung
+            Intent().apply { component = ComponentName("com.samsung.android.lool", "com.samsung.android.sm.ui.battery.BatteryActivity") },
+            Intent().apply { component = ComponentName("com.samsung.android.sm_cn", "com.samsung.android.sm.ui.ram.AutoRunActivity") }
+        )
+
+        var opened = false
+        for (intent in intents) {
+            try {
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                context.startActivity(intent)
+                opened = true
+                break
+            } catch (e: Exception) {}
         }
-        context.startActivity(Intent(Settings.ACTION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+
+        if (opened) {
+            Toast.makeText(context, "Find '${context.getString(R.string.app_name)}' and enable 'Auto-start' / 'Background Running'", Toast.LENGTH_LONG).show()
+        } else {
+            // Fallback to standard battery optimization
+            if (!hasBatteryOptimizationPermission(context)) {
+                try {
+                    val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:${context.packageName}"))
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    context.startActivity(intent)
+                    return
+                } catch (e: Exception) {}
+            }
+            context.startActivity(Intent(Settings.ACTION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        }
+    }
+
+    fun openBackgroundPopupSettings() {
+        val context = getApplication<Application>()
+
+        try {
+            val intent = Intent(Settings.ACTION_SETTINGS).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(intent)
+        } catch (_: Exception) {}
+
+        setShowBackgroundPopupGuide(false)
+        
+        // Mark as "Checked" for UI purposes
+        prefs.edit().putBoolean("perm_background_popups", true).apply()
+        checkPermissions()
+    }
+
+    fun setShowBackgroundPopupGuide(show: Boolean) {
+        _uiState.update {
+            it.copy(showBackgroundPopupGuide = show)
+        }
     }
 
     private fun loadInstalledApps() {
@@ -615,9 +681,19 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
             if (lat == -1000.0) return@mapNotNull null
             VaultConfig(id, GeoPoint(lat, prefs.getFloat("vault_${id}_lon", 0f).toDouble()), prefs.getFloat("vault_${id}_radius", 500f), LockType.valueOf(prefs.getString("vault_${id}_lock_type", "PIN") ?: "PIN"), prefs.getString("vault_${id}_secret", "") ?: "", prefs.getStringSet("vault_${id}_apps", emptySet()) ?: emptySet(), prefs.getLong("vault_${id}_timestamp", 0L))
         }
-        val language = prefs.getString("language", "en") ?: "en"
-        _uiState.update { it.copy(vaults = vaults, isLocked = prefs.getBoolean("is_locked", true), activeVaultId = prefs.getString("active_vault_id", null), isFingerprintEnabled = prefs.getBoolean("fingerprint_enabled", true), isDarkMode = prefs.getBoolean("is_dark_mode", false), currentLanguage = language, isFirstRun = prefs.getBoolean("is_first_run", true), isLanguageSelected = prefs.contains("language")) }
-        com.geovault.security.LocaleManager.applyLanguage(language)
+        val language = com.geovault.security.LocaleManager.getLanguage(getApplication())
+        _uiState.update { it.copy(
+            vaults = vaults, 
+            isLocked = prefs.getBoolean("is_locked", true), 
+            activeVaultId = prefs.getString("active_vault_id", null), 
+            isFingerprintEnabled = prefs.getBoolean("fingerprint_enabled", true), 
+            isDarkMode = prefs.getBoolean("is_dark_mode", false), 
+            isScreenshotRestricted = prefs.getBoolean("screenshot_restriction", true),
+            currentLanguage = language, 
+            isFirstRun = prefs.getBoolean("is_first_run", true), 
+            isLanguageSelected = prefs.contains("language") || language != "en"
+        ) }
+        com.geovault.security.LocaleManager.applyLanguage(getApplication(), language)
         loadInstalledApps()
     }
 
@@ -640,14 +716,31 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
         prefs.edit().putStringSet("vault_ids", emptySet()).putBoolean("is_locked", true).apply(); loadPersistedVaults(); notifyServiceToRefresh()
     }
 
+    private var lastLocationFetchTime = 0L
+    private var lastLocationEnsured: GeoPoint? = null
+
     fun onLocationChanged(latitude: Double, longitude: Double) {
-        val isIndia = latitude in 8.4..37.6 && longitude in 68.7..97.2
-        _uiState.update { it.copy(currentLocation = GeoPoint(latitude, longitude), isIndiaRegion = isIndia) }
-        if (!_uiState.value.isFirstRun) ensureOffline(GeoPoint(latitude, longitude))
+        val now = System.currentTimeMillis()
+        val currentPoint = GeoPoint(latitude, longitude)
         
-        // Fetch weather and AQI if network is available
-        if (isNetworkAvailable(getApplication())) {
-            fetchWeatherAndAQI(latitude, longitude)
+        // BATTERY OPTIMIZATION: Throttle location-based updates (once every 2 mins or if moved significantly)
+        val hasMovedSignificantly = lastLocationEnsured?.let { 
+            LocationHelper.calculateDistance(it.latitude, it.longitude, latitude, longitude) > 500f // 500m
+        } ?: true
+
+        val isIndia = latitude in 8.4..37.6 && longitude in 68.7..97.2
+        _uiState.update { it.copy(currentLocation = currentPoint, isIndiaRegion = isIndia) }
+        
+        if (now - lastLocationFetchTime > 120000 || hasMovedSignificantly) {
+            lastLocationFetchTime = now
+            lastLocationEnsured = currentPoint
+            
+            if (!_uiState.value.isFirstRun) ensureOffline(currentPoint)
+            
+            // Fetch weather and AQI if network is available
+            if (isNetworkAvailable(getApplication())) {
+                fetchWeatherAndAQI(latitude, longitude)
+            }
         }
     }
 
@@ -745,7 +838,11 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
     fun toggleScreenshotRestriction() { val newValue = !_uiState.value.isScreenshotRestricted; prefs.edit().putBoolean("screenshot_restriction", newValue).apply(); _uiState.update { it.copy(isScreenshotRestricted = newValue) } }
     fun toggleFingerprint() { val newValue = !_uiState.value.isFingerprintEnabled; prefs.edit().putBoolean("fingerprint_enabled", newValue).apply(); _uiState.update { it.copy(isFingerprintEnabled = newValue) } }
 
-    fun setLanguage(langCode: String) { prefs.edit().putString("language", langCode).apply(); _uiState.update { it.copy(currentLanguage = langCode, isLanguageSelected = true) }; com.geovault.security.LocaleManager.applyLanguage(langCode) }
+    fun setLanguage(langCode: String) { 
+        prefs.edit().putString("language", langCode).apply()
+        _uiState.update { it.copy(currentLanguage = langCode, isLanguageSelected = true) }
+        com.geovault.security.LocaleManager.applyLanguage(getApplication(), langCode) 
+    }
 
     fun removeFileFromVault(fileId: String) { viewModelScope.launch(Dispatchers.IO) { com.geovault.security.SecureManager.getInstance(getApplication()).removeFileInfo(fileId); updateFileCounts() } }
 

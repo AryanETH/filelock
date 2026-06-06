@@ -15,6 +15,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.geovault.ui.theme.*
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -174,7 +175,7 @@ fun DashboardTourOverlay(
                                     .weight(1f)
                                     .clip(CircleShape)
                                     .background(
-                                        if (i <= idx) AppBlue
+                                        if (i <= idx) CyberBlue
                                         else Color.Gray.copy(alpha = 0.25f)
                                     )
                             )
@@ -226,7 +227,7 @@ fun DashboardTourOverlay(
                                 else onCompleted()
                             },
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = AppBlue
+                                containerColor = CyberBlue
                             ),
                             shape = RoundedCornerShape(14.dp),
                             contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp)

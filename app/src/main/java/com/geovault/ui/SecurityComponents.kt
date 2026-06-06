@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Backspace
+import com.geovault.ui.theme.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -90,11 +91,11 @@ fun CompactPinPad(
             }
         }
 
-        val primaryColor = if (isLightTheme) AppBlue else CyberBlue
+        val primaryColor = CyberBlue
         val onPrimaryColor = Color.White
-        val surfaceColor = if (isLightTheme) CreamWhite else CyberDarkBlue
-        val textColor = if (isLightTheme) Color.Black else Color.White
-        val borderColor = if (isLightTheme) Color.Black.copy(alpha = 0.1f) else Color.White.copy(alpha = 0.1f)
+        val surfaceColor = if (isLightTheme) Color.White else CyberDarkBlue
+        val textColor = if (isLightTheme) LightTextPrimary else Color.White
+        val borderColor = if (isLightTheme) LightOutline.copy(alpha = 0.2f) else Color.White.copy(alpha = 0.1f)
 
         Column(
             modifier = Modifier.fillMaxWidth(),
@@ -126,12 +127,12 @@ fun CompactPinPad(
                                 .requiredSize(dotSize)
                                 .scale(scale)
                                 .background(
-                                    if (filled) AppBlue else surfaceColor,
+                                    if (filled) Color(0xFF0980FC) else surfaceColor,
                                     CircleShape
                                 )
                                 .border(
                                     2.dp, 
-                                    if (isError) Color.Red else if (isLightTheme) Color.Black else Color.White,
+                                    if (isError) CyberNeonRed else Color.Black,
                                     CircleShape
                                 ),
                             contentAlignment = Alignment.Center
@@ -248,8 +249,8 @@ fun CompactPatternGrid(
         val dotRadius = (gridSize.value / 35).dp
         val lineWidth = (gridSize.value / 60).dp
 
-        val inactiveDotColor = if (isLightTheme) Color.Black.copy(alpha = 0.1f) else Color.White.copy(alpha = 0.1f)
-        val activeDotColor = if (isLightTheme) AppBlue else CyberBlue
+        val inactiveDotColor = if (isLightTheme) LightOutline.copy(alpha = 0.3f) else Color.White.copy(alpha = 0.1f)
+        val activeDotColor = CyberBlue
 
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Box(
@@ -303,7 +304,7 @@ fun CompactPatternGrid(
                             val isActive = secret.contains(index.toString())
                             drawCircle(
                                 color = when {
-                                    isError && isActive -> Color.Red
+                                    isError && isActive -> CyberNeonRed
                                     isActive -> activeDotColor
                                     else -> inactiveDotColor
                                 },
@@ -318,7 +319,7 @@ fun CompactPatternGrid(
                             val p1 = getCenterForIndex(secret[i].toString().toInt(), spacing, startOffset)
                             val p2 = getCenterForIndex(secret[i+1].toString().toInt(), spacing, startOffset)
                             drawLine(
-                                if (isError) Color.Red else activeDotColor, 
+                                if (isError) CyberNeonRed else activeDotColor, 
                                 p1, p2, 
                                 strokeWidth = lineWidth.toPx(),
                                 cap = StrokeCap.Round
@@ -337,7 +338,7 @@ fun CompactPatternGrid(
                         onPatternComplete(secret)
                     },
                     modifier = Modifier.fillMaxWidth().height(50.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = if (isLightTheme) AppBlue else CyberBlue),
+                    colors = ButtonDefaults.buttonColors(containerColor = CyberBlue),
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Text("CONFIRM PATTERN", fontWeight = FontWeight.Black)
@@ -345,7 +346,7 @@ fun CompactPatternGrid(
             } else {
                 Text(
                     text = if (isError) "TRY AGAIN" else if (availableWidth > 500.dp) "DRAW PATTERN TO UNLOCK" else "CONNECT DOTS TO VERIFY", 
-                    color = if (isError) Color.Red else (if (isLightTheme) Color.Gray else Color.White.copy(alpha = 0.6f)),
+                    color = if (isError) CyberNeonRed else (if (isLightTheme) LightTextSecondary else Color.White.copy(alpha = 0.6f)),
                     fontSize = if (availableWidth > 500.dp) 14.sp else 10.sp,
                     letterSpacing = 1.sp,
                     fontWeight = FontWeight.Black,

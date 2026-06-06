@@ -1,219 +1,220 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Mapplock</string>
-    <string name="accessibility_description">Used to protect your locked apps.</string>
+<string name="app_name">Mapplock</string>
+<string name="accessibility_description">Used to protect your locked apps.</string>
 
-    <!-- Simplified Jargon -->
-    <string name="vault">Safe Zone</string>
-    <string name="vault_plural">Safe Zones</string>
-    <string name="hidden_files">Secret Files</string>
-    <string name="hide_app">Hide App</string>
-    <string name="wrong_unlock_alert">Intruder Alert</string>
-    <string name="wrong_unlock">Wrong Unlock</string>
-    <string name="global_lock">Lock All</string>
-    <string name="stealth_entry">Secret Entry</string>
+<!--  Simplified Jargon  -->
+<string name="vault">Safe Zone</string>
+<string name="vault_plural">Safe Zones</string>
+<string name="hidden_files">Secret Files</string>
+<string name="hide_app">Hide App</string>
+<string name="wrong_unlock_alert">Intruder Alert</string>
+<string name="wrong_unlock">Wrong Unlock</string>
+<string name="global_lock">Lock All</string>
+<string name="stealth_entry">Secret Entry</string>
 
-    <!-- Language Screen -->
-    <string name="select_language">Choose Language</string>
-    <string name="english">English</string>
-    <string name="hindi">Hindi</string>
-    <string name="close_btn">Close</string>
-    <string name="selected_text">Selected</string>
-    <string name="language">Language</string>
-    <string name="search_languages">Search languages...</string>
+<!--  Language Screen  -->
+<string name="select_language">Choose Language</string>
+<string name="english">English</string>
+<string name="hindi">Hindi</string>
+<string name="close_btn">Close</string>
+<string name="selected_text">Selected</string>
+<string name="language">Language</string>
+<string name="search_languages">Search languages...</string>
 
-    <!-- Permission Screen -->
-    <string name="security_clearance">Permission Guide</string>
-    <string name="security_clearance_desc">Permissions are only requested when needed</string>
-    <string name="privacy_note">We do not collect, store, or share any of your personal information</string>
-    <string name="ads_note">This action may contain ads</string>
+<!--  Permission Screen  -->
+<string name="security_clearance">Permission Guide</string>
+<string name="security_clearance_desc">Permissions are only requested when needed</string>
+<string name="privacy_note">We do not collect, store, or share any of your personal information</string>
+<string name="ads_note">This action may contain ads</string>
 
-    <string name="permission_usage_access">App Monitoring</string>
-    <string name="permission_usage_access_desc">To see when you open a locked app.</string>
-    <string name="permission_overlay_access">Display Over Other Apps</string>
-    <string name="permission_overlay_access_desc">To show the lock screen over other apps.</string>
-    <string name="permission_camera_access">Camera</string>
-    <string name="permission_camera_access_desc">To take a photo of anyone trying to break in.</string>
-    <string name="permission_location_access">Location</string>
-    <string name="permission_location_access_desc">To lock/unlock apps when you are near your safe zone.</string>
-    <string name="permission_storage_access">Storage</string>
-    <string name="permission_storage_access_desc">To hide and save your photos and videos.</string>
-    <string name="permission_background_activity">Run in Background</string>
-    <string name="permission_background_activity_desc">To keep the app working 24/7 for your safety.</string>
-    <string name="system_ready">All Set!</string>
-    <string name="authorize">Allow</string>
-    <string name="usage_access">App Monitoring</string>
-    <string name="usage_access_desc">To see when you open a locked app</string>
-    <string name="overlay_access">Display Over Apps</string>
-    <string name="overlay_access_desc">Required to show the lock screen interface</string>
-    <string name="location_access">Location</string>
-    <string name="location_access_desc">Needed for GPS, nearby places, and navigation</string>
-    <string name="background_activity">Background Activity</string>
-    <string name="background_activity_desc">To keep protection active at all times</string>
-    <string name="full_storage_access">Storage Access</string>
-    <string name="full_storage_access_desc">Required to encrypt and hide your files</string>
+<string name="permission_usage_access">App Monitoring</string>
+<string name="permission_usage_access_desc">To see when you open a locked app.</string>
+<string name="permission_overlay_access">Display Over Other Apps</string>
+<string name="permission_overlay_access_desc">To show the lock screen over other apps.</string>
+<string name="permission_camera_access">Camera</string>
+<string name="permission_camera_access_desc">To take a photo of anyone trying to break in.</string>
+<string name="permission_location_access">Location</string>
+<string name="permission_location_access_desc">To lock/unlock apps when you are near your safe zone.</string>
+<string name="permission_storage_access">Storage</string>
+<string name="permission_storage_access_desc">To hide and save your photos and videos.</string>
+<string name="permission_background_activity">Run in Background</string>
+<string name="permission_background_activity_desc">To keep the app working 24/7 for your safety.</string>
+<string name="system_ready">All Set!</string>
+<string name="authorize">Allow</string>
+<string name="usage_access">App Monitoring</string>
+<string name="usage_access_desc">To see when you open a locked app</string>
+<string name="overlay_access">Display Over Apps</string>
+<string name="overlay_access_desc">Required to show the lock screen interface</string>
+<string name="location_access">Location</string>
+<string name="location_access_desc">Needed for GPS, nearby places, and navigation</string>
+<string name="background_activity">Ignore Battery Optimization</string>
+<string name="background_activity_desc">Allows the lock service to run reliably without being killed by the system.</string>
+<string name="full_storage_access">Storage Access</string>
+<string name="full_storage_access_desc">Required to encrypt and hide your files</string>
+<string name="background_popups">Background Pop-ups</string>
+<string name="background_popups_desc">Tap here → Special app access → Display pop-ups while in background → Allow</string>
 
+<!--  Onboarding  -->
+<string name="onboarding_1_title">Live Satellite View</string>
+<string name="onboarding_1_desc">See real time satellite views and discover places with HD live maps</string>
+<string name="onboarding_2_title">Secret Entry</string>
+<string name="onboarding_2_desc">No icons or passwords. Long-press your secret point on the map to see your files.</string>
+<string name="onboarding_3_title">Vault Protection</string>
+<string name="onboarding_3_desc">Lock any app. They will only open when you are in your safe zone.</string>
+<string name="onboarding_4_title">Global Security</string>
+<string name="onboarding_4_desc">Your photos and videos are hidden and saved safely with local encryption.</string>
+<string name="initialize_system">Get Started</string>
+<string name="next">Continue</string>
 
-    <!-- Onboarding -->
-    <string name="onboarding_1_title">Live Satellite View</string>
-    <string name="onboarding_1_desc">See real time satellite views and discover places with HD live maps</string>
-    <string name="onboarding_2_title">Secret Entry</string>
-    <string name="onboarding_2_desc">No icons or passwords. Long-press your secret point on the map to see your files.</string>
-    <string name="onboarding_3_title">Vault Protection</string>
-    <string name="onboarding_3_desc">Lock any app. They will only open when you are in your safe zone.</string>
-    <string name="onboarding_4_title">Global Security</string>
-    <string name="onboarding_4_desc">Your photos and videos are hidden and saved safely with local encryption.</string>
-    <string name="initialize_system">Get Started</string>
-    <string name="next">Continue</string>
+<!--  Map Screen  -->
+<string name="verify_pin">ENTER PIN</string>
+<string name="verify_pattern">DRAW PATTERN</string>
+<string name="cancel">CANCEL</string>
+<string name="setup_lock">SET LOCK</string>
+<string name="select_apps">CHOOSE APPS</string>
+<string name="save_lock">SAVE</string>
+<string name="back">BACK</string>
+<string name="search_places">Search place...</string>
 
+<!--  Dashboard  -->
+<string name="app_lock_title">Hide Apps</string>
+<string name="app_lock_subtitle">Lock your apps</string>
+<string name="history_title">Locked Apps</string>
+<string name="history_subtitle">Manage all your locked apps</string>
+<string name="categories">CATEGORIES</string>
+<string name="photos">Photos</string>
+<string name="videos">Videos</string>
+<string name="audio">Audio</string>
+<string name="documents">Documents</string>
+<string name="wrong_unlocks">Intruders</string>
+<string name="recycle_bin">Recycle Bin</string>
+<string name="items_count">%1$d items</string>
 
-    <!-- Map Screen -->
-    <string name="verify_pin">ENTER PIN</string>
-    <string name="verify_pattern">DRAW PATTERN</string>
-    <string name="cancel">CANCEL</string>
-    <string name="setup_lock">SET LOCK</string>
-    <string name="select_apps">CHOOSE APPS</string>
-    <string name="save_lock">SAVE</string>
-    <string name="back">BACK</string>
-    <string name="search_places">Search place...</string>
+<!--  Media Viewer Screen  -->
+<string name="save_to_gallery">Save to Gallery</string>
+<string name="open_in">Open In</string>
+<string name="restore">Restore</string>
+<string name="delete">Delete</string>
+<string name="restore_file_title">Restore File?</string>
+<string name="restore_file_message">Move this file back to your phone gallery.</string>
+<string name="delete_file_title">Delete File?</string>
+<string name="delete_file_message">This will delete the file forever.</string>
+<string name="preview_unavailable">Cannot preview:</string>
+<string name="use_open_in_hint">Use \'Open In\' to view.</string>
+<string name="open_with">Open with...</string>
+<string name="restore_confirm">RESTORE</string>
+<string name="delete_confirm">DELETE</string>
+<string name="no_preview">No preview for %1$s</string>
+<string name="open_in_hint">Use \'Open In\' to view with another app.</string>
 
-    <!-- Dashboard -->
-    <string name="app_lock_title">Hide Apps</string>
-    <string name="app_lock_subtitle">Lock your apps</string>
-    <string name="history_title">Locked Apps</string>
-    <string name="history_subtitle">Manage all your locked apps</string>
-    <string name="categories">CATEGORIES</string>
-    <string name="photos">Photos</string>
-    <string name="videos">Videos</string>
-    <string name="audio">Audio</string>
-    <string name="documents">Documents</string>
-    <string name="wrong_unlocks">Intruders</string>
-    <string name="recycle_bin">Recycle Bin</string>
-    <string name="items_count">%1$d items</string>
+<!--  Settings  -->
+<string name="system_permissions">PERMISSIONS</string>
+<string name="permission_app_detection">App Detection</string>
+<string name="permission_app_detection_desc">To see when you open locked apps.</string>
+<string name="permission_lock_window">Lock Window</string>
+<string name="permission_lock_window_desc">To show the lock screen.</string>
+<string name="permission_camera">Camera</string>
+<string name="permission_camera_desc">To catch someone trying to open your apps.</string>
+<string name="permission_storage">Storage</string>
+<string name="permission_storage_desc">To save your hidden files.</string>
+<string name="advanced_security">SECURITY</string>
+<string name="uninstall_protection">Uninstall Protection</string>
+<string name="uninstall_protection_desc">Stop others from deleting this app.</string>
+<string name="lock_options">LOCK SETTINGS</string>
+<string name="global_lock_title">Lock All</string>
+<string name="global_lock_desc">Lock all your selected apps at once.</string>
+<string name="dark_mode">Dark Mode</string>
+<string name="dark_mode_desc">Switch light and dark theme.</string>
 
-    <!-- Media Viewer Screen -->
-    <string name="save_to_gallery">Save to Gallery</string>
-    <string name="open_in">Open In</string>
-    <string name="restore">Restore</string>
-    <string name="delete">Delete</string>
-    <string name="restore_file_title">Restore File?</string>
-    <string name="restore_file_message">Move this file back to your phone gallery.</string>
-    <string name="delete_file_title">Delete File?</string>
-    <string name="delete_file_message">This will delete the file forever.</string>
-    <string name="preview_unavailable">Cannot preview:</string>
-    <string name="use_open_in_hint">Use \'Open In\' to view.</string>
-    <string name="open_with">Open with...</string>
-    <string name="restore_confirm">RESTORE</string>
-    <string name="delete_confirm">DELETE</string>
-    <string name="no_preview">No preview for %1$s</string>
-    <string name="open_in_hint">Use \'Open In\' to view with another app.</string>
+<!--  Tour  -->
+<string name="tour_skip">Skip</string>
+<string name="tour_next">Next</string>
+<string name="tour_welcome">Welcome! Your privacy is now hidden on the map.</string>
+<string name="tour_step1">Long-press on the map to set your secret entry point.</string>
+<string name="tour_step2">Double-tap your secret point to see your hidden files.</string>
+<string name="tour_step3">Use these buttons to find yourself or change map style.</string>
+<string name="tour_step4">Remember your secret point! It is your key.</string>
+<string name="zoom_in_hint">Zoom in more to set a safe zone.</string>
+<string name="access_granted_desc">Welcome back! Access allowed.</string>
+<string name="zone_restricted_desc">Access Denied. You are outside the safe zone.</string>
+<string name="system_initialization_desc">Long-press on map to create a safe zone.</string>
+<string name="lock_type_bio">Fingerprint</string>
+<string name="biometric_required">Please use your fingerprint.</string>
+<string name="map_location_hint">Use map point to unlock.</string>
+<string name="package_visibility">Choose apps to lock</string>
+<string name="tap_map_to_unlock">Tap below to open the map.</string>
+<string name="open_map_interface">Open Map</string>
+<string name="screenshot_restriction">No Screenshots</string>
+<string name="screenshot_restriction_desc">Stop others from taking screenshots of your vault.</string>
+<string name="fingerprint_unlock">Fingerprint</string>
+<string name="fingerprint_unlock_desc">Use fingerprint for quick access.</string>
+<string name="support_links">HELP &amp; LEGAL</string>
+<string name="tutorial">Tutorial (Watch Video)</string>
+<string name="feedback">Send Feedback</string>
+<string name="terms_of_use">Terms of Use</string>
+<string name="faq">FAQ / Help</string>
+<string name="privacy_policy">Privacy Policy</string>
 
-    <!-- Settings -->
-    <string name="system_permissions">PERMISSIONS</string>
-    <string name="permission_app_detection">App Detection</string>
-    <string name="permission_app_detection_desc">To see when you open locked apps.</string>
-    <string name="permission_lock_window">Lock Window</string>
-    <string name="permission_lock_window_desc">To show the lock screen.</string>
-    <string name="permission_camera">Camera</string>
-    <string name="permission_camera_desc">To catch someone trying to open your apps.</string>
-    <string name="permission_storage">Storage</string>
-    <string name="permission_storage_desc">To save your hidden files.</string>
-    <string name="advanced_security">SECURITY</string>
-    <string name="uninstall_protection">Uninstall Protection</string>
-    <string name="uninstall_protection_desc">Stop others from deleting this app.</string>
-    <string name="lock_options">LOCK SETTINGS</string>
-    <string name="global_lock_title">Lock All</string>
-    <string name="global_lock_desc">Lock all your selected apps at once.</string>
-    <string name="dark_mode">Dark Mode</string>
-    <string name="dark_mode_desc">Switch light and dark theme.</string>
+<!--  VaultContentScreen  -->
+<string name="settings">Settings</string>
+<string name="lock">Lock</string>
+<string name="add">Add</string>
+<string name="sort">Sort</string>
+<string name="hide">Hide</string>
+<string name="vault_empty">No apps here yet.</string>
+<string name="vault_empty_hint">Tap + to add some files.</string>
+<string name="app_lock_desc">Hidden apps will only open when you are in your safe zone.</string>
+<string name="hide_app_dialog_title">Hide App</string>
+<string name="cloning_in_progress">Moving app to safe zone...</string>
+<string name="hide_app_dialog_body">This will hide the app and it will only open from here. Proceed?</string>
+<string name="proceed">Continue</string>
+<string name="clone_success">App hidden successfully!</string>
+<string name="clone_failed">Failed. Please try again.</string>
+<string name="clear_all_hidden_apps">Unhide all apps</string>
+<string name="active_vaults">Active Zones</string>
+<string name="apps_locked">%1$d apps locked</string>
+<string name="vault_established">Safe Zone Created</string>
+<string name="apps_hidden">%1$d apps hidden:</string>
+<string name="close">Close</string>
+<string name="fix">Fix</string>
+<string name="get_started">Get Started</string>
+<string name="grant">Allow</string>
+<string name="vault_id_label">Zone %1$s</string>
 
-    <!-- Tour -->
-    <string name="tour_skip">Skip</string>
-    <string name="tour_next">Next</string>
-    <string name="tour_welcome">Welcome! Your privacy is now hidden on the map.</string>
-    <string name="tour_step1">Long-press on the map to set your secret entry point.</string>
-    <string name="tour_step2">Double-tap your secret point to see your hidden files.</string>
-    <string name="tour_step3">Use these buttons to find yourself or change map style.</string>
-    <string name="tour_step4">Remember your secret point! It is your key.</string>
-    <string name="zoom_in_hint">Zoom in more to set a safe zone.</string>
-    <string name="access_granted_desc">Welcome back! Access allowed.</string>
-    <string name="zone_restricted_desc">Access Denied. You are outside the safe zone.</string>
-    <string name="system_initialization_desc">Long-press on map to create a safe zone.</string>
-    <string name="lock_type_bio">Fingerprint</string>
-    <string name="biometric_required">Please use your fingerprint.</string>
-    <string name="map_location_hint">Use map point to unlock.</string>
-    <string name="package_visibility">Choose apps to lock</string>
-    <string name="tap_map_to_unlock">Tap below to open the map.</string>
-    <string name="open_map_interface">Open Map</string>
-    <string name="screenshot_restriction">No Screenshots</string>
-    <string name="screenshot_restriction_desc">Stop others from taking screenshots of your vault.</string>
-    <string name="fingerprint_unlock">Fingerprint</string>
-    <string name="fingerprint_unlock_desc">Use fingerprint for quick access.</string>
-    <string name="support_links">HELP &amp; LEGAL</string>
-    <string name="feedback">Send Feedback</string>
-    <string name="terms_of_use">Terms of Use</string>
-    <string name="faq">FAQ / Help</string>
-    <string name="privacy_policy">Privacy Policy</string>
+<!--  MapSelectionScreen  -->
+<string name="access_granted">Access Allowed</string>
+<string name="zone_restricted">Access Denied</string>
+<string name="system_initialization">Setting Up...</string>
+<string name="vault_encryption">Encrypting...</string>
+<string name="lock_type_pin">PIN</string>
+<string name="lock_type_pattern">Pattern</string>
+<string name="lock_type_map">Map</string>
+<string name="abort">Stop</string>
+<string name="initialize">Start</string>
+<string name="bypass_security">Skip</string>
+<string name="use_fingerprint">Use Fingerprint</string>
+<string name="location_locked">Location Locked</string>
+<string name="enter_pin">Enter PIN</string>
+<string name="draw_pattern">Draw Pattern</string>
+<string name="tap_coordinates">Tap Map</string>
+<string name="verify_identity">Verify It\'s You</string>
+<string name="outside_radius">You are too far from the safe zone</string>
+<string name="biometric_unavailable">Fingerprint not available</string>
+<string name="fingerprint">Fingerprint</string>
+<string name="tap_target_coordinates">Tap your secret map point</string>
 
-    <!-- VaultContentScreen -->
-    <string name="settings">Settings</string>
-    <string name="lock">Lock</string>
-    <string name="add">Add</string>
-    <string name="sort">Sort</string>
-    <string name="hide">Hide</string>
-    <string name="vault_empty">No apps here yet.</string>
-    <string name="vault_empty_hint">Tap + to add some files.</string>
-    <string name="app_lock_desc">Hidden apps will only open when you are in your safe zone.</string>
-    <string name="hide_app_dialog_title">Hide App</string>
-    <string name="cloning_in_progress">Moving app to safe zone...</string>
-    <string name="hide_app_dialog_body">This will hide the app and it will only open from here. Proceed?</string>
-    <string name="proceed">Continue</string>
-    <string name="clone_success">App hidden successfully!</string>
-    <string name="clone_failed">Failed. Please try again.</string>
-    <string name="clear_all_hidden_apps">Unhide all apps</string>
-    <string name="active_vaults">Active Zones</string>
-    <string name="apps_locked">%1$d apps locked</string>
-    <string name="vault_established">Safe Zone Created</string>
-    <string name="apps_hidden">%1$d apps hidden:</string>
-    <string name="close">Close</string>
-    <string name="fix">Fix</string>
-    <string name="get_started">Get Started</string>
-    <string name="grant">Allow</string>
-    <string name="vault_id_label">Zone %1$s</string>
-
-    <!-- MapSelectionScreen -->
-    <string name="access_granted">Access Allowed</string>
-    <string name="zone_restricted">Access Denied</string>
-    <string name="system_initialization">Setting Up...</string>
-    <string name="vault_encryption">Encrypting...</string>
-    <string name="lock_type_pin">PIN</string>
-    <string name="lock_type_pattern">Pattern</string>
-    <string name="lock_type_map">Map</string>
-    <string name="abort">Stop</string>
-    <string name="initialize">Start</string>
-    <string name="bypass_security">Skip</string>
-    <string name="use_fingerprint">Use Fingerprint</string>
-    <string name="location_locked">Location Locked</string>
-    <string name="enter_pin">Enter PIN</string>
-    <string name="draw_pattern">Draw Pattern</string>
-    <string name="tap_coordinates">Tap Map</string>
-    <string name="verify_identity">Verify It\'s You</string>
-    <string name="outside_radius">You are too far from the safe zone</string>
-    <string name="biometric_unavailable">Fingerprint not available</string>
-    <string name="fingerprint">Fingerprint</string>
-    <string name="tap_target_coordinates">Tap your secret map point</string>
-
-    <!--DashboardTour-->
-     <string name="tour_dash_welcome_title">Welcome to Mapplock</string>
-     <string name="tour_dash_welcome_desc">Your privacy is safe with us. Let\'s take a quick look around.</string>
-     <string name="tour_dash_hide_apps_title">Hide Apps</string>
-     <string name="tour_dash_hide_apps_desc">Tap here to lock and hide any app. They will disappear until you unlock them.</string>
-     <string name="tour_dash_history_title">My Zones</string>
-     <string name="tour_dash_history_desc">Manage all your safe zones and the apps inside them.</string>
-     <string name="tour_dash_categories_title">Your Secret Vault</string>
-     <string name="tour_dash_categories_desc">Photos, videos and files you hide will be saved here safely.</string>
-     <string name="tour_dash_fab_title">Add Files</string>
-     <string name="tour_dash_fab_desc">Tap the + button to hide files from your gallery.</string>
-     <string name="tour_dash_settings_title">Settings</string>
-     <string name="tour_dash_settings_desc">Change your lock, language and more from here.</string>
+<!-- DashboardTour -->
+<string name="tour_dash_welcome_title">Welcome to Mapplock</string>
+<string name="tour_dash_welcome_desc">Your privacy is safe with us. Let\'s take a quick look around.</string>
+<string name="tour_dash_hide_apps_title">Hide Apps</string>
+<string name="tour_dash_hide_apps_desc">Tap here to lock and hide any app. They will disappear until you unlock them.</string>
+<string name="tour_dash_history_title">My Zones</string>
+<string name="tour_dash_history_desc">Manage all your safe zones and the apps inside them.</string>
+<string name="tour_dash_categories_title">Your Secret Vault</string>
+<string name="tour_dash_categories_desc">Photos, videos and files you hide will be saved here safely.</string>
+<string name="tour_dash_fab_title">Add Files</string>
+<string name="tour_dash_fab_desc">Tap the + button to hide files from your gallery.</string>
+<string name="tour_dash_settings_title">Settings</string>
+<string name="tour_dash_settings_desc">Change your lock, language and more from here.</string>
 </resources>

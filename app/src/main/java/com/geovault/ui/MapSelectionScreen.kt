@@ -77,6 +77,8 @@ fun MapSelectionScreen(
     onUnlockAttempt: (String, String) -> Unit,
     onSimulateLocation: (Double, Double) -> Unit
 ) {
+    val isDark = state.isDarkMode
+    val accentColor = CyberBlue
     var mapLibreMap by remember { mutableStateOf<MapLibreMap?>(null) }
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -161,7 +163,7 @@ fun MapSelectionScreen(
         containerColor = if (isDarkTheme) CyberBlack else Color.White,
         bottomBar = {
             if (state.vaults.isEmpty()) {
-                CyberSetupOverlay()
+                CyberSetupOverlay(accentColor = accentColor)
             }
         }
     ) { padding ->
@@ -221,7 +223,9 @@ fun MapSelectionScreen(
                 modifier = Modifier.align(Alignment.TopEnd).padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                StyleFab(icon = Icons.Default.Public, active = isSatelliteMode) { isSatelliteMode = !isSatelliteMode }
+                StyleFab(icon = Icons.Default.Public, active = isSatelliteMode, accentColor = accentColor, isDark = isDark) { 
+                    isSatelliteMode = !isSatelliteMode 
+                }
             }
 
             // Controls
@@ -229,7 +233,7 @@ fun MapSelectionScreen(
                 modifier = Modifier.align(Alignment.BottomEnd).padding(20.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                CyberActionButton(icon = Icons.Default.MyLocation, onClick = {
+                CyberActionButton(icon = Icons.Default.MyLocation, accentColor = accentColor, onClick = {
                     try {
                         fusedLocationClient.lastLocation.addOnSuccessListener { location ->
                             location?.let {
@@ -246,6 +250,7 @@ fun MapSelectionScreen(
     if (showSetupDialog && selectedLatLng != null) {
         CyberSetupDialog(
             apps = state.installedApps,
+            accentColor = accentColor,
             onDismiss = { showSetupDialog = false },
             onConfirm = { pin, selectedApps, lockType ->
                 onSaveConfig(GeoPoint(selectedLatLng!!.latitude, selectedLatLng!!.longitude), pin, selectedApps, lockType)
@@ -259,6 +264,8 @@ fun MapSelectionScreen(
         if (vault != null) {
             CyberUnlockDialog(
                 lockType = vault.lockType,
+                accentColor = accentColor,
+                isDark = isDark,
                 onDismiss = { selectedVaultId = null },
                 onConfirm = { secret ->
                     onUnlockAttempt(vault.id, secret)
@@ -321,11 +328,11 @@ fun SecurityStatusPanel(isNear: Boolean, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun StyleFab(icon: ImageVector, active: Boolean, onClick: () -> Unit) {
+fun StyleFab(icon: ImageVector, active: Boolean, accentColor: Color, isDark: Boolean, onClick: () -> Unit) {
     SmallFloatingActionButton(
         onClick = onClick,
-        containerColor = if (active) CyberBlue else CyberDarkBlue.copy(alpha = 0.8f),
-        contentColor = if (active) Color.Black else CyberBlue,
+        containerColor = if (active) accentColor else CyberDarkBlue.copy(alpha = 0.8f),
+        contentColor = if (active) (if (isDark) Color.Black else Color.White) else accentColor,
         shape = CircleShape
     ) {
         Icon(icon, contentDescription = null, modifier = Modifier.size(20.dp))
@@ -333,24 +340,24 @@ fun StyleFab(icon: ImageVector, active: Boolean, onClick: () -> Unit) {
 }
 
 @Composable
-fun CyberActionButton(icon: ImageVector, color: Color = CyberBlue, onClick: () -> Unit) {
+fun CyberActionButton(icon: ImageVector, accentColor: Color, active: Boolean = false, onClick: () -> Unit) {
     Surface(
         modifier = Modifier.size(56.dp).clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
         color = CyberDarkBlue.copy(alpha = 0.9f),
-        border = BorderStroke(1.dp, color.copy(alpha = 0.4f)),
+        border = BorderStroke(1.dp, accentColor.copy(alpha = 0.4f)),
         shadowElevation = 8.dp
     ) {
-        Icon(icon, contentDescription = null, tint = color, modifier = Modifier.padding(16.dp))
+        Icon(icon, contentDescription = null, tint = accentColor, modifier = Modifier.padding(16.dp))
     }
 }
 
 @Composable
-fun CyberSetupOverlay() {
+fun CyberSetupOverlay(accentColor: Color) {
     Surface(
         modifier = Modifier.fillMaxWidth().height(100.dp),
         color = CyberBlack.copy(alpha = 0.9f),
-        border = BorderStroke(1.dp, Brush.verticalGradient(listOf(CyberBlue.copy(alpha = 0.3f), Color.Transparent)))
+        border = BorderStroke(1.dp, Brush.verticalGradient(listOf(accentColor.copy(alpha = 0.3f), Color.Transparent)))
     ) {
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -360,7 +367,7 @@ fun CyberSetupOverlay() {
             Text(
                 stringResource(R.string.system_initialization),
                 style = MaterialTheme.typography.labelLarge,
-                color = CyberBlue,
+                color = accentColor,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 3.sp
             )
@@ -374,7 +381,7 @@ fun CyberSetupOverlay() {
 }
 
 @Composable
-fun CyberSetupDialog(apps: List<AppInfo>, onDismiss: () -> Unit, onConfirm: (String, Set<String>, LockType) -> Unit) {
+fun CyberSetupDialog(apps: List<AppInfo>, accentColor: Color, onDismiss: () -> Unit, onConfirm: (String, Set<String>, LockType) -> Unit) {
     var pin by remember { mutableStateOf("") }
     var lockType by remember { mutableStateOf(LockType.PIN) }
     val selectedApps = remember { mutableStateOf(setOf<String>()) }
@@ -384,24 +391,24 @@ fun CyberSetupDialog(apps: List<AppInfo>, onDismiss: () -> Unit, onConfirm: (Str
             modifier = Modifier.fillMaxWidth().fillMaxHeight(0.9f),
             shape = RoundedCornerShape(32.dp),
             color = CyberDarkBlue,
-            border = BorderStroke(1.dp, CyberBlue.copy(alpha = 0.3f))
+            border = BorderStroke(1.dp, accentColor.copy(alpha = 0.3f))
         ) {
             Column(modifier = Modifier.padding(24.dp)) {
-                Text(stringResource(R.string.vault_encryption), style = MaterialTheme.typography.headlineSmall, color = CyberBlue, fontWeight = FontWeight.Black)
+                Text(stringResource(R.string.vault_encryption), style = MaterialTheme.typography.headlineSmall, color = accentColor, fontWeight = FontWeight.Black)
 
                 Spacer(Modifier.height(16.dp))
 
                 Row(modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    LockTypeButton(stringResource(R.string.lock_type_pin), lockType == LockType.PIN) {
+                    LockTypeButton(stringResource(R.string.lock_type_pin), lockType == LockType.PIN, accentColor = accentColor, isDark = true) {
                         lockType = LockType.PIN
                         pin = ""
                     }
-                    LockTypeButton(stringResource(R.string.lock_type_pattern), lockType == LockType.PATTERN) {
+                    LockTypeButton(stringResource(R.string.lock_type_pattern), lockType == LockType.PATTERN, accentColor = accentColor, isDark = true) {
                         lockType = LockType.PATTERN
                         pin = ""
                     }
-                    LockTypeButton(stringResource(R.string.lock_type_bio), lockType == LockType.FINGERPRINT) { lockType = LockType.FINGERPRINT }
-                    LockTypeButton(stringResource(R.string.lock_type_map), lockType == LockType.MAP) { lockType = LockType.MAP }
+                    LockTypeButton(stringResource(R.string.lock_type_bio), lockType == LockType.FINGERPRINT, accentColor = accentColor, isDark = true) { lockType = LockType.FINGERPRINT }
+                    LockTypeButton(stringResource(R.string.lock_type_map), lockType == LockType.MAP, accentColor = accentColor, isDark = true) { lockType = LockType.MAP }
                 }
 
                 Spacer(Modifier.height(16.dp))
@@ -415,11 +422,11 @@ fun CyberSetupDialog(apps: List<AppInfo>, onDismiss: () -> Unit, onConfirm: (Str
                             CompactPatternGrid(onPatternComplete = { pin = it })
                         }
                         LockType.FINGERPRINT -> {
-                            Text(stringResource(R.string.biometric_required), color = CyberBlue)
+                            Text(stringResource(R.string.biometric_required), color = accentColor)
                             pin = "BIO"
                         }
                         LockType.MAP -> {
-                            Text(stringResource(R.string.map_location_hint), color = CyberBlue)
+                            Text(stringResource(R.string.map_location_hint), color = accentColor)
                             pin = "MAP"
                         }
                     }
@@ -451,10 +458,11 @@ fun CyberSetupDialog(apps: List<AppInfo>, onDismiss: () -> Unit, onConfirm: (Str
                 }
 
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                    TextButton(onClick = onDismiss) { Text(stringResource(R.string.abort)) }
+                    TextButton(onClick = onDismiss) { Text(stringResource(R.string.abort), color = Color.Gray) }
                     Button(
                         onClick = { onConfirm(pin, selectedApps.value, lockType) },
-                        enabled = pin.isNotEmpty() && selectedApps.value.isNotEmpty()
+                        enabled = pin.isNotEmpty() && selectedApps.value.isNotEmpty(),
+                        colors = ButtonDefaults.buttonColors(containerColor = accentColor, contentColor = if (accentColor == BrandBlue) Color.White else Color.Black)
                     ) { Text(stringResource(R.string.initialize)) }
                 }
             }
@@ -463,14 +471,14 @@ fun CyberSetupDialog(apps: List<AppInfo>, onDismiss: () -> Unit, onConfirm: (Str
 }
 
 @Composable
-fun LockTypeButton(text: String, selected: Boolean, onClick: () -> Unit) {
+fun LockTypeButton(text: String, selected: Boolean, accentColor: Color, isDark: Boolean, onClick: () -> Unit) {
     Button(
         onClick = onClick,
         colors = ButtonDefaults.buttonColors(
-            containerColor = if (selected) CyberBlue else Color.Transparent,
-            contentColor = if (selected) Color.Black else CyberBlue
+            containerColor = if (selected) accentColor else Color.Transparent,
+            contentColor = if (selected) (if (isDark) Color.Black else Color.White) else accentColor
         ),
-        border = BorderStroke(1.dp, CyberBlue),
+        border = BorderStroke(1.dp, accentColor),
         modifier = Modifier.height(40.dp)
     ) {
         Text(text, fontSize = 10.sp)
@@ -478,7 +486,7 @@ fun LockTypeButton(text: String, selected: Boolean, onClick: () -> Unit) {
 }
 
 @Composable
-fun CyberUnlockDialog(lockType: LockType, onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
+fun CyberUnlockDialog(lockType: LockType, accentColor: Color, isDark: Boolean, onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
     var secret by remember { mutableStateOf("") }
 
     Dialog(onDismissRequest = onDismiss) {
@@ -501,16 +509,16 @@ fun CyberUnlockDialog(lockType: LockType, onDismiss: () -> Unit, onConfirm: (Str
                     LockType.FINGERPRINT -> {
                         IconButton(
                             onClick = { onConfirm("BIO") },
-                            modifier = Modifier.size(64.dp).background(CyberBlue.copy(alpha = 0.1f), CircleShape)
+                            modifier = Modifier.size(64.dp).background(accentColor.copy(alpha = 0.1f), CircleShape)
                         ) {
-                            Icon(Icons.Default.Fingerprint, null, tint = CyberBlue, modifier = Modifier.size(32.dp))
+                            Icon(Icons.Default.Fingerprint, null, tint = accentColor, modifier = Modifier.size(32.dp))
                         }
-                        Text(stringResource(R.string.use_fingerprint), color = CyberBlue, style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(top = 8.dp))
+                        Text(stringResource(R.string.use_fingerprint), color = accentColor, style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(top = 8.dp))
                     }
                     LockType.MAP -> {
                         Text(stringResource(R.string.tap_map_to_unlock), color = Color.Gray, textAlign = TextAlign.Center)
                         Spacer(Modifier.height(16.dp))
-                        Button(onClick = { onConfirm("MAP") }) {
+                        Button(onClick = { onConfirm("MAP") }, colors = ButtonDefaults.buttonColors(containerColor = CyberBlue, contentColor = Color.White)) {
                             Text(stringResource(R.string.open_map_interface))
                         }
                     }

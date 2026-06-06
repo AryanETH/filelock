@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.core.graphics.drawable.toBitmap
-import com.geovault.ui.theme.CyberBlue
+import com.geovault.ui.theme.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.ui.draw.clip
@@ -140,14 +140,15 @@ fun AuthUI(
 
     val isSatelliteMode = remember { prefs.getBoolean("is_satellite_mode", false) }
     val isFingerprintEnabled = remember { prefs.getBoolean("fingerprint_enabled", true) }
-    val isDarkMode = remember { prefs.getBoolean("dark_mode", false) }
+    val isDarkMode = remember { prefs.getBoolean("is_dark_mode", false) }
     var biometricStatusMessage by remember { mutableStateOf<String?>(null) }
     
     var isWithinRadius by remember { mutableStateOf(radius <= 0f) }
     var hasAutoRequestedBiometric by remember { mutableStateOf(false) }
     
-    val backgroundColor = if (isDarkMode) Color(0xFF0A0E14) else CreamWhite
-    val textPrimary = if (isDarkMode) Color.White else Color.Black.copy(alpha = 0.8f)
+    val backgroundColor = if (isDarkMode) Color(0xFF0A0E14) else Color.White
+    val textPrimary = if (isDarkMode) Color.White else LightTextPrimary
+    val accentColor = CyberBlue
 
     if (radius > 0) {
         LaunchedEffect(radius) {
@@ -406,7 +407,7 @@ fun AuthUI(
                     Icon(
                         Icons.Default.Fingerprint, 
                         contentDescription = "Fingerprint", 
-                        tint = AppBlue, 
+                        tint = accentColor,
                         modifier = Modifier.size(if (isSmallScreen) 44.dp else 56.dp)
                     )
                 }
@@ -473,7 +474,7 @@ fun MapLockScreen(targetLocation: GeoPoint, isSatelliteMode: Boolean, isDarkMode
             Text(
                 "TAP TARGET COORDINATES",
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
-                color = if (isDarkMode) CyberBlue else AppBlue,
+                color = CyberBlue,
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Black,
                 letterSpacing = 1.sp

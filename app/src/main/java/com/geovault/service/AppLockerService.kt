@@ -64,18 +64,39 @@ class AppLockerService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedSt
 
     override fun onBind(intent: Intent?): IBinder? = null
 
+    private var isScreenOn = true
+
     private val screenReceiver = object : android.content.BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            if (intent?.action == "com.geovault.HIDE_OVERLAY") {
-                serviceScope.launch(Dispatchers.Main) {
-                    hideOverlayImmediate()
+            when (intent?.action) {
+                android.content.Intent.ACTION_SCREEN_ON -> {
+                    isScreenOn = true
+                    // Reset last foreground package to force a re-check when screen turns on
+                    lastForegroundPackage = ""
+                    if (pollingJob == null || !pollingJob!!.isActive) {
+                        startPolling()
+                    }
                 }
-                return
-            }
-            serviceScope.launch(Dispatchers.Main) {
-                val prefs = com.geovault.security.SecureManager.getInstance(this@AppLockerService).prefs
-                prefs.edit().remove("bypass_package").commit()
-                hideOverlayImmediate()
+                android.content.Intent.ACTION_SCREEN_OFF -> {
+                    isScreenOn = false
+                    serviceScope.launch(Dispatchers.Main) {
+                        val prefs = com.geovault.security.SecureManager.getInstance(this@AppLockerService).prefs
+                        prefs.edit().remove("bypass_package").commit()
+                        hideOverlayImmediate()
+                    }
+                }
+                "com.geovault.HIDE_OVERLAY" -> {
+                    serviceScope.launch(Dispatchers.Main) {
+                        hideOverlayImmediate()
+                    }
+                }
+                android.content.Intent.ACTION_USER_PRESENT -> {
+                    isScreenOn = true
+                    // Safety restart when user unlocks phone
+                    if (pollingJob == null || !pollingJob!!.isActive) {
+                        startPolling()
+                    }
+                }
             }
         }
     }
@@ -92,13 +113,22 @@ class AppLockerService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedSt
         }
     }
 
+    private var wakeLock: android.os.PowerManager.WakeLock? = null
+
     override fun onCreate() {
         super.onCreate()
+        
+        // Acquire WakeLock to keep detection alive when screen is on
+        val powerManager = getSystemService(Context.POWER_SERVICE) as android.os.PowerManager
+        wakeLock = powerManager.newWakeLock(android.os.PowerManager.PARTIAL_WAKE_LOCK, "GeoVault:DetectionLock")
+        wakeLock?.acquire(10 * 60 * 1000L /*10 minutes*/)
+
         prefs = com.geovault.security.SecureManager.getInstance(this).prefs
         prefs.registerOnSharedPreferenceChangeListener(preferenceListener)
         
         // Register screen receiver
         val filter = android.content.IntentFilter().apply {
+            addAction(android.content.Intent.ACTION_SCREEN_ON)
             addAction(android.content.Intent.ACTION_SCREEN_OFF)
             addAction(android.content.Intent.ACTION_USER_PRESENT)
             addAction("com.geovault.HIDE_OVERLAY")
@@ -110,7 +140,7 @@ class AppLockerService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedSt
             registerReceiver(screenReceiver, filter)
         }
         
-        // 5. High-Frequency Stability: Set thread priority to maximum
+        // High-Frequency Stability: Set thread priority to maximum
         Thread.currentThread().priority = Thread.MAX_PRIORITY
 
         savedStateRegistryController.performRestore(null)
@@ -175,21 +205,25 @@ class AppLockerService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedSt
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = android.app.NotificationChannel(
                 channelId, "Security Monitoring",
-                android.app.NotificationManager.IMPORTANCE_LOW
+                android.app.NotificationManager.IMPORTANCE_HIGH
             ).apply {
                 description = "Keeps the app lock active in the background"
+                enableLights(false)
+                enableVibration(false)
+                setShowBadge(false)
             }
             val manager = getSystemService(android.app.NotificationManager::class.java)
             manager.createNotificationChannel(channel)
         }
 
         return androidx.core.app.NotificationCompat.Builder(this, channelId)
-            .setContentTitle("Security Monitoring Active")
-            .setContentText("Privacy protection is running")
+            .setContentTitle("GeoVault Security Active")
+            .setContentText("Your apps are protected")
             .setSmallIcon(com.geovault.R.drawable.ic_calculator)
-            .setPriority(androidx.core.app.NotificationCompat.PRIORITY_LOW)
+            .setPriority(androidx.core.app.NotificationCompat.PRIORITY_MAX)
             .setCategory(androidx.core.app.NotificationCompat.CATEGORY_SERVICE)
             .setOngoing(true)
+            .setSilent(true)
             .build()
     }
 
@@ -201,13 +235,16 @@ class AppLockerService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedSt
         // Handle Accessibility Events for 0ms latency
         val packageName = intent?.getStringExtra("event_package_name")
         if (packageName != null && intent.getBooleanExtra("is_accessibility_event", false)) {
-            // OS: Process & Thread Management
-            // Offload to Default dispatcher to keep the main thread fluid
             serviceScope.launch {
                 handlePackageChange(packageName, isEventDriven = true)
             }
         }
         
+        // Safety check to ensure polling is always running on Realme
+        if (pollingJob == null || !pollingJob!!.isActive) {
+            startPolling()
+        }
+
         return START_STICKY
     }
 
@@ -236,12 +273,12 @@ class AppLockerService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedSt
             allVaultIds.forEach { id ->
                 val vaultApps = prefs.getStringSet("vault_${id}_apps", emptySet()) ?: emptySet()
                 apps.addAll(vaultApps)
-                android.util.Log.d("AppLockerService", "Vault $id has ${vaultApps.size} apps: $vaultApps")
             }
             lockedPackages = apps
-            android.util.Log.d("AppLockerService", "Total locked apps updated: ${lockedPackages.size} -> $lockedPackages")
             
             isMasterStealthEnabled = prefs.getBoolean("master_stealth_enabled", false)
+            
+            android.util.Log.d("AppLockerService", "Monitoring ${lockedPackages.size} apps: $lockedPackages")
         }
     }
 
@@ -249,47 +286,64 @@ class AppLockerService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedSt
 
     private fun getForegroundPackageInfo(): ForegroundInfo? {
         val time = System.currentTimeMillis()
-        val usageEvents = usageStatsManager?.queryEvents(time - 1000, time) ?: return null
-        val event = UsageEvents.Event()
-        var lastPackage: String? = null
-        var lastTime = 0L
         
-        while (usageEvents.hasNextEvent()) {
-            usageEvents.getNextEvent(event)
-            if (event.eventType == UsageEvents.Event.ACTIVITY_RESUMED || 
-                event.eventType == UsageEvents.Event.MOVE_TO_FOREGROUND ||
-                event.eventType == 26) {
-                lastPackage = event.packageName
-                lastTime = event.timeStamp
+        // Method 1: UsageEvents (More granular)
+        // Increased lookup range to 5 seconds to catch delayed events on Realme
+        val usageEvents = usageStatsManager?.queryEvents(time - 5000, time)
+        if (usageEvents != null) {
+            val event = UsageEvents.Event()
+            var lastPkg: String? = null
+            var lastTime = 0L
+            
+            while (usageEvents.hasNextEvent()) {
+                usageEvents.getNextEvent(event)
+                if (event.eventType == UsageEvents.Event.ACTIVITY_RESUMED || 
+                    event.eventType == UsageEvents.Event.MOVE_TO_FOREGROUND) {
+                    
+                    if (event.timeStamp > lastTime) {
+                        lastPkg = event.packageName
+                        lastTime = event.timeStamp
+                    }
+                }
+            }
+            
+            if (lastPkg != null && lastTime > lastResumeTime) {
+                lastResumeTime = lastTime
+                return ForegroundInfo(lastPkg, true)
             }
         }
         
-        if (lastPackage == null) return null
-        
-        val isNew = lastTime > lastResumeTime
-        if (isNew) {
-            lastResumeTime = lastTime
+        // Method 2: Last Time Used Fallback
+        val stats = usageStatsManager?.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, time - 10000, time)
+        if (!stats.isNullOrEmpty()) {
+            val latest = stats.maxByOrNull { it.lastTimeUsed }
+            if (latest != null && latest.packageName != lastForegroundPackage) {
+                return ForegroundInfo(latest.packageName, false)
+            }
         }
         
-        return ForegroundInfo(lastPackage, isNew)
+        return null
     }
 
+    private var pollingJob: Job? = null
+
     private fun startPolling() {
-        serviceScope.launch(Dispatchers.Default) {
+        pollingJob?.cancel()
+        pollingJob = serviceScope.launch(Dispatchers.Default) {
             while (isActive) {
-                val info = getForegroundPackageInfo()
-                if (info != null) {
-                    handlePackageChange(info.packageName, info.isNewEvent)
+                try {
+                    if (isScreenOn) {
+                        val info = getForegroundPackageInfo()
+                        if (info != null) {
+                            handlePackageChange(info.packageName, info.isNewEvent)
+                        }
+                    }
+                } catch (e: Exception) {
+                    android.util.Log.e("AppLockerService", "Polling error: ${e.message}")
                 }
                 
-                // DAA: Greedy strategy for battery optimization
-                // Poll faster when a high-risk (locked) app is likely to be open
-                // or if we just detected a change.
-                val delayMs = when {
-                    lockedPackages.contains(lastForegroundPackage) -> 100L // Fast for locked apps
-                    lastForegroundPackage == "com.android.systemui" -> 50L  // Ultra-fast for Recents
-                    else -> 200L // Faster polling for better responsiveness
-                }
+                // ULTRA-FAST 50ms polling when screen is ON for 100% detection rate
+                val delayMs = if (isScreenOn) 50L else 2000L
                 delay(delayMs)
             }
         }
@@ -298,17 +352,14 @@ class AppLockerService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedSt
     private suspend fun handlePackageChange(currentPackage: String, isEventDriven: Boolean) {
         val prefs = com.geovault.security.SecureManager.getInstance(this).prefs
         
-        // Clear bypass when entering the locker app itself
         if (currentPackage == this.packageName) {
             withContext(Dispatchers.Main) {
                 prefs.edit().remove("bypass_package").apply()
             }
-            // Do NOT return here. We need to update lastForegroundPackage to avoid bypass bugs.
         }
 
         val bypassPackage = prefs.getString("bypass_package", null)
 
-        // 1. If we are in SystemUI or a different app, ensure bypass is cleared
         if (bypassPackage != null && currentPackage != bypassPackage) {
             withContext(Dispatchers.Main) {
                 prefs.edit().remove("bypass_package").apply()
@@ -319,14 +370,11 @@ class AppLockerService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedSt
         
         if (isNewLaunch) {
             lastForegroundPackage = currentPackage
-
-            // Refresh bypass after potential clear
             val updatedBypass = prefs.getString("bypass_package", null)
 
             val isSystemTarget = currentPackage == "com.android.packageinstaller" || 
                                  currentPackage == "com.google.android.packageinstaller"
 
-            // HARD EXCLUSION: Never lock Settings or Play Store as per user request
             val isRestrictedSystemApp = currentPackage == "com.android.settings" || 
                                         currentPackage == "com.android.vending" || 
                                         currentPackage == "com.google.android.vending"
@@ -368,38 +416,29 @@ class AppLockerService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedSt
             }
 
             try {
-                // IMPORTANT: The overlay is now OPAQUE WHITE to cover app content instantly.
                 overlayView?.alpha = 1f 
                 overlayView?.visibility = View.VISIBLE
                 windowManager?.addView(overlayView, params)
                 isOverlayAttached = true
                 
-                // Launch LockActivity to provide the actual PIN UI
-                val isFingerprintEnabled = prefs.getBoolean("fingerprint_enabled", true)
-                val lockIntent = Intent(this, com.geovault.LockActivity::class.java).apply {
-                    val target = targetPackageState.value
-                    putExtra("target_package", target)
-                    putExtra("request_biometric", isFingerprintEnabled)
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or 
-                             Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or
-                             Intent.FLAG_ACTIVITY_NO_ANIMATION)
-                }
-                startActivity(lockIntent)
+                triggerLockActivity()
             } catch (e: Exception) {}
         } else {
-            // Even if attached, if we are calling showOverlayImmediate, it means a lock is required.
-            // Re-trigger LockActivity to be safe (handles the case where user cleared it from Recents).
-            val isFingerprintEnabled = prefs.getBoolean("fingerprint_enabled", true)
-            val lockIntent = Intent(this, com.geovault.LockActivity::class.java).apply {
-                val target = targetPackageState.value
-                putExtra("target_package", target)
-                putExtra("request_biometric", isFingerprintEnabled)
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or 
-                         Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or
-                         Intent.FLAG_ACTIVITY_NO_ANIMATION)
-            }
-            startActivity(lockIntent)
+            triggerLockActivity()
         }
+    }
+
+    private fun triggerLockActivity() {
+        val isFingerprintEnabled = prefs.getBoolean("fingerprint_enabled", true)
+        val lockIntent = Intent(this, com.geovault.LockActivity::class.java).apply {
+            putExtra("target_package", targetPackageState.value)
+            putExtra("request_biometric", isFingerprintEnabled)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or 
+                     Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or
+                     Intent.FLAG_ACTIVITY_SINGLE_TOP or
+                     Intent.FLAG_ACTIVITY_NO_ANIMATION)
+        }
+        startActivity(lockIntent)
     }
 
     private fun hideOverlayImmediate() {
@@ -412,13 +451,16 @@ class AppLockerService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedSt
 
     @androidx.compose.runtime.Composable
     private fun LockOverlayContent(targetPackage: String) {
-        // Pure White Cover for background privacy. 
-        // We keep it empty so the "Initialization" screen is invisible.
         Box(modifier = Modifier.fillMaxSize().background(Color.White))
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        
+        if (wakeLock?.isHeld == true) {
+            wakeLock?.release()
+        }
+
         val prefs = com.geovault.security.SecureManager.getInstance(this).prefs
         prefs.unregisterOnSharedPreferenceChangeListener(preferenceListener)
 
