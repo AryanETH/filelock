@@ -46,6 +46,14 @@ import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.graphics.graphicsLayer
+import java.io.File
+
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Shadow
 
 @Composable
 fun AuthUI(
@@ -147,7 +155,9 @@ fun AuthUI(
     var hasAutoRequestedBiometric by remember { mutableStateOf(false) }
     
     val backgroundColor = if (isDarkMode) Color(0xFF0A0E14) else Color.White
-    val textPrimary = if (isDarkMode) Color.White else LightTextPrimary
+    val customBgPath = remember { prefs.getString("lock_background_path", null) }
+    val hasCustomBg = customBgPath != null && File(customBgPath).exists()
+    val textPrimary = if (hasCustomBg) Color.White else (if (isDarkMode) Color.White else LightTextPrimary)
     val accentColor = CyberBlue
 
     if (radius > 0) {
@@ -213,6 +223,23 @@ fun AuthUI(
     }
 
     BoxWithConstraints(modifier = Modifier.fillMaxSize().background(backgroundColor)) {
+        if (hasCustomBg) {
+            AsyncImage(
+                model = File(customBgPath!!),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+            // Frosty overlay layer
+            Box(modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    if (isDarkMode) Color.Black.copy(alpha = 0.5f) 
+                    else Color.White.copy(alpha = 0.4f)
+                )
+            )
+        }
+
         val availableHeight = maxHeight
         val isSmallScreen = availableHeight < 600.dp
 
@@ -229,7 +256,9 @@ fun AuthUI(
             // 1. App Logo
             appIcon?.let { icon ->
                 Box(
-                    modifier = Modifier.size(if (isSmallScreen) 80.dp else 110.dp),
+                    modifier = Modifier
+                        .size(if (isSmallScreen) 80.dp else 110.dp)
+                        .then(if (hasCustomBg) Modifier.shadow(12.dp, CircleShape) else Modifier),
                     contentAlignment = Alignment.Center
                 ) {
                     Image(
@@ -256,7 +285,9 @@ fun AuthUI(
                         }
                     },
                     color = if (!isWithinRadius && radius > 0) Color.Red else textPrimary,
-                    style = if (isSmallScreen) MaterialTheme.typography.titleMedium else MaterialTheme.typography.headlineSmall,
+                    style = (if (isSmallScreen) MaterialTheme.typography.titleMedium else MaterialTheme.typography.headlineSmall).copy(
+                        shadow = if (hasCustomBg) Shadow(color = Color.Black.copy(alpha = 0.5f), blurRadius = 10f, offset = Offset(2f, 2f)) else null
+                    ),
                     fontWeight = FontWeight.Black,
                     textAlign = TextAlign.Center
                 )
@@ -285,7 +316,7 @@ fun AuthUI(
                                 }
                             },
                             onError = captureIntruder,
-                            isLightTheme = !isDarkMode,
+                            isLightTheme = !isDarkMode && !hasCustomBg,
                             isFullPage = true
                         )
                     }
@@ -302,7 +333,7 @@ fun AuthUI(
                                 }
                             },
                             onError = captureIntruder,
-                            isLightTheme = !isDarkMode,
+                            isLightTheme = !isDarkMode && !hasCustomBg,
                             isFullPage = true
                         )
                     }
@@ -337,7 +368,7 @@ fun AuthUI(
                                 }
                             },
                             onError = captureIntruder,
-                            isLightTheme = !isDarkMode
+                            isLightTheme = !isDarkMode && !hasCustomBg
                         )
                     }
                 }
@@ -350,6 +381,7 @@ fun AuthUI(
                 Box(
                     modifier = Modifier
                         .size(if (isSmallScreen) 64.dp else 80.dp)
+                        .then(if (hasCustomBg) Modifier.shadow(16.dp, CircleShape, ambientColor = Color.Black, spotColor = Color.Black) else Modifier)
                         .clickable {
                             haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
                             
@@ -407,7 +439,7 @@ fun AuthUI(
                     Icon(
                         Icons.Default.Fingerprint, 
                         contentDescription = "Fingerprint", 
-                        tint = accentColor,
+                        tint = if (hasCustomBg) Color.White else accentColor, 
                         modifier = Modifier.size(if (isSmallScreen) 44.dp else 56.dp)
                     )
                 }
@@ -415,7 +447,7 @@ fun AuthUI(
                 biometricStatusMessage?.let { msg ->
                     Text(
                         text = msg,
-                        color = Color.Gray,
+                        color = if (hasCustomBg) Color.White else Color.Gray,
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.padding(top = 12.dp, bottom = 16.dp)
                     )
@@ -446,7 +478,10 @@ fun MapLockScreen(targetLocation: GeoPoint, isSatelliteMode: Boolean, isDarkMode
             factory = {
                 mapView.apply {
                     getMapAsync { map ->
-                        map.setStyle(currentStyle)
+                        map.setStyle(currentStyle) { style ->
+                            // Apply official boundaries for compliance
+                            MapStyleHelper.applyIndiaBoundaries(context, style)
+                        }
                         map.uiSettings.isLogoEnabled = false
                         map.uiSettings.isAttributionEnabled = false
                         

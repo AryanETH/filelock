@@ -13,6 +13,7 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.lazy.grid.*
@@ -26,6 +27,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.draw.*
 import androidx.compose.ui.zIndex
 import androidx.compose.ui.graphics.Color
@@ -60,6 +62,8 @@ import java.io.File
 import java.io.FileOutputStream
 import java.text.SimpleDateFormat
 import java.util.*
+import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.saveable.listSaver
 import com.geovault.core.AppCloner
 import com.geovault.core.VirtualAppManager
 @OptIn(ExperimentalMaterial3Api::class)
@@ -351,6 +355,36 @@ fun formatDuration(ms: Long): String {
     return String.format(java.util.Locale.US, "%02d:%02d", min, sec)
 }
 
+val ContentScreenSaver = listSaver<ContentScreen, Any>(
+    save = { screen ->
+        when (screen) {
+            is ContentScreen.Dashboard -> listOf("Dashboard")
+            is ContentScreen.AppLock -> listOf("AppLock")
+            is ContentScreen.Settings -> listOf("Settings")
+            is ContentScreen.LanguageSelection -> listOf("LanguageSelection")
+            is ContentScreen.FAQ -> listOf("FAQ")
+            is ContentScreen.CategoryView -> listOf("CategoryView", screen.category.name)
+            is ContentScreen.FolderView -> listOf("FolderView", screen.folderName)
+            is ContentScreen.WebView -> listOf("WebView", screen.url, screen.title)
+            is ContentScreen.ImageAdjustment -> listOf("ImageAdjustment", screen.uri.toString())
+        }
+    },
+    restore = { list ->
+        when (list[0] as String) {
+            "Dashboard" -> ContentScreen.Dashboard
+            "AppLock" -> ContentScreen.AppLock
+            "Settings" -> ContentScreen.Settings
+            "LanguageSelection" -> ContentScreen.LanguageSelection
+            "FAQ" -> ContentScreen.FAQ
+            "CategoryView" -> ContentScreen.CategoryView(FileCategory.valueOf(list[1] as String))
+            "FolderView" -> ContentScreen.FolderView(list[1] as String)
+            "WebView" -> ContentScreen.WebView(list[1] as String, list[2] as String)
+            "ImageAdjustment" -> ContentScreen.ImageAdjustment(Uri.parse(list[1] as String))
+            else -> ContentScreen.Dashboard
+        }
+    }
+)
+
 @UnstableApi
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -386,6 +420,7 @@ fun VaultContentScreen(
     onBulkDelete: (Set<String>) -> Unit = {},
     onBulkRestore: (Set<String>) -> Unit = {},
     onAddFilesToFolder: (List<Uri>, String) -> Unit = { _, _ -> },
+    onSetCustomBackground: (String?) -> Unit = {},
     onStartAction: () -> Unit = {},
     onEndAction: () -> Unit = {}
 ) {
@@ -400,7 +435,7 @@ fun VaultContentScreen(
     val virtualAppManager = remember { VirtualAppManager(context) }
     val appCloner = remember { AppCloner(context) }
     
-    var currentScreen by remember { mutableStateOf<ContentScreen>(ContentScreen.Dashboard) }
+    var currentScreen by rememberSaveable(stateSaver = ContentScreenSaver) { mutableStateOf<ContentScreen>(ContentScreen.Dashboard) }
     var selectedCategoryForAdd by remember { mutableStateOf<FileCategory?>(null) }
     var viewingFile by remember { mutableStateOf<VaultFile?>(null) }
     var showBackupDialog by remember { mutableStateOf(false) }
@@ -672,7 +707,11 @@ fun VaultContentScreen(
                             onToggleUninstallShield = onToggleUninstallShield,
                             onRestoreAndUninstall = onRestoreAndUninstall,
                             onOpenWebView = { url, title -> currentScreen = ContentScreen.WebView(url, title) },
-                            onOpenFAQ = { currentScreen = ContentScreen.FAQ }
+                            onOpenFAQ = { currentScreen = ContentScreen.FAQ },
+                            onPickBackground = { currentScreen = ContentScreen.ImageAdjustment(it) },
+                            onSetCustomBackground = onSetCustomBackground,
+                            onStartAction = onStartAction,
+                            onEndAction = onEndAction
                         )
                         is ContentScreen.CategoryView -> {
                             val gridState = categoryGridStates.getOrPut(screen.category) { LazyGridState() }
@@ -712,6 +751,14 @@ fun VaultContentScreen(
                         is ContentScreen.WebView -> WebViewScreen(
                             url = screen.url,
                             isDark = isDark
+                        )
+                        is ContentScreen.ImageAdjustment -> ImageAdjustmentScreen(
+                            uri = screen.uri,
+                            onApply = { path ->
+                                onSetCustomBackground(path)
+                                currentScreen = ContentScreen.Settings
+                            },
+                            onCancel = { currentScreen = ContentScreen.Settings }
                         )
                     }
                 }
@@ -933,6 +980,7 @@ sealed class ContentScreen {
     data class CategoryView(val category: FileCategory) : ContentScreen()
     data class FolderView(val folderName: String) : ContentScreen()
     data class WebView(val url: String, val title: String) : ContentScreen()
+    data class ImageAdjustment(val uri: Uri) : ContentScreen()
 }
 
 @Composable
@@ -988,16 +1036,16 @@ fun DashboardContent(
 
     val categories = remember(state) {
         val list = mutableListOf(
-            CategoryData(FileCategory.PHOTO, "", state.photoCount, Icons.Filled.Image, IconBlue, SoftBlue),
-            CategoryData(FileCategory.VIDEO, "", state.videoCount, Icons.Filled.PlayCircle, IconOrange, SoftOrange),
-            CategoryData(FileCategory.AUDIO, "", state.audioCount, Icons.Filled.MusicNote, IconRed, SoftRed),
-            CategoryData(FileCategory.DOCUMENT, "", state.documentCount, Icons.Filled.Description, IconGreen, SoftGreen),
-            CategoryData(FileCategory.INTRUDER, "", state.intruderCount, Icons.Filled.PersonSearch, IconOrange, SoftOrange),
-            CategoryData(FileCategory.RECYCLE_BIN, "", state.recycleBinCount, Icons.Filled.Delete, IconGray, SoftGray)
+            CategoryData(FileCategory.PHOTO, "", state.photoCount, Icons.Filled.Image, IconBlue, SoftBlue, imageRes = R.drawable.images),
+            CategoryData(FileCategory.VIDEO, "", state.videoCount, Icons.Filled.PlayCircle, IconOrange, SoftOrange, imageRes = R.drawable.video),
+            CategoryData(FileCategory.AUDIO, "", state.audioCount, Icons.Filled.MusicNote, IconRed, SoftRed, imageRes = R.drawable.audio_music),
+            CategoryData(FileCategory.DOCUMENT, "", state.documentCount, Icons.Filled.Description, IconGreen, SoftGreen, imageRes = R.drawable.documents),
+            CategoryData(FileCategory.INTRUDER, "", state.intruderCount, Icons.Filled.PersonSearch, IconOrange, SoftOrange, imageRes = R.drawable.intruder),
+            CategoryData(FileCategory.RECYCLE_BIN, "", state.recycleBinCount, Icons.Filled.Delete, IconGray, SoftGray, imageRes = R.drawable.recycle_bin)
         )
         state.customFolders.forEach { folderName ->
             val count = state.files.count { it.folderName == folderName }
-            list.add(CategoryData(FileCategory.OTHER, folderName, count, Icons.Default.Folder, IconPurple, SoftPurple, folderName))
+            list.add(CategoryData(FileCategory.OTHER, folderName, count, Icons.Default.Folder, IconPurple, SoftPurple, folderName, R.drawable.custom_folder))
         }
         list
     }
@@ -1112,12 +1160,12 @@ fun DashboardContent(
                                     }
                                 }
                             ) {
-                                CategoryGridItem(cat.title, cat.count, cat.icon, cat.color, isDark) {
+                                CategoryGridItem(cat.title, cat.count, cat.icon, cat.color, isDark, imageRes = cat.imageRes) {
                                     onFolderClick(cat.customFolderName)
                                 }
                             }
                         } else {
-                            CategoryGridItem(cat.title, cat.count, cat.icon, cat.color, isDark, modifier) {
+                            CategoryGridItem(cat.title, cat.count, cat.icon, cat.color, isDark, modifier, cat.imageRes) {
                                 onCategoryClick(cat.category)
                             }
                         }
@@ -1149,12 +1197,12 @@ fun DashboardContent(
                                 }
                             }
                         ) {
-                            CategoryItem(cat.title, cat.count, cat.icon, cat.color, cat.bgColor, isDark) {
+                            CategoryItem(cat.title, cat.count, cat.icon, cat.color, cat.bgColor, isDark, cat.imageRes) {
                                 onFolderClick(cat.customFolderName)
                             }
                         }
                     } else {
-                        CategoryItem(cat.title, cat.count, cat.icon, cat.color, cat.bgColor, isDark) {
+                        CategoryItem(cat.title, cat.count, cat.icon, cat.color, cat.bgColor, isDark, cat.imageRes) {
                             onCategoryClick(cat.category)
                         }
                     }
@@ -1171,7 +1219,8 @@ private data class CategoryData(
     val icon: ImageVector,
     val color: Color,
     val bgColor: Color,
-    val customFolderName: String? = null
+    val customFolderName: String? = null,
+    val imageRes: Int? = null
 )
 
 @Composable
@@ -1182,6 +1231,7 @@ fun CategoryGridItem(
     color: Color,
     isDark: Boolean,
     modifier: Modifier = Modifier,
+    imageRes: Int? = null,
     onClick: () -> Unit
 ) {
     Surface(
@@ -1202,12 +1252,21 @@ fun CategoryGridItem(
                     .background(if (isDark) Color.White.copy(alpha = 0.05f) else color.copy(alpha = 0.1f), CircleShape),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    icon, 
-                    null, 
-                    tint = if (isDark) CyberBlue else color, 
-                    modifier = Modifier.size(24.dp)
-                )
+                if (imageRes != null) {
+                    Image(
+                        painter = painterResource(id = imageRes),
+                        contentDescription = null,
+                        modifier = Modifier.size(32.dp),
+                        contentScale = ContentScale.Fit
+                    )
+                } else {
+                    Icon(
+                        icon, 
+                        null, 
+                        tint = if (isDark) CyberBlue else color, 
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
             }
             Spacer(Modifier.height(10.dp))
             Text(
@@ -1236,40 +1295,22 @@ fun CategoryGridItem(
 
 @Composable
 fun IllustrationBox(category: FileCategory, isDark: Boolean) {
-    val color = when(category) {
-        FileCategory.PHOTO -> CyberBlue
-        FileCategory.VIDEO -> IconOrange
-        FileCategory.AUDIO -> IconRed
-        FileCategory.DOCUMENT -> IconGreen
-        FileCategory.INTRUDER -> Color.Red
-        else -> IconPurple
+    val imageRes = when(category) {
+        FileCategory.PHOTO -> R.drawable.images
+        FileCategory.VIDEO -> R.drawable.video
+        FileCategory.AUDIO -> R.drawable.audio_music
+        FileCategory.DOCUMENT -> R.drawable.documents
+        FileCategory.INTRUDER -> R.drawable.intruder
+        FileCategory.RECYCLE_BIN -> R.drawable.recycle_bin
+        else -> R.drawable.custom_folder
     }
     
-    Box(contentAlignment = Alignment.Center, modifier = Modifier.size(150.dp)) {
-        Canvas(modifier = Modifier.size(120.dp)) {
-            drawCircle(
-                color = color.copy(alpha = 0.1f),
-                radius = size.minDimension / 2
-            )
-            drawCircle(
-                color = color.copy(alpha = 0.2f),
-                radius = size.minDimension / 3,
-                center = Offset(size.width * 0.7f, size.height * 0.3f)
-            )
-        }
-        
-        Icon(
-            imageVector = when(category) {
-                FileCategory.PHOTO -> Icons.Default.AddPhotoAlternate
-                FileCategory.VIDEO -> Icons.Default.VideoLibrary
-                FileCategory.AUDIO -> Icons.Default.LibraryMusic
-                FileCategory.DOCUMENT -> Icons.Default.ContentPasteSearch
-                FileCategory.INTRUDER -> Icons.Default.VerifiedUser
-                else -> Icons.Default.FolderOpen
-            },
+    Box(contentAlignment = Alignment.Center, modifier = Modifier.size(240.dp)) {
+        Image(
+            painter = painterResource(id = imageRes),
             contentDescription = null,
-            modifier = Modifier.size(72.dp),
-            tint = color
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Fit
         )
     }
 }
@@ -1751,6 +1792,7 @@ fun CategoryItem(
     color: Color,
     bgColor: Color,
     isDark: Boolean,
+    imageRes: Int? = null,
     onClick: () -> Unit
 ) {
     Surface(
@@ -1770,12 +1812,21 @@ fun CategoryItem(
                     .background(if (isDark) Color.White.copy(alpha = 0.05f) else color.copy(alpha = 0.15f), CircleShape),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    icon, 
-                    null, 
-                    tint = if (isDark) CyberBlue else color, 
-                    modifier = Modifier.size(24.dp)
-                )
+                if (imageRes != null) {
+                    Image(
+                        painter = painterResource(id = imageRes),
+                        contentDescription = null,
+                        modifier = Modifier.size(32.dp),
+                        contentScale = ContentScale.Fit
+                    )
+                } else {
+                    Icon(
+                        icon, 
+                        null, 
+                        tint = if (isDark) CyberBlue else color, 
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
             }
             Spacer(Modifier.width(20.dp))
             Column(modifier = Modifier.weight(1f)) {
@@ -1821,10 +1872,24 @@ fun SettingsSection(
     onToggleUninstallShield: (Boolean) -> Unit = {},
     onRestoreAndUninstall: () -> Unit = {},
     onOpenWebView: (String, String) -> Unit,
-    onOpenFAQ: () -> Unit
+    onOpenFAQ: () -> Unit,
+    onPickBackground: (Uri) -> Unit,
+    onSetCustomBackground: (String?) -> Unit,
+    onStartAction: () -> Unit = {},
+    onEndAction: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val isDark = state.isDarkMode
+    
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        onEndAction()
+        if (uri != null) {
+            onPickBackground(uri)
+        }
+    }
+
     val textPrimary = if (isDark) Color.White else LightTextPrimary
     val textSecondary = Color.Gray
     val surfaceColor = if (isDark) CyberDarkBlue else CreamWhite.copy(alpha = 0.95f)
@@ -1877,14 +1942,6 @@ fun SettingsSection(
                             isDark = isDark,
                             onCheckedChange = { onToggleScreenshotRestriction() }
                         )
-                        SettingsToggleItem(
-                            title = stringResource(R.string.dark_mode),
-                            subtitle = stringResource(R.string.dark_mode_desc),
-                            icon = Icons.Default.WbSunny,
-                            checked = state.isDarkMode,
-                            isDark = isDark,
-                            onCheckedChange = { onToggleDarkMode() }
-                        )
                         SettingsLinkItem(
                             title = stringResource(R.string.language),
                             subtitle = if (state.currentLanguage == "hi") "हिन्दी" else "English",
@@ -1895,6 +1952,107 @@ fun SettingsSection(
                     }
                 }
             }
+
+        // Appearance Section
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(
+                "Appearance",
+                color = CyberBlue,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Black,
+                modifier = Modifier.padding(bottom = 4.dp)
+            )
+
+            Surface(
+                color = surfaceColor,
+                shape = RoundedCornerShape(28.dp),
+                border = BorderStroke(1.dp, (if (isDark) Color.White else Color.Black).copy(alpha = 0.05f)),
+                shadowElevation = 4.dp
+            ) {
+                Column {
+                    SettingsToggleItem(
+                        title = stringResource(R.string.dark_mode),
+                        subtitle = stringResource(R.string.dark_mode_desc),
+                        icon = Icons.Default.WbSunny,
+                        checked = state.isDarkMode,
+                        isDark = isDark,
+                        onCheckedChange = { onToggleDarkMode() }
+                    )
+                    
+                    if (state.customBackgroundPath != null) {
+                        var showBgOptions by remember { mutableStateOf(false) }
+                        
+                        Column {
+                            SettingsLinkItem(
+                                title = "Custom Lock Background",
+                                subtitle = "Image Active • Tap to manage",
+                                icon = Icons.Default.Image,
+                                isDark = isDark,
+                                onClick = { showBgOptions = !showBgOptions }
+                            )
+                            
+                            if (showBgOptions) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    // Preview
+                                    Surface(
+                                        modifier = Modifier.size(60.dp, 80.dp),
+                                        shape = RoundedCornerShape(8.dp),
+                                        border = BorderStroke(1.dp, Color.Gray.copy(alpha = 0.3f))
+                                    ) {
+                                        AsyncImage(
+                                            model = File(state.customBackgroundPath),
+                                            contentDescription = null,
+                                            contentScale = ContentScale.Crop
+                                        )
+                                    }
+                                    
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Button(
+                                            onClick = {
+                                                onStartAction()
+                                                imagePickerLauncher.launch("image/*")
+                                            },
+                                            modifier = Modifier.fillMaxWidth().height(36.dp),
+                                            contentPadding = PaddingValues(0.dp),
+                                            colors = ButtonDefaults.buttonColors(containerColor = CyberBlue),
+                                            shape = RoundedCornerShape(8.dp)
+                                        ) {
+                                            Text("CHANGE", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                        }
+                                        Spacer(Modifier.height(8.dp))
+                                        OutlinedButton(
+                                            onClick = { onSetCustomBackground(null) },
+                                            modifier = Modifier.fillMaxWidth().height(36.dp),
+                                            contentPadding = PaddingValues(0.dp),
+                                            border = BorderStroke(1.dp, Color.Red.copy(alpha = 0.6f)),
+                                            shape = RoundedCornerShape(8.dp)
+                                        ) {
+                                            Text("REMOVE", fontSize = 12.sp, color = Color.Red.copy(alpha = 0.8f))
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        SettingsLinkItem(
+                            title = "Custom Lock Background",
+                            subtitle = "Set your personal background",
+                            icon = Icons.Default.Image,
+                            isDark = isDark,
+                            onClick = {
+                                onStartAction()
+                                imagePickerLauncher.launch("image/*")
+                            }
+                        )
+                    }
+                }
+            }
+        }
 
         // Support & Legal
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -2603,3 +2761,108 @@ fun formatFileSize(size: Long): String {
     val digitGroups = (Math.log10(size.toDouble()) / Math.log10(1024.0)).toInt()
     return String.format("%.1f %s", size / Math.pow(1024.0, digitGroups.toDouble()), units[digitGroups.coerceIn(0, units.size - 1)])
 }
+
+@Composable
+fun ImageAdjustmentScreen(
+    uri: Uri,
+    onApply: (String) -> Unit,
+    onCancel: () -> Unit
+) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var offset by remember { mutableStateOf(Offset.Zero) }
+    var scale by remember { mutableFloatStateOf(1f) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .padding(32.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            // 9:16 Crop Area Guide
+            Box(
+                modifier = Modifier
+                    .aspectRatio(9f / 16f)
+                    .fillMaxHeight()
+                    .border(2.dp, Color.White.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
+                    .clip(RoundedCornerShape(8.dp))
+            ) {
+                AsyncImage(
+                    model = uri,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .pointerInput(Unit) {
+                            detectTransformGestures { _, pan, zoom, _ ->
+                                offset += pan
+                                scale = (scale * zoom).coerceIn(1f, 5f)
+                            }
+                        }
+                        .graphicsLayer(
+                            scaleX = scale,
+                            scaleY = scale,
+                            translationX = offset.x,
+                            translationY = offset.y
+                        ),
+                    contentScale = ContentScale.Crop
+                )
+            }
+        }
+
+        Surface(
+            color = CyberDarkBlue,
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .padding(24.dp)
+                    .navigationBarsPadding(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                OutlinedButton(
+                    onClick = onCancel,
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, Color.Gray)
+                ) {
+                    Text("CANCEL", color = Color.White)
+                }
+                Button(
+                    onClick = {
+                        // In a real app, you'd process the crop here. 
+                        // For simplicity, we'll save the URI path or copy the file.
+                        scope.launch {
+                            val savedPath = saveImageToInternal(context, uri)
+                            onApply(savedPath)
+                        }
+                    },
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = CyberBlue)
+                ) {
+                    Text("APPLY", fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+    }
+}
+
+private suspend fun saveImageToInternal(context: Context, uri: Uri): String = withContext(Dispatchers.IO) {
+    val inputStream = context.contentResolver.openInputStream(uri)
+    val file = File(context.filesDir, "lock_bg.jpg")
+    inputStream?.use { input ->
+        FileOutputStream(file).use { output ->
+            input.copyTo(output)
+        }
+    }
+    file.absolutePath
+}
+

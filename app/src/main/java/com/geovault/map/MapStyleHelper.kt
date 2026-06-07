@@ -59,31 +59,82 @@ object MapStyleHelper {
     }
 
     /**
-     * Generates a style string (URL or JSON).
-     * @param isSatellite If true, returns a satellite-based style.
-     * @param isHybrid If true (and isSatellite is true), adds labels/roads over imagery.
-     * @param isDark If not in satellite mode, determines whether to use dark or light theme.
+     * Applies official Survey of India boundaries to the map style.
+     * This method hides default disputed boundary layers and adds the official one from assets.
      */
-    fun applyIndiaBoundaries(style: org.maplibre.android.maps.Style) {
+    fun applyIndiaBoundaries(context: android.content.Context, style: org.maplibre.android.maps.Style) {
         try {
-            // Official Indian Boundaries Layer (Simplified GeoJSON URL)
+            // 1. Comprehensive hiding of default administrative boundaries (OpenMapTiles schema)
+            // We iterate through all layers and hide anything that looks like a country/state boundary
+            // to ensure no disputed dotted lines remain visible.
+            style.getLayers().forEach { layer ->
+                val id = layer.id.lowercase()
+                if (id.contains("admin") || id.contains("boundary") || id.contains("country") || id.contains("state")) {
+                    // Only hide line layers (borders), not labels or fills
+                    if (layer is org.maplibre.android.style.layers.LineLayer) {
+                        layer.setProperties(org.maplibre.android.style.layers.PropertyFactory.visibility(org.maplibre.android.style.layers.Property.NONE))
+                    }
+                }
+            }
+
+            // 2. Add the official Indian Boundary from local assets
             val indiaSourceId = "india-boundary-source"
             val indiaLayerId = "india-boundary-layer"
             
             if (style.getSource(indiaSourceId) == null) {
-                style.addSource(org.maplibre.android.style.sources.GeoJsonSource(indiaSourceId, java.net.URL("https://raw.githubusercontent.com/datameet/maps/master/Country/india-composite.json")))
-                
-                val layer = org.maplibre.android.style.layers.LineLayer(indiaLayerId, indiaSourceId).apply {
-                    setProperties(
-                        org.maplibre.android.style.layers.PropertyFactory.lineColor(android.graphics.Color.parseColor("#FF5722")),
-                        org.maplibre.android.style.layers.PropertyFactory.lineWidth(2f),
-                        org.maplibre.android.style.layers.PropertyFactory.lineOpacity(0.8f)
-                    )
+                val geoJson = readAssetFile(context, "india_boundaries.geojson")
+                if (geoJson != null) {
+                    style.addSource(org.maplibre.android.style.sources.GeoJsonSource(indiaSourceId, geoJson))
+                    
+                    // Create the official boundary layer with professional styling as per Survey of India standards
+                    val layer = org.maplibre.android.style.layers.LineLayer(indiaLayerId, indiaSourceId).apply {
+                        setProperties(
+                            // Official dark gray-blue color from the guide (#444466)
+                            org.maplibre.android.style.layers.PropertyFactory.lineColor(android.graphics.Color.parseColor("#444466")),
+                            
+                            // Dynamic line width based on zoom levels (mapped from the scale rules in the guide)
+                            org.maplibre.android.style.layers.PropertyFactory.lineWidth(
+                                org.maplibre.android.style.expressions.Expression.interpolate(
+                                    org.maplibre.android.style.expressions.Expression.linear(), 
+                                    org.maplibre.android.style.expressions.Expression.zoom(),
+                                    org.maplibre.android.style.expressions.Expression.stop(1, 0.8f),   // MinScaleDenominator 50000000+
+                                    org.maplibre.android.style.expressions.Expression.stop(4, 1.2f),   // MaxScale 50000000
+                                    org.maplibre.android.style.expressions.Expression.stop(7, 2.0f),   // MaxScale 12500000
+                                    org.maplibre.android.style.expressions.Expression.stop(12, 4.0f)   // MaxScale 3000000
+                                )
+                            ),
+                            
+                            // Essential styling for clean, continuous lines
+                            org.maplibre.android.style.layers.PropertyFactory.lineJoin(org.maplibre.android.style.layers.Property.LINE_JOIN_ROUND),
+                            org.maplibre.android.style.layers.PropertyFactory.lineCap(org.maplibre.android.style.layers.Property.LINE_CAP_ROUND),
+                            org.maplibre.android.style.layers.PropertyFactory.lineOpacity(0.9f)
+                        )
+                    }
+                    
+                    // Place the official boundary below labels and place names for a professional look
+                    val labelLayer = style.getLayers().find { it.id.contains("label") || it.id.contains("place") }
+                    if (labelLayer != null) {
+                        style.addLayerBelow(layer, labelLayer.id)
+                    } else {
+                        style.addLayer(layer)
+                    }
+                } else {
+                    android.util.Log.e("MapStyleHelper", "Missing india_boundaries.geojson in assets folder")
                 }
-                style.addLayer(layer)
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            android.util.Log.e("MapStyleHelper", "Error applying India boundaries: ${e.message}")
+        }
+    }
+
+    /**
+     * Reads a file from the assets folder.
+     */
+    private fun readAssetFile(context: android.content.Context, fileName: String): String? {
+        return try {
+            context.assets.open(fileName).bufferedReader().use { it.readText() }
+        } catch (e: Exception) {
+            null
         }
     }
 }

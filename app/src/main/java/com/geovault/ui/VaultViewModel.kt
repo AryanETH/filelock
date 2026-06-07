@@ -25,6 +25,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 
@@ -52,6 +54,9 @@ import kotlinx.coroutines.withContext
 class VaultViewModel(application: Application) : AndroidViewModel(application) {
     private val _uiState = MutableStateFlow(VaultState())
     val uiState: StateFlow<VaultState> = _uiState.asStateFlow()
+
+    private val _recreateEvent = MutableSharedFlow<Unit>()
+    val recreateEvent = _recreateEvent.asSharedFlow()
 
     private var isPerformingAction = false
 
@@ -691,7 +696,8 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
             isScreenshotRestricted = prefs.getBoolean("screenshot_restriction", true),
             currentLanguage = language, 
             isFirstRun = prefs.getBoolean("is_first_run", true), 
-            isLanguageSelected = prefs.contains("language") || language != "en"
+            isLanguageSelected = prefs.contains("language") || language != "en",
+            customBackgroundPath = prefs.getString("lock_background_path", null)
         ) }
         com.geovault.security.LocaleManager.applyLanguage(getApplication(), language)
         loadInstalledApps()
@@ -842,6 +848,16 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
         prefs.edit().putString("language", langCode).apply()
         _uiState.update { it.copy(currentLanguage = langCode, isLanguageSelected = true) }
         com.geovault.security.LocaleManager.applyLanguage(getApplication(), langCode) 
+        viewModelScope.launch { _recreateEvent.emit(Unit) }
+    }
+
+    fun setCustomBackground(path: String?) {
+        if (path == null) {
+            prefs.edit().remove("lock_background_path").apply()
+        } else {
+            prefs.edit().putString("lock_background_path", path).apply()
+        }
+        _uiState.update { it.copy(customBackgroundPath = path) }
     }
 
     fun removeFileFromVault(fileId: String) { viewModelScope.launch(Dispatchers.IO) { com.geovault.security.SecureManager.getInstance(getApplication()).removeFileInfo(fileId); updateFileCounts() } }

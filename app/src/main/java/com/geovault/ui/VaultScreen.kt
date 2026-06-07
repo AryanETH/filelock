@@ -137,6 +137,7 @@ fun VaultScreen(
     onBulkDelete: (Set<String>) -> Unit = {},
     onBulkRestore: (Set<String>) -> Unit = {},
     onAddFilesToFolder: (List<android.net.Uri>, String) -> Unit = { _, _ -> },
+    onSetCustomBackground: (String?) -> Unit = {},
     onFetchWeather: (Double, Double) -> Unit = { _, _ -> },
     onStartAction: () -> Unit = {},
     onEndAction: () -> Unit = {},
@@ -443,7 +444,7 @@ fun VaultScreen(
 
                                     map.setStyle(currentStyleUrl) { style ->
                                         if (state.isIndiaRegion) {
-                                            MapStyleHelper.applyIndiaBoundaries(style)
+                                            MapStyleHelper.applyIndiaBoundaries(ctx, style)
                                         }
                                         try {
                                             val locationComponent = map.locationComponent
@@ -751,6 +752,7 @@ fun VaultScreen(
                     onBulkDelete = onBulkDelete,
                     onBulkRestore = onBulkRestore,
                     onAddFilesToFolder = onAddFilesToFolder,
+                    onSetCustomBackground = onSetCustomBackground,
                     onStartAction = onStartAction,
                     onEndAction = onEndAction
                 )

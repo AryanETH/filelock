@@ -56,13 +56,13 @@
 <string name="background_popups_desc">Tap here → Special app access → Display pop-ups while in background → Allow</string>
 
 <!--  Onboarding  -->
-<string name="onboarding_1_title">Live Satellite View</string>
-<string name="onboarding_1_desc">See real time satellite views and discover places with HD live maps</string>
-<string name="onboarding_2_title">Secret Entry</string>
-<string name="onboarding_2_desc">No icons or passwords. Long-press your secret point on the map to see your files.</string>
-<string name="onboarding_3_title">Vault Protection</string>
-<string name="onboarding_3_desc">Lock any app. They will only open when you are in your safe zone.</string>
-<string name="onboarding_4_title">Global Security</string>
+<string name="onboarding_1_title">disguise as lock</string>
+<string name="onboarding_1_desc">Map will act as lock layer all your files will be hidden beneath the location</string>
+<string name="onboarding_2_title">fully offline</string>
+<string name="onboarding_2_desc">None of your data is stored in servers mapplock is fully offline and local</string>
+<string name="onboarding_3_title">Made In India</string>
+<string name="onboarding_3_desc">Our entire app is proudly Indian Build in Bhopal</string>
+<string name="onboarding_4_title">experience the different</string>
 <string name="onboarding_4_desc">Your photos and videos are hidden and saved safely with local encryption.</string>
 <string name="initialize_system">Get Started</string>
 <string name="next">Continue</string>
@@ -78,7 +78,7 @@
 <string name="search_places">Search place...</string>
 
 <!--  Dashboard  -->
-<string name="app_lock_title">Hide Apps</string>
+<string name="app_lock_title">lock Apps</string>
 <string name="app_lock_subtitle">Lock your apps</string>
 <string name="history_title">Locked Apps</string>
 <string name="history_subtitle">Manage all your locked apps</string>

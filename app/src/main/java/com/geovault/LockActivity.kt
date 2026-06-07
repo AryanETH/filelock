@@ -114,9 +114,10 @@ class LockActivity : AppCompatActivity() {
             }
 
             GeoVaultTheme(darkTheme = isDark) {
+                val customBgPath = remember { prefs.getString("lock_background_path", null) }
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = if (isDark) CyberBlack else Color.White,
+                    color = if (customBgPath != null) Color.Transparent else (if (isDark) CyberBlack else Color.White),
                 ) {
                     // Apply FLAG_SECURE dynamically
                     SideEffect {

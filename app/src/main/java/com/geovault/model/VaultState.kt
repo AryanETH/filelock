@@ -92,6 +92,7 @@ data class VaultState(
     val isUninstallShieldEnabled: Boolean = false,
     val showBackgroundPopupGuide: Boolean = false,
     val pendingDeleteIntent: android.app.PendingIntent? = null,
+    val customBackgroundPath: String? = null,
     
     // Import/Export Progress
     val operationProgress: OperationProgress? = null,

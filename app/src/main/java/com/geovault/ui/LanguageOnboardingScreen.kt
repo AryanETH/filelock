@@ -29,7 +29,7 @@ fun LanguageOnboardingScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(CyberBlack),
+            .background(Color.White),
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -47,14 +47,14 @@ fun LanguageOnboardingScreen(
             
             Text(
                 text = "SELECT LANGUAGE",
-                color = Color.White,
+                color = LightTextPrimary,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Black
             )
             
             Text(
                 text = "Choose your preferred language to continue",
-                color = Color.Gray,
+                color = LightTextSecondary,
                 fontSize = 14.sp,
                 modifier = Modifier.padding(top = 8.dp)
             )
@@ -64,10 +64,11 @@ fun LanguageOnboardingScreen(
             Box {
                 Surface(
                     onClick = { expanded = true },
-                    color = CyberDarkBlue,
+                    color = Color.White,
                     shape = RoundedCornerShape(16.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.1f)),
-                    modifier = Modifier.fillMaxWidth().height(64.dp)
+                    border = androidx.compose.foundation.BorderStroke(1.dp, LightOutline.copy(alpha = 0.2f)),
+                    modifier = Modifier.fillMaxWidth().height(64.dp),
+                    shadowElevation = 2.dp
                 ) {
                     Row(
                         modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp),
@@ -76,7 +77,7 @@ fun LanguageOnboardingScreen(
                     ) {
                         Text(
                             text = if (selectedLanguage == "hi") "हिन्दी (Hindi)" else "English",
-                            color = Color.White,
+                            color = LightTextPrimary,
                             fontWeight = FontWeight.Bold
                         )
                         Icon(Icons.Default.ArrowDropDown, null, tint = CyberBlue)
@@ -88,17 +89,17 @@ fun LanguageOnboardingScreen(
                     onDismissRequest = { expanded = false },
                     modifier = Modifier
                         .fillMaxWidth(0.85f)
-                        .background(CyberDarkBlue)
+                        .background(Color.White)
                 ) {
                     DropdownMenuItem(
-                        text = { Text("English", color = Color.White) },
+                        text = { Text("English", color = LightTextPrimary) },
                         onClick = {
                             selectedLanguage = "en"
                             expanded = false
                         }
                     )
                     DropdownMenuItem(
-                        text = { Text("हिन्दी (Hindi)", color = Color.White) },
+                        text = { Text("हिन्दी (Hindi)", color = LightTextPrimary) },
                         onClick = {
                             selectedLanguage = "hi"
                             expanded = false
@@ -115,7 +116,7 @@ fun LanguageOnboardingScreen(
                 colors = ButtonDefaults.buttonColors(containerColor = CyberBlue),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text("CONTINUE", fontWeight = FontWeight.Black, fontSize = 18.sp)
+                Text("CONTINUE", fontWeight = FontWeight.Black, fontSize = 18.sp, color = Color.White)
             }
         }
     }

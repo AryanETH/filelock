@@ -72,6 +72,8 @@ import android.widget.Toast
 import androidx.annotation.OptIn
 import androidx.media3.common.util.UnstableApi
 
+import androidx.compose.runtime.saveable.rememberSaveable
+
 class MainActivity : AppCompatActivity() {
     private val viewModel: VaultViewModel by viewModels()
 
@@ -102,7 +104,7 @@ class MainActivity : AppCompatActivity() {
 
         setContent {
             val uiState by viewModel.uiState.collectAsState()
-            var showSplash by remember { mutableStateOf(true) }
+            var showSplash by rememberSaveable { mutableStateOf(true) }
 
             LaunchedEffect(Unit) {
                 delay(1500)
@@ -114,6 +116,12 @@ class MainActivity : AppCompatActivity() {
                     window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
                 } else {
                     window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+                }
+            }
+
+            LaunchedEffect(Unit) {
+                viewModel.recreateEvent.collect {
+                    recreate()
                 }
             }
 
@@ -340,6 +348,7 @@ class MainActivity : AppCompatActivity() {
                                     onBulkDelete = { ids -> viewModel.bulkDeleteFiles(ids) },
                                     onBulkRestore = { ids -> viewModel.bulkRestoreFiles(ids) },
                                     onAddFilesToFolder = { uris, folder -> viewModel.addFilesToVault(uris, com.geovault.model.FileCategory.OTHER, folder) },
+                                    onSetCustomBackground = { viewModel.setCustomBackground(it) },
                                     onFetchWeather = { lat, lon -> viewModel.fetchWeatherAndAQI(lat, lon) },
                                     onStartAction = { viewModel.setPerformingAction(true) },
                                     onEndAction = { viewModel.setPerformingAction(false) },
@@ -394,7 +403,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
-        if (!viewModel.isPerformingAction()) {
+        if (!isChangingConfigurations && !viewModel.isPerformingAction()) {
             com.geovault.security.SecureManager.getInstance(this).prefs.edit {
                 remove("bypass_package")
             }
