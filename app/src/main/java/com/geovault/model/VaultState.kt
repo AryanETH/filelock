@@ -57,6 +57,7 @@ data class VaultState(
     val isFirstRun: Boolean = true,
     val isNetworkAvailable: Boolean = true,
     val isMapLoaded: Boolean = true,
+    val disclaimerAccepted: Boolean = false,
 
     val hasUsageStatsPermission: Boolean = false,
     val hasOverlayPermission: Boolean = false,
@@ -66,6 +67,7 @@ data class VaultState(
     val hasFullStoragePermission: Boolean = false,
     val hasBatteryOptimizationPermission: Boolean = false,
     val hasBackgroundPopupsPermission: Boolean = false,
+    val hasNotificationPermission: Boolean = false,
 
     // Files
     val files: List<VaultFile> = emptyList(),
@@ -87,7 +89,8 @@ data class VaultState(
     val showTour: Boolean = false,
     val isLanguageSelected: Boolean = false,
     val currentLanguage: String = "en",
-    val isScreenshotRestricted: Boolean = true,
+    val isScreenshotRestricted: Boolean = false,
+    val isIntruderCaptureEnabled: Boolean = false,
     val isIndiaRegion: Boolean = false,
     val isUninstallShieldEnabled: Boolean = false,
     val showBackgroundPopupGuide: Boolean = false,

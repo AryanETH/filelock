@@ -111,9 +111,9 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun completeOnboarding() {
-        prefs.edit().putBoolean("is_first_run", false).apply()
+        prefs.edit().putBoolean("is_first_run", false).putBoolean("disclaimer_accepted", true).apply()
         val tourCompleted = prefs.getBoolean("tour_completed", false)
-        _uiState.update { it.copy(isFirstRun = false, isMapDownloading = false, showTour = !tourCompleted) }
+        _uiState.update { it.copy(isFirstRun = false, disclaimerAccepted = true, isMapDownloading = false, showTour = !tourCompleted) }
         startMapDownload()
     }
 
@@ -144,6 +144,8 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
                 putBoolean("is_locked", true)
                 putBoolean("fingerprint_enabled", true)
                 putBoolean("master_stealth_enabled", false)
+                putBoolean("intruder_capture_enabled", false)
+                putBoolean("screenshot_restriction", false)
                 apply()
             }
         }
@@ -263,10 +265,15 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun bulkDeleteFiles(fileIds: Set<String>) {
+    fun bulkDeleteFiles(fileIds: Set<String>, isPermanent: Boolean = false) {
         viewModelScope.launch(Dispatchers.IO) {
             fileIds.forEach { id ->
-                com.geovault.security.SecureManager.getInstance(getApplication()).removeFileInfo(id)
+                if (isPermanent) {
+                    com.geovault.security.SecureManager.getInstance(getApplication()).removeFileInfo(id)
+                } else {
+                    // Move to Recycle Bin instead of deleting
+                    com.geovault.security.SecureManager.getInstance(getApplication()).updateFileCategory(id, FileCategory.RECYCLE_BIN)
+                }
             }
             updateFileCounts()
         }
@@ -411,7 +418,7 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
         val fileIds = prefs.getStringSet("vault_file_ids", emptySet()) ?: emptySet()
         val customFolders = (prefs.getStringSet("custom_folders", emptySet()) ?: emptySet()).toList().sorted()
         val files = mutableListOf<VaultFile>()
-        var photos = 0; var videos = 0; var audio = 0; var docs = 0; var intruders = 0
+        var photos = 0; var videos = 0; var audio = 0; var docs = 0; var intruders = 0; var trashed = 0
         fileIds.forEach { id ->
             val name = prefs.getString("file_${id}_name", "") ?: ""
             val path = prefs.getString("file_${id}_path", "") ?: ""
@@ -421,14 +428,17 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
             val folderName = prefs.getString("file_${id}_folder", null)
             val file = VaultFile(id, name, path, category, prefs.getLong("file_${id}_size", 0), prefs.getLong("file_${id}_timestamp", 0), thumbPath, folderName)
             files.add(file)
-            if (folderName == null) {
+            
+            if (category == FileCategory.RECYCLE_BIN) {
+                trashed++
+            } else if (folderName == null) {
                 when (category) {
                     FileCategory.PHOTO -> photos++; FileCategory.VIDEO -> videos++; FileCategory.AUDIO -> audio++; FileCategory.DOCUMENT -> docs++; FileCategory.INTRUDER -> intruders++
                     else -> {}
                 }
             }
         }
-        _uiState.update { it.copy(files = files.sortedByDescending { f -> f.addedTimestamp }, customFolders = customFolders, photoCount = photos, videoCount = videos, audioCount = audio, documentCount = docs, intruderCount = intruders) }
+        _uiState.update { it.copy(files = files.sortedByDescending { f -> f.addedTimestamp }, customFolders = customFolders, photoCount = photos, videoCount = videos, audioCount = audio, documentCount = docs, intruderCount = intruders, recycleBinCount = trashed) }
     }
 
     private fun ensureMainActivityEnabled() {
@@ -444,6 +454,9 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
         val hasLocation = androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
         val hasBattery = hasBatteryOptimizationPermission(context)
         val hasBackgroundPopups = prefs.getBoolean("perm_background_popups", false)
+        val hasNotifications = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+        } else true
         val hasStorage = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_MEDIA_IMAGES) == PackageManager.PERMISSION_GRANTED else androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
         val hasFullStorage = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) Environment.isExternalStorageManager() else true
         
@@ -460,6 +473,7 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
                 hasFullStoragePermission = hasFullStorage,
                 hasBatteryOptimizationPermission = hasBattery,
                 hasBackgroundPopupsPermission = hasBackgroundPopups,
+                hasNotificationPermission = hasNotifications,
                 isUninstallShieldEnabled = isDeviceAdmin
             )
         }
@@ -693,9 +707,11 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
             activeVaultId = prefs.getString("active_vault_id", null), 
             isFingerprintEnabled = prefs.getBoolean("fingerprint_enabled", true), 
             isDarkMode = prefs.getBoolean("is_dark_mode", false), 
-            isScreenshotRestricted = prefs.getBoolean("screenshot_restriction", true),
+            isScreenshotRestricted = prefs.getBoolean("screenshot_restriction", false),
+            isIntruderCaptureEnabled = prefs.getBoolean("intruder_capture_enabled", false),
             currentLanguage = language, 
             isFirstRun = prefs.getBoolean("is_first_run", true), 
+            disclaimerAccepted = prefs.getBoolean("disclaimer_accepted", false),
             isLanguageSelected = prefs.contains("language") || language != "en",
             customBackgroundPath = prefs.getString("lock_background_path", null)
         ) }
@@ -831,7 +847,11 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
     fun launchApp(packageName: String) {
         val context = getApplication<Application>()
         prefs.edit().putString("bypass_package", packageName).apply()
-        context.packageManager.getLaunchIntentForPackage(packageName)?.apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); context.startActivity(this) }
+        context.packageManager.getLaunchIntentForPackage(packageName)?.apply { 
+            setPerformingAction(true)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            context.startActivity(this) 
+        }
     }
 
     fun toggleMasterStealth() {
@@ -842,6 +862,7 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
 
     fun toggleDarkMode() { val newValue = !_uiState.value.isDarkMode; prefs.edit().putBoolean("is_dark_mode", newValue).apply(); _uiState.update { it.copy(isDarkMode = newValue) } }
     fun toggleScreenshotRestriction() { val newValue = !_uiState.value.isScreenshotRestricted; prefs.edit().putBoolean("screenshot_restriction", newValue).apply(); _uiState.update { it.copy(isScreenshotRestricted = newValue) } }
+    fun toggleIntruderCapture(enabled: Boolean) { prefs.edit().putBoolean("intruder_capture_enabled", enabled).apply(); _uiState.update { it.copy(isIntruderCaptureEnabled = enabled) } }
     fun toggleFingerprint() { val newValue = !_uiState.value.isFingerprintEnabled; prefs.edit().putBoolean("fingerprint_enabled", newValue).apply(); _uiState.update { it.copy(isFingerprintEnabled = newValue) } }
 
     fun setLanguage(langCode: String) { 
@@ -860,7 +881,19 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
         _uiState.update { it.copy(customBackgroundPath = path) }
     }
 
-    fun removeFileFromVault(fileId: String) { viewModelScope.launch(Dispatchers.IO) { com.geovault.security.SecureManager.getInstance(getApplication()).removeFileInfo(fileId); updateFileCounts() } }
+    fun removeFileFromVault(fileId: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val catStr = prefs.getString("file_${fileId}_category", "") ?: ""
+            val category = try { FileCategory.valueOf(catStr) } catch (e: Exception) { FileCategory.OTHER }
+            
+            if (category == FileCategory.RECYCLE_BIN) {
+                com.geovault.security.SecureManager.getInstance(getApplication()).removeFileInfo(fileId)
+            } else {
+                com.geovault.security.SecureManager.getInstance(getApplication()).updateFileCategory(fileId, FileCategory.RECYCLE_BIN)
+            }
+            updateFileCounts()
+        }
+    }
 
     fun fetchGalleryItems(category: FileCategory) {
         viewModelScope.launch(Dispatchers.IO) {

@@ -90,7 +90,10 @@ class LockActivity : AppCompatActivity() {
         controller.hide(WindowInsetsCompat.Type.statusBars() or WindowInsetsCompat.Type.navigationBars())
         controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         
-        IntruderManager.getInstance(this).startSession(this)
+        val isIntruderEnabled = prefs.getBoolean("intruder_capture_enabled", false)
+        if (isIntruderEnabled) {
+            IntruderManager.getInstance(this).startSession(this)
+        }
 
         onBackPressedDispatcher.addCallback(this) {
             // Redirect to Home instead of showing the app behind

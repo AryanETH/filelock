@@ -48,6 +48,13 @@ class SecureManager(context: Context) {
         }
     }
 
+    fun updateFileCategory(id: String, category: FileCategory) {
+        prefs.edit().apply {
+            putString("file_${id}_category", category.name)
+            apply()
+        }
+    }
+
     fun removeFileInfo(id: String) {
         val fileIds = (prefs.getStringSet("vault_file_ids", emptySet()) ?: emptySet()).toMutableSet()
         if (fileIds.remove(id)) {

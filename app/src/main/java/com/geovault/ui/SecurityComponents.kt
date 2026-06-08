@@ -132,7 +132,7 @@ fun CompactPinPad(
                                 )
                                 .border(
                                     2.dp, 
-                                    if (isError) CyberNeonRed else Color.Black,
+                                    if (isError) CyberNeonRed else (if (isLightTheme) Color.Black else Color.White),
                                     CircleShape
                                 ),
                             contentAlignment = Alignment.Center

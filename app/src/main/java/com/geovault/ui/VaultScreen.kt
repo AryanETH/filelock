@@ -130,11 +130,12 @@ fun VaultScreen(
     onSetLanguage: (String) -> Unit,
     onCompleteTour: () -> Unit,
     onToggleScreenshotRestriction: () -> Unit,
+    onToggleIntruderCapture: (Boolean) -> Unit = {},
     onToggleUninstallShield: (Boolean) -> Unit = {},
     onRestoreAndUninstall: () -> Unit = {},
     onCreateFolder: (String) -> Unit = {},
     onDeleteFolder: (String, Boolean) -> Unit = { _, _ -> },
-    onBulkDelete: (Set<String>) -> Unit = {},
+    onBulkDelete: (Set<String>, Boolean) -> Unit = { _, _ -> },
     onBulkRestore: (Set<String>) -> Unit = {},
     onAddFilesToFolder: (List<android.net.Uri>, String) -> Unit = { _, _ -> },
     onSetCustomBackground: (String?) -> Unit = {},
@@ -152,11 +153,12 @@ fun VaultScreen(
     var showSetupDialog by remember { mutableStateOf(false) }
     var setupLatLng by remember { mutableStateOf<LatLng?>(null) }
     var isNativeEligible by remember { mutableStateOf(false) }
+    val context = LocalContext.current
     val isDark = state.isDarkMode
     
     val currentStyleUrl = remember(state.isSatelliteMode) {
         if (state.isSatelliteMode) {
-            MapStyleHelper.getSatelliteStyle(isHybrid = true)
+            MapStyleHelper.getSatelliteStyle(context, isHybrid = true)
         } else {
             MapStyleHelper.BRIGHT
         }
@@ -164,8 +166,6 @@ fun VaultScreen(
 
     var mapBearing by remember { mutableFloatStateOf(0f) }
     var hideNetworkWarning by remember { mutableStateOf(false) }
-
-    val context = LocalContext.current
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
     
     var isCenteredOnUser by remember { mutableStateOf(false) }
@@ -225,7 +225,7 @@ fun VaultScreen(
     }
 
     DisposableEffect(showUnlockPrompt) {
-        if (showUnlockPrompt) {
+        if (showUnlockPrompt && state.isIntruderCaptureEnabled) {
             IntruderManager.getInstance(context).startSession(lifecycleOwner)
         }
         onDispose {
@@ -443,9 +443,9 @@ fun VaultScreen(
                                     }
 
                                     map.setStyle(currentStyleUrl) { style ->
-                                        if (state.isIndiaRegion) {
-                                            MapStyleHelper.applyIndiaBoundaries(ctx, style)
-                                        }
+                                        // Always apply official boundaries for compliance and consistency
+                                        MapStyleHelper.applyIndiaBoundaries(ctx, style)
+
                                         try {
                                             val locationComponent = map.locationComponent
                                             locationComponent.activateLocationComponent(
@@ -611,7 +611,11 @@ fun VaultScreen(
                                 mapLibreMap?.animateCamera(CameraUpdateFactory.zoomOut())
                             }
 
-                            SmallMapFab(icon = Icons.Default.MyLocation, active = isCenteredOnUser) {
+                            SmallMapFab(
+                                icon = Icons.Default.MyLocation,
+                                active = isCenteredOnUser,
+                                activeColor = Color(0xFF0368E8)
+                            ) {
                                 if (!isCenteredOnUser) {
                                     HapticHelper.vibrate(context, 1)
                                     isCenteredOnUser = true
@@ -644,6 +648,7 @@ fun VaultScreen(
                         VaultUnlockDialog(
                             vault = selectedVaultForUnlock!!,
                             isDark = isDark,
+                            isIntruderCaptureEnabled = state.isIntruderCaptureEnabled,
                             onDismiss = { showUnlockPrompt = false },
                             onConfirm = { secret ->
                                 onUnlockAttempt(selectedVaultForUnlock!!.location.latitude, selectedVaultForUnlock!!.location.longitude, secret)
@@ -744,6 +749,7 @@ fun VaultScreen(
                     onSetLanguage = onSetLanguage,
                     onCompleteTour = onCompleteTour,
                     onToggleScreenshotRestriction = onToggleScreenshotRestriction,
+                    onToggleIntruderCapture = onToggleIntruderCapture,
                     onToggleUninstallShield = onToggleUninstallShield,
                     onRestoreAndUninstall = onRestoreAndUninstall,
                     onFetchGalleryItems = onFetchGalleryItems,
@@ -792,6 +798,7 @@ fun MapSkeleton() {
 fun VaultUnlockDialog(
     vault: com.geovault.model.VaultConfig,
     isDark: Boolean,
+    isIntruderCaptureEnabled: Boolean,
     onDismiss: () -> Unit,
     onConfirm: (String) -> Unit,
     onIntruderCaptured: (android.net.Uri, String?) -> Unit
@@ -802,7 +809,7 @@ fun VaultUnlockDialog(
     Dialog(onDismissRequest = onDismiss) {
         Surface(
             shape = RoundedCornerShape(24.dp),
-            color = if (isDark) CyberDarkBlue else CreamWhite,
+            color = CreamWhite, // Always light theme for the unlock prompt
             shadowElevation = 8.dp,
             modifier = Modifier.width(300.dp)
         ) {
@@ -820,27 +827,31 @@ fun VaultUnlockDialog(
                 if (vault.lockType == LockType.PIN) {
                     CompactPinPad(
                         correctPin = vault.secret, 
-                        isLightTheme = !isDark,
+                        isLightTheme = true, // Always light theme
                         onPinComplete = {
                             failedAttempts = 0
                             onConfirm(it)
                         },
                         onError = {
                             failedAttempts++
-                            if (failedAttempts >= 3) IntruderManager.getInstance(context).captureIntruder(onIntruderCaptured)
+                            if (failedAttempts >= 3 && isIntruderCaptureEnabled) {
+                                IntruderManager.getInstance(context).captureIntruder(onIntruderCaptured)
+                            }
                         }
                     )
                 } else {
                     CompactPatternGrid(
                         correctPattern = vault.secret, 
-                        isLightTheme = !isDark,
+                        isLightTheme = true, // Always light theme
                         onPatternComplete = {
                             failedAttempts = 0
                             onConfirm(it)
                         },
                         onError = {
                             failedAttempts++
-                            if (failedAttempts >= 3) IntruderManager.getInstance(context).captureIntruder(onIntruderCaptured)
+                            if (failedAttempts >= 3 && isIntruderCaptureEnabled) {
+                                IntruderManager.getInstance(context).captureIntruder(onIntruderCaptured)
+                            }
                         }
                     )
                 }
@@ -866,7 +877,7 @@ fun VaultSetupDialog(
         Surface(
             modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(16.dp),
             shape = RoundedCornerShape(24.dp),
-            color = if (isDark) CyberDarkBlue else CreamWhite,
+            color = CreamWhite, // Always light theme for setup
             shadowElevation = 8.dp
         ) {
             Column(
@@ -890,14 +901,14 @@ fun VaultSetupDialog(
                     Spacer(Modifier.height(12.dp))
                 }
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    VaultLockTypeButton(stringResource(R.string.lock_type_pin), lockType == LockType.PIN, isDark) { lockType = LockType.PIN }
-                    VaultLockTypeButton(stringResource(R.string.lock_type_pattern), lockType == LockType.PATTERN, isDark) { lockType = LockType.PATTERN }
+                    VaultLockTypeButton(stringResource(R.string.lock_type_pin), lockType == LockType.PIN, false) { lockType = LockType.PIN }
+                    VaultLockTypeButton(stringResource(R.string.lock_type_pattern), lockType == LockType.PATTERN, false) { lockType = LockType.PATTERN }
                 }
                 Spacer(Modifier.height(20.dp))
                 if (lockType == LockType.PIN) {
-                    CompactPinPad(isLightTheme = !isDark, autoConfirm = false, onPinComplete = { onConfirm(it, emptySet(), lockType, if (isNativeEnabled) radius else 0f) })
+                    CompactPinPad(isLightTheme = true, autoConfirm = false, onPinComplete = { onConfirm(it, emptySet(), lockType, if (isNativeEnabled) radius else 0f) })
                 } else {
-                    CompactPatternGrid(isLightTheme = !isDark, showConfirmButton = true, onPatternComplete = { onConfirm(it, emptySet(), lockType, if (isNativeEnabled) radius else 0f) })
+                    CompactPatternGrid(isLightTheme = true, showConfirmButton = true, onPatternComplete = { onConfirm(it, emptySet(), lockType, if (isNativeEnabled) radius else 0f) })
                 }
                 Spacer(Modifier.height(12.dp))
                 TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel), color = Color.Gray) }
@@ -918,13 +929,22 @@ fun RowScope.VaultLockTypeButton(text: String, selected: Boolean, isDark: Boolea
 }
 
 @Composable
-fun SmallMapFab(icon: ImageVector, active: Boolean, modifier: Modifier = Modifier, isDark: Boolean = false, onClick: () -> Unit) {
+fun SmallMapFab(
+    icon: ImageVector,
+    active: Boolean,
+    modifier: Modifier = Modifier,
+    isDark: Boolean = false,
+    activeColor: Color = Color.Black,
+    onClick: () -> Unit
+) {
+    val containerColor = if (active) activeColor else (if (isDark) CyberDarkBlue else Color.White)
+    val contentColor = if (containerColor == Color.White) Color.Black else Color.White
     Surface(
         onClick = onClick,
         modifier = modifier.size(44.dp),
         shape = CircleShape,
-        color = if (active) Color.Black else (if (isDark) CyberDarkBlue else Color.White),
-        contentColor = if (active) Color.White else (if (isDark) Color.White else Color.Black),
+        color = containerColor,
+        contentColor = contentColor,
         shadowElevation = 6.dp
     ) {
         Box(contentAlignment = Alignment.Center) { Icon(icon, null, modifier = Modifier.size(20.dp)) }

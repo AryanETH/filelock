@@ -93,7 +93,7 @@ fun MapSelectionScreen(
 
     val currentStyleUrl = remember(isSatelliteMode, isDarkTheme) {
         if (isSatelliteMode) {
-            MapStyleHelper.getSatelliteStyle(isHybrid = true)
+            MapStyleHelper.getSatelliteStyle(context, isHybrid = true)
         } else {
             if (isDarkTheme) MapStyleHelper.DARK else MapStyleHelper.BRIGHT
         }
@@ -106,7 +106,7 @@ fun MapSelectionScreen(
     val sensorManager = remember { context.getSystemService(Context.SENSOR_SERVICE) as SensorManager }
     val rotationVectorSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
     
-    var deviceAzimuth by remember { mutableStateOf(0f) }
+    var deviceAzimuth by remember { mutableFloatStateOf(0f) }
     val animatedBearing by animateFloatAsState(
         targetValue = deviceAzimuth,
         animationSpec = spring(
@@ -487,8 +487,6 @@ fun LockTypeButton(text: String, selected: Boolean, accentColor: Color, isDark: 
 
 @Composable
 fun CyberUnlockDialog(lockType: LockType, accentColor: Color, isDark: Boolean, onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
-    var secret by remember { mutableStateOf("") }
-
     Dialog(onDismissRequest = onDismiss) {
         Surface(
             modifier = Modifier.width(300.dp),

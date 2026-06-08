@@ -65,6 +65,11 @@ import java.util.*
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.listSaver
 import com.geovault.core.AppCloner
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.unit.IntSize
+import kotlin.math.min
 import com.geovault.core.VirtualAppManager
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -413,11 +418,12 @@ fun VaultContentScreen(
     onSetLanguage: (String) -> Unit,
     onCompleteTour: () -> Unit,
     onToggleScreenshotRestriction: () -> Unit,
+    onToggleIntruderCapture: (Boolean) -> Unit = {},
     onToggleUninstallShield: (Boolean) -> Unit = {},
     onRestoreAndUninstall: () -> Unit = {},
     onCreateFolder: (String) -> Unit = {},
     onDeleteFolder: (String, Boolean) -> Unit = { _, _ -> },
-    onBulkDelete: (Set<String>) -> Unit = {},
+    onBulkDelete: (Set<String>, Boolean) -> Unit = { _, _ -> },
     onBulkRestore: (Set<String>) -> Unit = {},
     onAddFilesToFolder: (List<Uri>, String) -> Unit = { _, _ -> },
     onSetCustomBackground: (String?) -> Unit = {},
@@ -580,7 +586,8 @@ fun VaultContentScreen(
             },
             floatingActionButton = {
                 val isIntruderCategory = currentScreen is ContentScreen.CategoryView && (currentScreen as ContentScreen.CategoryView).category == FileCategory.INTRUDER
-                if (!isSelectionActive && !isIntruderCategory && (currentScreen is ContentScreen.Dashboard || currentScreen is ContentScreen.CategoryView || currentScreen is ContentScreen.FolderView)) {
+                val isRecycleBin = currentScreen is ContentScreen.CategoryView && (currentScreen as ContentScreen.CategoryView).category == FileCategory.RECYCLE_BIN
+                if (!isSelectionActive && !isIntruderCategory && !isRecycleBin && (currentScreen is ContentScreen.Dashboard || currentScreen is ContentScreen.CategoryView || currentScreen is ContentScreen.FolderView)) {
                     FloatingActionButton(
                         onClick = { 
                             if (currentScreen == ContentScreen.Dashboard) {
@@ -589,23 +596,28 @@ fun VaultContentScreen(
                                 val cat = if (currentScreen is ContentScreen.CategoryView) (currentScreen as ContentScreen.CategoryView).category else FileCategory.PHOTO
                                 val folder = if (currentScreen is ContentScreen.FolderView) (currentScreen as ContentScreen.FolderView).folderName else null
                                 
+                                // Requirement: Ask for "All Files Access" (Manage All Files) on first category + click
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !state.hasFullStoragePermission) {
+                                    onGrantFullStorage()
+                                    return@FloatingActionButton
+                                }
+
                                 // Contextual Permission Check
                                 val hasPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                                     when {
-                                        folder != null -> state.hasStoragePermission
                                         cat == FileCategory.PHOTO -> androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_MEDIA_IMAGES) == android.content.pm.PackageManager.PERMISSION_GRANTED
                                         cat == FileCategory.VIDEO -> androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_MEDIA_VIDEO) == android.content.pm.PackageManager.PERMISSION_GRANTED
                                         cat == FileCategory.AUDIO -> androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_MEDIA_AUDIO) == android.content.pm.PackageManager.PERMISSION_GRANTED
-                                        else -> state.hasStoragePermission
+                                        else -> state.hasStoragePermission || (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && state.hasFullStoragePermission)
                                     }
                                 } else {
                                     state.hasStoragePermission
                                 }
 
-                                if (hasPermission) {
+                                if (hasPermission || (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && state.hasFullStoragePermission)) {
                                     if (folder != null) {
                                         selectedFolderForAdd = folder
-                                        onFetchGalleryItems(FileCategory.PHOTO) // Default to photos for folder add
+                                        onFetchGalleryItems(FileCategory.PHOTO) 
                                     } else {
                                         selectedCategoryForAdd = cat
                                         onFetchGalleryItems(cat)
@@ -613,7 +625,6 @@ fun VaultContentScreen(
                                 } else {
                                     val perms = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                                         when {
-                                            folder != null -> arrayOf(android.Manifest.permission.READ_MEDIA_IMAGES, android.Manifest.permission.READ_MEDIA_VIDEO)
                                             cat == FileCategory.PHOTO -> arrayOf(android.Manifest.permission.READ_MEDIA_IMAGES)
                                             cat == FileCategory.VIDEO -> arrayOf(android.Manifest.permission.READ_MEDIA_VIDEO)
                                             cat == FileCategory.AUDIO -> arrayOf(android.Manifest.permission.READ_MEDIA_AUDIO)
@@ -679,7 +690,78 @@ fun VaultContentScreen(
                                     SkeletonBox(modifier = Modifier.fillMaxWidth().height(70.dp).padding(vertical = 8.dp), isDark = isDark)
                                 }
                             } else {
-                                AppLockManagement(
+                        val targetScreen = when {
+                        !state.hasNotificationPermission && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> "NotificationPermission"
+                        !state.hasUsageStatsPermission -> "UsagePermission"
+                        !state.hasOverlayPermission -> "OverlayPermission"
+                        !state.hasBackgroundPopupsPermission -> "BackgroundPopupsPermission"
+                        !state.hasBatteryOptimizationPermission -> "BatteryPermission"
+                        else -> "AppList"
+                    }
+
+                    when (targetScreen) {
+                        "NotificationPermission" -> {
+                            AppLockPermissionScreen(
+                                title = "Enable Notifications",
+                                description = "GeoVault uses notifications to keep the protection service running reliably.",
+                                icon = Icons.Default.Notifications,
+                                onGrant = { 
+                                    onStartAction()
+                                    onToggleAppLock("") // Trick to trigger notification permission in MainActivity
+                                },
+                                isDark = isDark
+                            )
+                        }
+                        "UsagePermission" -> {
+                            AppLockPermissionScreen(
+                                title = "Usage Stats Access",
+                                description = "GeoVault needs to know when an app is launched to show the lock screen.",
+                                icon = Icons.Default.Timeline,
+                                onGrant = { 
+                                    onStartAction()
+                                    onOpenUsageSettings() 
+                                },
+                                isDark = isDark
+                            )
+                        }
+                        "OverlayPermission" -> {
+                            AppLockPermissionScreen(
+                                title = "Display Over Other Apps",
+                                description = "GeoVault needs to draw the lock screen over protected applications.",
+                                icon = Icons.Default.Layers,
+                                onGrant = { 
+                                    onStartAction()
+                                    onOpenOverlaySettings() 
+                                },
+                                isDark = isDark
+                            )
+                        }
+                        "BackgroundPopupsPermission" -> {
+                            AppLockPermissionScreen(
+                                title = "Background Pop-ups",
+                                description = "Allows GeoVault to instantly launch the security screen from the background.",
+                                icon = Icons.Default.OpenInNew,
+                                onGrant = { 
+                                    onStartAction()
+                                    onGrantBackgroundPopups() 
+                                },
+                                isDark = isDark
+                            )
+                        }
+                        "BatteryPermission" -> {
+                            AppLockPermissionScreen(
+                                title = "Disable Battery Optimization",
+                                description = "Prevents the system from killing GeoVault's protection service.",
+                                icon = Icons.Default.BatteryChargingFull,
+                                onGrant = { 
+                                    onStartAction()
+                                    onOpenProtectedApps() 
+                                },
+                                isDark = isDark
+                            )
+                        }
+                        else -> {
+                            AppLockManagement(
                                     state = state, 
                                     scrollState = appLockScrollState,
                                     onToggleAppLock = onToggleAppLock,
@@ -687,6 +769,8 @@ fun VaultContentScreen(
                                         appToHide = pkg
                                     }
                                 )
+                        }
+                    }
                             }
                         }
                         is ContentScreen.Settings -> SettingsSection(
@@ -704,6 +788,7 @@ fun VaultContentScreen(
                             onSetLanguage = onSetLanguage,
                             onOpenLanguageSelection = { currentScreen = ContentScreen.LanguageSelection },
                             onToggleScreenshotRestriction = onToggleScreenshotRestriction,
+                            onToggleIntruderCapture = onToggleIntruderCapture,
                             onToggleUninstallShield = onToggleUninstallShield,
                             onRestoreAndUninstall = onRestoreAndUninstall,
                             onOpenWebView = { url, title -> currentScreen = ContentScreen.WebView(url, title) },
@@ -754,6 +839,7 @@ fun VaultContentScreen(
                         )
                         is ContentScreen.ImageAdjustment -> ImageAdjustmentScreen(
                             uri = screen.uri,
+                            isDark = isDark,
                             onApply = { path ->
                                 onSetCustomBackground(path)
                                 currentScreen = ContentScreen.Settings
@@ -981,6 +1067,77 @@ sealed class ContentScreen {
     data class FolderView(val folderName: String) : ContentScreen()
     data class WebView(val url: String, val title: String) : ContentScreen()
     data class ImageAdjustment(val uri: Uri) : ContentScreen()
+}
+
+@Composable
+fun AppLockPermissionScreen(
+    title: String,
+    description: String,
+    icon: ImageVector,
+    isDark: Boolean,
+    onGrant: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Surface(
+            modifier = Modifier.size(100.dp),
+            shape = CircleShape,
+            color = (if (isDark) Color.White else CyberBlue).copy(alpha = 0.1f)
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    modifier = Modifier.size(48.dp),
+                    tint = CyberBlue
+                )
+            }
+        }
+        
+        Spacer(Modifier.height(24.dp))
+        
+        Text(
+            text = title,
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Black,
+            color = if (isDark) Color.White else CyberNavy
+        )
+        
+        Spacer(Modifier.height(12.dp))
+        
+        Text(
+            text = description,
+            style = MaterialTheme.typography.bodyLarge,
+            textAlign = TextAlign.Center,
+            color = if (isDark) Color.LightGray else Color.DarkGray
+        )
+        
+        Spacer(Modifier.height(40.dp))
+        
+        Button(
+            onClick = onGrant,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = CyberBlue),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Text("GRANT PERMISSION", fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+        }
+        
+        Spacer(Modifier.height(16.dp))
+        
+        Text(
+            "Security requires active system monitoring.",
+            style = MaterialTheme.typography.bodySmall,
+            color = Color.Gray
+        )
+    }
 }
 
 @Composable
@@ -1323,7 +1480,7 @@ fun FileCategoryList(
     gridState: LazyGridState = rememberLazyGridState(),
     onFileClick: (VaultFile) -> Unit,
     onSelectionActive: (Boolean) -> Unit = {},
-    onBulkDelete: (Set<String>) -> Unit = {},
+    onBulkDelete: (Set<String>, Boolean) -> Unit = { _, _ -> },
     onBulkRestore: (Set<String>) -> Unit = {}
 ) {
     var selectedIds by remember { mutableStateOf(setOf<String>()) }
@@ -1349,13 +1506,17 @@ fun FileCategoryList(
                         color = Color.Gray
                     )
                     Text(
-                        text = "Tap the + button to secure your items.",
+
+                        text = when(category) {
+                            FileCategory.INTRUDER -> "I'm on duty sir 24x7."
+                            else -> "Tap the + button to secure your items."
+                        },
                         style = MaterialTheme.typography.bodySmall,
                         color = Color.Gray.copy(alpha = 0.6f),
                         modifier = Modifier.padding(top = 4.dp)
-                    )
+                                )
+                        }
                 }
-            }
         } else {
             LazyVerticalGrid(
                 state = gridState,
@@ -1435,7 +1596,8 @@ fun FileCategoryList(
                         }
                         
                         IconButton(onClick = { 
-                            onBulkDelete(selectedIds)
+                            val isRecycleBin = category == FileCategory.RECYCLE_BIN
+                            onBulkDelete(selectedIds, isRecycleBin)
                             selectedIds = emptySet()
                         }) {
                             Icon(Icons.Default.Delete, "Delete", tint = Color.Red.copy(alpha = 0.8f))
@@ -1869,6 +2031,7 @@ fun SettingsSection(
     onSetLanguage: (String) -> Unit,
     onOpenLanguageSelection: () -> Unit,
     onToggleScreenshotRestriction: () -> Unit,
+    onToggleIntruderCapture: (Boolean) -> Unit,
     onToggleUninstallShield: (Boolean) -> Unit = {},
     onRestoreAndUninstall: () -> Unit = {},
     onOpenWebView: (String, String) -> Unit,
@@ -1899,16 +2062,6 @@ fun SettingsSection(
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         Spacer(Modifier.height(8.dp))
-
-            // Other necessary permissions hidden in screenshots but needed
-            if (!state.hasUsageStatsPermission || !state.hasOverlayPermission || !state.hasBatteryOptimizationPermission || !state.hasBackgroundPopupsPermission || (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !state.hasFullStoragePermission)) {
-                Text(stringResource(R.string.system_permissions), color = CyberBlue, fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 8.dp))
-                if (!state.hasUsageStatsPermission) PermissionItem("App Usage Access", "Required to detect app launches", false, isDark, onOpenUsageSettings)
-                if (!state.hasOverlayPermission) PermissionItem("Overlay Permission", "Required to show lock screen", false, isDark, onOpenOverlaySettings)
-                if (!state.hasBackgroundPopupsPermission) PermissionItem("Background Pop-ups", "Allows lock to appear in background", false, isDark, onGrantBackgroundPopups)
-                if (!state.hasBatteryOptimizationPermission) PermissionItem("Battery Optimization", "Allows protection to run 24/7", false, isDark, onOpenProtectedApps)
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !state.hasFullStoragePermission) PermissionItem("Full Storage Access", "Required to delete files from gallery", false, isDark, onGrantFullStorage)
-            }
 
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
@@ -1941,6 +2094,14 @@ fun SettingsSection(
                             checked = state.isScreenshotRestricted,
                             isDark = isDark,
                             onCheckedChange = { onToggleScreenshotRestriction() }
+                        )
+                        SettingsToggleItem(
+                            title = "Intruder Capture",
+                            subtitle = "Snap a selfie of anyone who tries to break in",
+                            icon = Icons.Default.CameraAlt,
+                            checked = state.isIntruderCaptureEnabled,
+                            isDark = isDark,
+                            onCheckedChange = { onToggleIntruderCapture(it) }
                         )
                         SettingsLinkItem(
                             title = stringResource(R.string.language),
@@ -2765,6 +2926,7 @@ fun formatFileSize(size: Long): String {
 @Composable
 fun ImageAdjustmentScreen(
     uri: Uri,
+    isDark: Boolean,
     onApply: (String) -> Unit,
     onCancel: () -> Unit
 ) {
@@ -2772,54 +2934,64 @@ fun ImageAdjustmentScreen(
     val scope = rememberCoroutineScope()
     var offset by remember { mutableStateOf(Offset.Zero) }
     var scale by remember { mutableFloatStateOf(1f) }
+    
+    var containerSize by remember { mutableStateOf(IntSize.Zero) }
+    var guideSize by remember { mutableStateOf(IntSize.Zero) }
+
+    val surfaceColor = if (isDark) CyberDarkBlue else CreamWhite
+    val bottomPanelColor = if (isDark) Color(0xFF101720) else Color.White
+    val textColor = if (isDark) Color.White else LightTextPrimary
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black),
+            .background(if (isDark) Color.Black else Color(0xFFF5F5F5)),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
-                .padding(32.dp),
+                .padding(32.dp)
+                .onGloballyPositioned { containerSize = it.size },
             contentAlignment = Alignment.Center
         ) {
-            // 9:16 Crop Area Guide
+            // Full image view (Fit) - Allows user to see whole image and frame
+            AsyncImage(
+                model = uri,
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .pointerInput(Unit) {
+                        detectTransformGestures { _, pan, zoom, _ ->
+                            offset += pan
+                            scale = (scale * zoom).coerceIn(0.5f, 8f)
+                        }
+                    }
+                    .graphicsLayer(
+                        scaleX = scale,
+                        scaleY = scale,
+                        translationX = offset.x,
+                        translationY = offset.y
+                    ),
+                contentScale = ContentScale.Fit
+            )
+
+            // 9:16 Crop Area Guide on top
             Box(
                 modifier = Modifier
                     .aspectRatio(9f / 16f)
                     .fillMaxHeight()
-                    .border(2.dp, Color.White.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
-                    .clip(RoundedCornerShape(8.dp))
-            ) {
-                AsyncImage(
-                    model = uri,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .pointerInput(Unit) {
-                            detectTransformGestures { _, pan, zoom, _ ->
-                                offset += pan
-                                scale = (scale * zoom).coerceIn(1f, 5f)
-                            }
-                        }
-                        .graphicsLayer(
-                            scaleX = scale,
-                            scaleY = scale,
-                            translationX = offset.x,
-                            translationY = offset.y
-                        ),
-                    contentScale = ContentScale.Crop
-                )
-            }
+                    .onGloballyPositioned { guideSize = it.size }
+                    .border(2.dp, if (isDark) Color.White else CyberBlue, RoundedCornerShape(8.dp))
+            )
         }
 
         Surface(
-            color = CyberDarkBlue,
+            color = surfaceColor,
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+            shadowElevation = 16.dp
         ) {
             Row(
                 modifier = Modifier
@@ -2831,16 +3003,14 @@ fun ImageAdjustmentScreen(
                     onClick = onCancel,
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, Color.Gray)
+                    border = BorderStroke(1.dp, if (isDark) Color.Gray else Color.LightGray)
                 ) {
-                    Text("CANCEL", color = Color.White)
+                    Text("CANCEL", color = textColor)
                 }
                 Button(
                     onClick = {
-                        // In a real app, you'd process the crop here. 
-                        // For simplicity, we'll save the URI path or copy the file.
                         scope.launch {
-                            val savedPath = saveImageToInternal(context, uri)
+                            val savedPath = saveCroppedImage(context, uri, scale, offset, containerSize, guideSize)
                             onApply(savedPath)
                         }
                     },
@@ -2848,16 +3018,97 @@ fun ImageAdjustmentScreen(
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = CyberBlue)
                 ) {
-                    Text("APPLY", fontWeight = FontWeight.Bold)
+                    Text("APPLY", fontWeight = FontWeight.Bold, color = Color.White)
                 }
             }
         }
     }
 }
 
+suspend fun saveCroppedImage(
+    context: Context,
+    uri: Uri,
+    scale: Float,
+    offset: Offset,
+    containerSize: IntSize,
+    guideSize: IntSize
+): String = withContext(Dispatchers.IO) {
+    try {
+        val inputStream = context.contentResolver.openInputStream(uri)
+        val originalBitmap = BitmapFactory.decodeStream(inputStream)
+        inputStream?.close()
+
+        if (originalBitmap == null || containerSize.width == 0 || guideSize.width == 0) return@withContext ""
+
+        val containerW = containerSize.width.toFloat()
+        val containerH = containerSize.height.toFloat()
+        val bitmapW = originalBitmap.width.toFloat()
+        val bitmapH = originalBitmap.height.toFloat()
+
+        // ContentScale.Fit logic: find scale that fits bitmap into container
+        val fitScale = min(containerW / bitmapW, containerH / bitmapH)
+        val totalScale = fitScale * scale
+
+        val guideW = guideSize.width.toFloat()
+        val guideH = guideSize.height.toFloat()
+
+        // Guide position in container (centered)
+        val guideLeft = (containerW - guideW) / 2
+        val guideTop = (containerH - guideH) / 2
+
+        // Current image position in container (centered + user offset)
+        val currentImageLeft = (containerW - (bitmapW * totalScale)) / 2 + offset.x
+        val currentImageTop = (containerH - (bitmapH * totalScale)) / 2 + offset.y
+
+        // Relative distance from image start to guide start
+        val relativeX = guideLeft - currentImageLeft
+        val relativeY = guideTop - currentImageTop
+
+        // Map back to original bitmap coordinates
+        val cropX = relativeX / totalScale
+        val cropY = relativeY / totalScale
+        val cropW = guideW / totalScale
+        val cropH = guideH / totalScale
+
+        // Define valid rect within original bitmap
+        val bitmapRect = android.graphics.Rect(
+            cropX.toInt().coerceIn(0, originalBitmap.width),
+            cropY.toInt().coerceIn(0, originalBitmap.height),
+            (cropX + cropW).toInt().coerceIn(0, originalBitmap.width),
+            (cropY + cropH).toInt().coerceIn(0, originalBitmap.height)
+        )
+        
+        if (bitmapRect.width() <= 10 || bitmapRect.height() <= 10) {
+            // Fallback if something went wrong - return original path
+            return@withContext saveImageToInternal(context, uri)
+        }
+
+        val croppedBitmap = Bitmap.createBitmap(
+            originalBitmap,
+            bitmapRect.left,
+            bitmapRect.top,
+            bitmapRect.width(),
+            bitmapRect.height()
+        )
+
+        val file = File(context.filesDir, "custom_lock_bg.jpg")
+        val out = FileOutputStream(file)
+        croppedBitmap.compress(Bitmap.CompressFormat.JPEG, 90, out)
+        out.close()
+        
+        originalBitmap.recycle()
+        croppedBitmap.recycle()
+
+        file.absolutePath
+    } catch (e: Exception) {
+        e.printStackTrace()
+        ""
+    }
+}
+
 private suspend fun saveImageToInternal(context: Context, uri: Uri): String = withContext(Dispatchers.IO) {
     val inputStream = context.contentResolver.openInputStream(uri)
-    val file = File(context.filesDir, "lock_bg.jpg")
+    val file = File(context.filesDir, "custom_lock_bg.jpg")
     inputStream?.use { input ->
         FileOutputStream(file).use { output ->
             input.copyTo(output)

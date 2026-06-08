@@ -95,10 +95,13 @@ fun AuthUI(
 
     // Start Intruder Session when this screen is active
     DisposableEffect(lifecycleOwner) {
-        if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-            IntruderManager.getInstance(context).startSession(lifecycleOwner)
-        } else {
-            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+        val isIntruderEnabled = prefs.getBoolean("intruder_capture_enabled", false)
+        if (isIntruderEnabled) {
+            if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                IntruderManager.getInstance(context).startSession(lifecycleOwner)
+            } else {
+                cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+            }
         }
         onDispose {
             IntruderManager.getInstance(context).stopSession()
@@ -109,7 +112,9 @@ fun AuthUI(
         failedAttempts++
         prefs.edit().putInt("temp_failed_attempts", failedAttempts).apply()
         
-        if (failedAttempts >= 1) {
+        val isIntruderEnabled = prefs.getBoolean("intruder_capture_enabled", false)
+
+        if (failedAttempts >= 1 && isIntruderEnabled) {
             haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
             
             // Single capture for immediate feedback without cluttering
@@ -466,7 +471,7 @@ fun MapLockScreen(targetLocation: GeoPoint, isSatelliteMode: Boolean, isDarkMode
     
     val currentStyle = remember(isSatelliteMode, isDarkMode) {
         if (isSatelliteMode) {
-            MapStyleHelper.getSatelliteStyle(isHybrid = true)
+            MapStyleHelper.getSatelliteStyle(context, isHybrid = true)
         } else {
             if (isDarkMode) MapStyleHelper.DARK else MapStyleHelper.BRIGHT
         }

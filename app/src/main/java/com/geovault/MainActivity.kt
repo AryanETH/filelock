@@ -58,6 +58,7 @@ import com.google.android.gms.location.LocationSettingsResponse
 import com.google.android.gms.location.SettingsClient
 import com.google.android.gms.tasks.Task
 import android.content.Intent
+import android.content.pm.PackageManager
 import org.maplibre.android.MapLibre
 
 import android.os.Build
@@ -85,9 +86,6 @@ class MainActivity : AppCompatActivity() {
     @OptIn(UnstableApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // Professional Security: Prevent screenshots and recent app previews
-        window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
 
         // Root Detection
         if (SecurityUtils.isDeviceRooted()) {
@@ -137,6 +135,10 @@ class MainActivity : AppCompatActivity() {
                     if (results[Manifest.permission.ACCESS_FINE_LOCATION] == false) {
                         Toast.makeText(this@MainActivity, "Location is required for Map Security", Toast.LENGTH_LONG).show()
                     }
+
+                    if (results[Manifest.permission.CAMERA] == true) {
+                        viewModel.toggleIntruderCapture(true)
+                    }
                 }
 
                 val resolutionLauncher = rememberLauncherForActivityResult(
@@ -163,26 +165,7 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 LaunchedEffect(Unit) {
-                    val permissions = mutableListOf<String>()
-                    permissions.add(Manifest.permission.ACCESS_FINE_LOCATION)
-                    permissions.add(Manifest.permission.ACCESS_COARSE_LOCATION)
-                    permissions.add(Manifest.permission.CAMERA)
-                    
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        permissions.add(Manifest.permission.POST_NOTIFICATIONS)
-                        permissions.add(Manifest.permission.READ_MEDIA_IMAGES)
-                        permissions.add(Manifest.permission.READ_MEDIA_VIDEO)
-                        permissions.add(Manifest.permission.READ_MEDIA_AUDIO)
-                    } else {
-                        permissions.add(Manifest.permission.READ_EXTERNAL_STORAGE)
-                        permissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                    }
-
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                        permissions.add(Manifest.permission.FOREGROUND_SERVICE_SPECIAL_USE)
-                    }
-                    
-                    permissionLauncher.launch(permissions.toTypedArray())
+                    // Contextual permissions: do not ask primarily
                 }
 
                 LaunchedEffect(Unit) {
@@ -221,17 +204,7 @@ class MainActivity : AppCompatActivity() {
                         targetState = when {
                             showSplash -> "intro"
                             uiState.isFirstRun && !uiState.isLanguageSelected -> "language_selection"
-                            uiState.isFirstRun -> "onboarding"
-
-                            !uiState.hasUsageStatsPermission ||
-                                    !uiState.hasOverlayPermission ||
-                                    !uiState.hasLocationPermission ||
-                                    !uiState.hasBatteryOptimizationPermission ||
-                                    !uiState.hasCameraPermission ||
-                                    !uiState.hasStoragePermission ||
-                                    !uiState.hasBackgroundPopupsPermission ||
-                                    (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !uiState.hasFullStoragePermission)
-                                -> "permissions"
+                            uiState.isFirstRun || !uiState.disclaimerAccepted -> "onboarding"
 
                             uiState.isMapDownloading -> "downloading"
 
@@ -254,7 +227,11 @@ class MainActivity : AppCompatActivity() {
                                 LanguageOnboardingScreen(onLanguageSelected = { viewModel.setLanguage(it) })
                             }
                             "onboarding" -> {
-                                OnboardingScreen(onFinished = { viewModel.completeOnboarding() })
+                                OnboardingScreen(
+                                    onFinished = { viewModel.completeOnboarding() },
+                                    onStartAction = { viewModel.setPerformingAction(true) },
+                                    onEndAction = { viewModel.setPerformingAction(false) }
+                                )
                             }
                             "permissions" -> {
                                 PermissionScreen(
@@ -310,12 +287,29 @@ class MainActivity : AppCompatActivity() {
                                     },
                                     onLockClick = { viewModel.lock() },
                                     onAppClick = { packageName -> viewModel.launchApp(packageName) },
-                                    onOpenUsageSettings = { viewModel.openUsageStatsSettings() },
-                                    onOpenOverlaySettings = { viewModel.openOverlaySettings() },
-                                    onOpenProtectedApps = { viewModel.openProtectedAppsSettings() },
+                                    onOpenUsageSettings = { 
+                                        viewModel.setPerformingAction(true)
+                                        viewModel.openUsageStatsSettings() 
+                                    },
+                                    onOpenOverlaySettings = { 
+                                        viewModel.setPerformingAction(true)
+                                        viewModel.openOverlaySettings() 
+                                    },
+                                    onOpenProtectedApps = { 
+                                        viewModel.setPerformingAction(true)
+                                        viewModel.openProtectedAppsSettings() 
+                                    },
                                     onToggleMasterStealth = { viewModel.toggleMasterStealth() },
                                     onAddFiles = { uris, category -> viewModel.addFilesToVault(uris, category) },
-                                    onToggleAppLock = { packageName -> viewModel.toggleAppLock(packageName) },
+                                    onToggleAppLock = { packageName -> 
+                                        if (packageName.isEmpty()) {
+                                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                                permissionLauncher.launch(arrayOf(Manifest.permission.POST_NOTIFICATIONS))
+                                            }
+                                        } else {
+                                            viewModel.toggleAppLock(packageName)
+                                        }
+                                    },
                                     onRemoveVault = { id -> viewModel.removeVault(id) },
                                     onClearAllVaults = { viewModel.clearAllVaults() },
                                     onGrantCamera = {
@@ -331,9 +325,13 @@ class MainActivity : AppCompatActivity() {
                                         }
                                     },
                                     onGrantFullStorage = {
+                                        viewModel.setPerformingAction(true)
                                         viewModel.openFullStorageSettings()
                                     },
-                                    onGrantBackgroundPopups = { viewModel.setShowBackgroundPopupGuide(true) },
+                                    onGrantBackgroundPopups = { 
+                                        viewModel.setPerformingAction(true)
+                                        viewModel.setShowBackgroundPopupGuide(true) 
+                                    },
                                     onDeleteFile = { fileId -> viewModel.removeFileFromVault(fileId) },
                                     onRestoreFile = { fileId -> viewModel.restoreFileToGallery(fileId) },
                                     onRemoveAppFromVault = { vaultId, pkg -> viewModel.removeAppFromSpecificVault(vaultId, pkg) },
@@ -343,9 +341,17 @@ class MainActivity : AppCompatActivity() {
                                     onSetLanguage = { lang -> viewModel.setLanguage(lang) },
                                     onCompleteTour = { viewModel.completeTour() },
                                     onToggleScreenshotRestriction = { viewModel.toggleScreenshotRestriction() },
+                                    onToggleIntruderCapture = { enabled ->
+                                        if (enabled && !uiState.hasCameraPermission) {
+                                            viewModel.setPerformingAction(true)
+                                            permissionLauncher.launch(arrayOf(Manifest.permission.CAMERA))
+                                        } else {
+                                            viewModel.toggleIntruderCapture(enabled)
+                                        }
+                                    },
                                     onCreateFolder = { viewModel.createFolder(it) },
                                     onDeleteFolder = { name, recover -> viewModel.deleteFolder(name, recover) },
-                                    onBulkDelete = { ids -> viewModel.bulkDeleteFiles(ids) },
+                                    onBulkDelete = { ids, isPermanent -> viewModel.bulkDeleteFiles(ids, isPermanent) },
                                     onBulkRestore = { ids -> viewModel.bulkRestoreFiles(ids) },
                                     onAddFilesToFolder = { uris, folder -> viewModel.addFilesToVault(uris, com.geovault.model.FileCategory.OTHER, folder) },
                                     onSetCustomBackground = { viewModel.setCustomBackground(it) },
