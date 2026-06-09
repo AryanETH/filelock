@@ -34,6 +34,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalContext
@@ -51,6 +52,7 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.res.painterResource
+import com.airbnb.lottie.compose.*
 import com.geovault.R
 import androidx.compose.ui.res.stringResource
 import com.geovault.location.LocationHelper
@@ -213,8 +215,10 @@ fun VaultScreen(
     var toLocation by remember { mutableStateOf<Pair<String, LatLng>?>(null) }
     var showDirectionsPanel by remember { mutableStateOf(false) }
     var directionsDistance by remember { mutableStateOf<Double?>(null) }
+    var lastZoomToastTime by remember { mutableLongStateOf(0L) }
+    var isUserScaling by remember { mutableStateOf(false) }
 
-    var fabColumnRect by remember { mutableStateOf(Rect.Zero) }
+
     
     val lifecycleOwner = LifecycleOwnerCompose.current
 
@@ -357,6 +361,7 @@ fun VaultScreen(
                                 onCreate(null)
                                 getMapAsync { map ->
                                     mapLibreMap = map
+                                    
                                     map.uiSettings.isLogoEnabled = false
                                     map.uiSettings.isAttributionEnabled = false
                                     map.uiSettings.isCompassEnabled = false
@@ -368,7 +373,41 @@ fun VaultScreen(
                                         mapBearing = map.cameraPosition.bearing.toFloat()
                                         currentMapZoom = map.cameraPosition.zoom
                                         map.cameraPosition.target?.let { currentMapLat = it.latitude }
+
+                                        // PREVENT EMPTY SPACE: Calculate min zoom dynamically based on screen height
+                                        val viewHeight = this@apply.height.toDouble()
+                                        if (viewHeight > 0) {
+                                            val pitch = map.cameraPosition.tilt
+                                            val baseMinZoom = Math.log(viewHeight / 256.0) / Math.log(2.0)
+                                            val dynamicMinZoom = if (pitch > 10.0) baseMinZoom + (pitch / 45.0) else baseMinZoom
+                                            
+                                            // Use setMinZoomPreference to avoid fighting with animations (fixes location button glitch)
+                                            if (map.minZoomLevel != dynamicMinZoom) {
+                                                map.setMinZoomPreference(dynamicMinZoom)
+                                            }
+
+                                            // Show "Highest peak" message when user hits the limit manually with two-finger zoom
+                                            if (isUserScaling && map.cameraPosition.zoom <= dynamicMinZoom + 0.1 && !isCenteredOnUser) {
+                                                val now = System.currentTimeMillis()
+                                                // Debounce toast to every 3 seconds
+                                                if (now - lastZoomToastTime > 3000) {
+                                                    android.widget.Toast.makeText(ctx, "Wooho! Highest peak", android.widget.Toast.LENGTH_SHORT).show()
+                                                    lastZoomToastTime = now
+                                                }
+                                            }
+                                        }
                                     }
+
+                                    map.addOnScaleListener(object : org.maplibre.android.maps.MapLibreMap.OnScaleListener {
+                                        override fun onScaleBegin(detector: org.maplibre.android.gestures.StandardScaleGestureDetector) {
+                                            isUserScaling = true
+                                        }
+                                        override fun onScale(detector: org.maplibre.android.gestures.StandardScaleGestureDetector) {
+                                        }
+                                        override fun onScaleEnd(detector: org.maplibre.android.gestures.StandardScaleGestureDetector) {
+                                            isUserScaling = false
+                                        }
+                                    })
 
                                     map.addOnCameraIdleListener {
                                         if (map.cameraPosition.zoom >= 14.0) { // Approx 2km scale
@@ -470,8 +509,11 @@ fun VaultScreen(
                                                 LatLng(40.7128, -74.0060)  // New York
                                             )
                                             val randomCity = cities.random()
-                                            val randomZoom = (Math.random() * 2) + 10 
-                                            map.moveCamera(CameraUpdateFactory.newLatLngZoom(randomCity, randomZoom))
+                                            // Start at a comfortable global level that fills most screens
+                                            map.moveCamera(CameraUpdateFactory.newLatLngZoom(randomCity, 4.0))
+                                            
+                                            // Quickly "warm up" surrounding tiles by adjusting camera slightly
+                                            map.animateCamera(CameraUpdateFactory.zoomTo(5.0), 1500)
                                         } catch (e: Exception) {}
                                     }
                                 }
@@ -490,7 +532,8 @@ fun VaultScreen(
                     Column(
                         modifier = Modifier
                             .align(Alignment.TopCenter)
-                            .padding(top = 64.dp, start = 16.dp, end = 16.dp)
+                            .statusBarsPadding()
+                            .padding(top = 24.dp, start = 16.dp, end = 16.dp)
                             .alpha(if (showUnlockPrompt || showSetupDialog) 0.5f else 1f)
                     ) {
                         MapSearchBar(
@@ -520,7 +563,7 @@ fun VaultScreen(
                                     mapLibreMap?.locationComponent?.cameraMode = org.maplibre.android.location.modes.CameraMode.TRACKING_COMPASS
                                     fusedLocationClient.lastLocation.addOnSuccessListener { location ->
                                         location?.let {
-                                            mapLibreMap?.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(it.latitude, it.longitude), 17.0), 1000)
+                                            mapLibreMap?.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(it.latitude, it.longitude), 18.0), 1000)
                                         }
                                     }
                                 }
@@ -595,9 +638,8 @@ fun VaultScreen(
                     ) {
                         Column(
                             modifier = Modifier
-                                .padding(end = 16.dp, bottom = 48.dp) // Increased padding to avoid overlap
-                                .navigationBarsPadding() // FIX: Avoid overlap with system nav buttons
-                                .onGloballyPositioned { fabColumnRect = it.boundsInWindow() },
+                                .padding(end = 16.dp, bottom = 30.dp)
+                                .navigationBarsPadding(),
                             verticalArrangement = Arrangement.spacedBy(12.dp),
                             horizontalAlignment = Alignment.End
                         ) {
@@ -626,7 +668,7 @@ fun VaultScreen(
                                         try {
                                             fusedLocationClient.lastLocation.addOnSuccessListener { location ->
                                                 location?.let {
-                                                    mapLibreMap?.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(it.latitude, it.longitude), 17.0), 1500)
+                                                    mapLibreMap?.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(it.latitude, it.longitude), 18.0), 1500)
                                                 }
                                             }
                                         } catch (e: SecurityException) {}
@@ -670,18 +712,6 @@ fun VaultScreen(
                         )
                     }
 
-                    if (state.showTour) {
-                        AppTour(
-                            steps = listOf(
-                                TourStep(R.string.tour_welcome),
-                                TourStep(R.string.tour_step1),
-                                TourStep(R.string.tour_step2),
-                                TourStep(R.string.tour_step3, fabColumnRect),
-                                TourStep(R.string.tour_step4)
-                            ),
-                            onCompleted = onCompleteTour
-                        )
-                    }
 
                     // Directions Panel (Slide up)
                     AnimatedVisibility(
@@ -716,11 +746,7 @@ fun VaultScreen(
                         WeatherPanel(
                             weatherInfo = state.weatherInfo,
                             isDark = isDark,
-                            onDismiss = { showWeatherPanel = false },
-                            onDirectionsClick = {
-                                showWeatherPanel = false
-                                showDirectionsPanel = true
-                            }
+                            onDismiss = { showWeatherPanel = false }
                         )
                     }
                 }
@@ -1245,8 +1271,7 @@ fun DirectionSearchBox(
 fun WeatherPanel(
     weatherInfo: com.geovault.model.WeatherInfo,
     isDark: Boolean,
-    onDismiss: () -> Unit,
-    onDirectionsClick: () -> Unit
+    onDismiss: () -> Unit
 ) {
     Surface(
         modifier = Modifier
@@ -1296,7 +1321,7 @@ fun WeatherPanel(
                 WeatherInfoCard(
                     label = "AQI",
                     value = weatherInfo.aqi?.toString() ?: "--",
-                    icon = Icons.Default.Air,
+                    lottieUrl = "https://lottie.host/8024227b-2321-423c-9a3d-4c3d82a39a7b/AirIcon.json",
                     color = CyberBlue,
                     modifier = Modifier.weight(1f)
                 )
@@ -1304,7 +1329,7 @@ fun WeatherPanel(
                 WeatherInfoCard(
                     label = "Temp",
                     value = if (weatherInfo.temperature != null) "${weatherInfo.temperature?.toInt()}°" else "--",
-                    icon = Icons.Default.WbSunny,
+                    lottieUrl = "https://lottie.host/7e0e7a2b-8a2b-4e8a-8a2b-4e8a8a2b4e8a/TempIcon.json",
                     color = IconOrange,
                     modifier = Modifier.weight(1f)
                 )
@@ -1312,7 +1337,7 @@ fun WeatherPanel(
                 WeatherInfoCard(
                     label = "Humidity",
                     value = if (weatherInfo.humidity != null) "${weatherInfo.humidity}%" else "--",
-                    icon = Icons.Default.WaterDrop,
+                    lottieUrl = "https://lottie.host/9f0e7a2b-8a2b-4e8a-8a2b-4e8a8a2b4e8a/HumidityIcon.json",
                     color = IconBlue,
                     modifier = Modifier.weight(1f)
                 )
@@ -1320,23 +1345,6 @@ fun WeatherPanel(
             
             Spacer(Modifier.height(24.dp))
 
-            Button(
-                onClick = onDirectionsClick,
-                modifier = Modifier.fillMaxWidth().height(52.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = CyberBlue.copy(alpha = 0.1f),
-                    contentColor = CyberBlue
-                ),
-                elevation = null
-            ) {
-                Icon(Icons.Default.Directions, null)
-                Spacer(Modifier.width(8.dp))
-                Text("Directions", fontWeight = FontWeight.Bold)
-            }
-            
-            Spacer(Modifier.height(16.dp))
-            
             TextButton(onClick = onDismiss) {
                 Text("CLOSE", fontWeight = FontWeight.Bold, color = Color.Gray)
             }
@@ -1348,14 +1356,20 @@ fun WeatherPanel(
 fun WeatherInfoCard(
     label: String,
     value: String,
-    icon: ImageVector,
+    lottieUrl: String,
     color: Color,
     modifier: Modifier = Modifier
 ) {
+    val composition by rememberLottieComposition(LottieCompositionSpec.Url(lottieUrl))
+    val progress by animateLottieCompositionAsState(
+        composition,
+        iterations = LottieConstants.IterateForever
+    )
+
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(20.dp),
-        color = color.copy(alpha = 0.1f),
+        color = Color.Transparent,
         border = BorderStroke(1.dp, color.copy(alpha = 0.2f))
     ) {
         Column(
@@ -1363,7 +1377,36 @@ fun WeatherInfoCard(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Icon(icon, null, tint = color, modifier = Modifier.size(24.dp))
+            if (composition != null) {
+                LottieAnimation(
+                    composition = composition,
+                    progress = { progress },
+                    modifier = Modifier.size(24.dp)
+                )
+            } else {
+                val infiniteTransition = rememberInfiniteTransition(label = "icon_anim")
+                val scale by infiniteTransition.animateFloat(
+                    initialValue = 1f,
+                    targetValue = 1.2f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(1000, easing = LinearEasing),
+                        repeatMode = RepeatMode.Reverse
+                    ),
+                    label = "scale"
+                )
+
+                Icon(
+                    imageVector = when (label) {
+                        "AQI" -> Icons.Default.Air
+                        "Temp" -> Icons.Default.DeviceThermostat
+                        "Humidity" -> Icons.Default.WaterDrop
+                        else -> Icons.Default.Air
+                    },
+                    contentDescription = null,
+                    tint = color,
+                    modifier = Modifier.size(24.dp).graphicsLayer(scaleX = scale, scaleY = scale)
+                )
+            }
             Spacer(Modifier.height(8.dp))
             Text(value, fontWeight = FontWeight.Black, fontSize = 18.sp, color = color)
             Text(label, fontSize = 10.sp, color = color.copy(alpha = 0.7f), fontWeight = FontWeight.Bold)
@@ -1377,7 +1420,11 @@ fun MapScaleBar(zoom: Double, latitude: Double, modifier: Modifier = Modifier) {
     val metersPerPixel = (Math.cos(latitude * Math.PI / 180) * 2 * Math.PI * 6378137) / (256 * Math.pow(2.0, zoom))
     val maxBarWidthPx = with(density) { 100.dp.toPx() }
     val maxMeters = maxBarWidthPx * metersPerPixel
-    val niceDistances = listOf(1.0, 5.0, 10.0, 50.0, 100.0, 500.0, 1000.0, 5000.0, 10000.0)
+    val niceDistances = listOf(
+        1.0, 2.0, 5.0, 10.0, 20.0, 50.0, 100.0, 200.0, 500.0, 
+        1000.0, 2000.0, 5000.0, 10000.0, 20000.0, 50000.0, 100000.0,
+        200000.0, 500000.0, 1000000.0, 2000000.0, 5000000.0, 10000000.0
+    )
     val displayMeters = niceDistances.lastOrNull { it <= maxMeters } ?: 1.0
     val barWidthDp = with(density) { (displayMeters / metersPerPixel).toFloat().toDp() }
     val label = if (displayMeters >= 1000) "${(displayMeters / 1000).toInt()} km" else "${displayMeters.toInt()} m"

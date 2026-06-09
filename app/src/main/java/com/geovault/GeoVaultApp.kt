@@ -22,7 +22,7 @@ class GeoVaultApp : Application(), ImageLoaderFactory {
     override fun onCreate() {
         super.onCreate()
         try {
-            // Global initialization of MapLibre to prevent per-activity crashes
+            // Global initialization of MapLibre
             MapLibre.getInstance(this)
         } catch (e: Exception) {
             e.printStackTrace()

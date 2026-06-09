@@ -56,14 +56,24 @@
 <string name="background_popups_desc">Tap here → Special app access → Display pop-ups while in background → Allow</string>
 
 <!--  Onboarding  -->
-<string name="onboarding_1_title">disguise as lock</string>
+<string name="onboarding_1_title">Disguise as Lock</string>
 <string name="onboarding_1_desc">Map will act as lock layer all your files will be hidden beneath the location</string>
-<string name="onboarding_2_title">fully offline</string>
+<string name="onboarding_2_title">Fully Offline</string>
 <string name="onboarding_2_desc">None of your data is stored in servers mapplock is fully offline and local</string>
 <string name="onboarding_3_title">Made In India</string>
-<string name="onboarding_3_desc">Our entire app is proudly Indian Build in Bhopal</string>
-<string name="onboarding_4_title">experience the different</string>
-<string name="onboarding_4_desc">Your photos and videos are hidden and saved safely with local encryption.</string>
+<string name="onboarding_3_desc">Our entire app is proudly Indian and Build in Bhopal</string>
+<string name="onboarding_4_title">How to use</string>
+<string name="onboarding_4_desc">Follow these simple steps to secure your device.</string>
+<string name="onboarding_4_step1">Long press on the map</string>
+<string name="onboarding_4_step2">Set your PIN or pattern</string>
+<string name="onboarding_4_step3">Lock your apps or hide files</string>
+<string name="onboarding_4_step4">Double tap on the same location to revisit dashboard</string>
+<string name="onboarding_disclaimer_title">Map Data Disclaimer</string>
+<string name="onboarding_disclaimer_desc">Map data and borders are provided as-is by map providers. We do not control or modify geographic representations. Your privacy is our priority.</string>
+<string name="onboarding_accept_prefix">I understand and accept the </string>
+<string name="onboarding_terms">Terms of Service</string>
+<string name="onboarding_and"> and </string>
+<string name="onboarding_privacy">Privacy Policy</string>
 <string name="initialize_system">Get Started</string>
 <string name="next">Continue</string>
 
@@ -78,7 +88,7 @@
 <string name="search_places">Search place...</string>
 
 <!--  Dashboard  -->
-<string name="app_lock_title">lock Apps</string>
+<string name="app_lock_title">Lock Apps</string>
 <string name="app_lock_subtitle">Lock your apps</string>
 <string name="history_title">Locked Apps</string>
 <string name="history_subtitle">Manage all your locked apps</string>
@@ -155,6 +165,7 @@
 <string name="terms_of_use">Terms of Use</string>
 <string name="faq">FAQ / Help</string>
 <string name="privacy_policy">Privacy Policy</string>
+<string name="share_mapplock">Share mapplock</string>
 
 <!--  VaultContentScreen  -->
 <string name="settings">Settings</string>
@@ -203,18 +214,83 @@
 <string name="biometric_unavailable">Fingerprint not available</string>
 <string name="fingerprint">Fingerprint</string>
 <string name="tap_target_coordinates">Tap your secret map point</string>
+<string name="location_required_title">Location Permission Needed</string>
+<string name="location_required_message">To enable Map Security and region-based locking, we need your location permission. \n\n<b>Note:</b> Your data is 100% offline and stays on your device.</string>
+<string name="location_allow_btn">ALLOW PERMISSION</string>
+<string name="location_access_title">LOCATION ACCESS</string>
+<string name="location_access_message">We need your location to enable location-based vault security. Your data stays on your device.</string>
+<string name="grant_location_access">GRANT LOCATION ACCESS</string>
 
 <!-- DashboardTour -->
 <string name="tour_dash_welcome_title">Welcome to Mapplock</string>
 <string name="tour_dash_welcome_desc">Your privacy is safe with us. Let\'s take a quick look around.</string>
-<string name="tour_dash_hide_apps_title">Hide Apps</string>
-<string name="tour_dash_hide_apps_desc">Tap here to lock and hide any app. They will disappear until you unlock them.</string>
-<string name="tour_dash_history_title">My Zones</string>
-<string name="tour_dash_history_desc">Manage all your safe zones and the apps inside them.</string>
+<string name="tour_dash_hide_apps_title">Lock Apps</string>
+<string name="tour_dash_hide_apps_desc">Tap here to lock any app. They will be protected until you unlock them.</string>
+<string name="tour_dash_history_title">Lock History</string>
+<string name="tour_dash_history_desc">Manage all your safe locations and the apps inside them.</string>
 <string name="tour_dash_categories_title">Your Secret Vault</string>
 <string name="tour_dash_categories_desc">Photos, videos and files you hide will be saved here safely.</string>
-<string name="tour_dash_fab_title">Add Files</string>
-<string name="tour_dash_fab_desc">Tap the + button to hide files from your gallery.</string>
+<string name="tour_dash_fab_title">Create New Folder</string>
+<string name="tour_dash_fab_desc">Tap the + button to create custom folders</string>
 <string name="tour_dash_settings_title">Settings</string>
 <string name="tour_dash_settings_desc">Change your lock, language and more from here.</string>
+    <string name="custom_lock_background">Custom Lock Background</string>
+    <string name="custom_lock_background_desc">Set your personal background</string>
+    <string name="intruder_capture">Intruder Capture</string>
+    <string name="intruder_capture_desc">Snap a selfie of anyone who tries to break in</string>
+    <string name="create_new_folder">Create New Folder</string>
+    <string name="create_new_folder_desc">Folders can contain any file type (Images, Videos, PDFs, etc).</string>
+    <string name="folder_name">Folder Name</string>
+    <string name="appearance">Appearance</string>
+    <string name="preview_and_hide">HIDE (%1$d)</string>
+    <string name="bg_active_desc">Image Active • Tap to manage</string>
+    <string name="change">CHANGE</string>
+    <string name="remove_btn">REMOVE</string>
+    <string name="notification_perm_title">Enable Notifications</string>
+    <string name="notification_perm_desc">GeoVault uses notifications to keep the protection service running reliably.</string>
+    <string name="usage_perm_title">Usage Stats Access</string>
+    <string name="usage_perm_desc">GeoVault needs to know when an app is launched to show the lock screen.</string>
+    <string name="overlay_perm_title">Display Over Other Apps</string>
+    <string name="overlay_perm_desc">GeoVault needs to draw the lock screen over protected applications.</string>
+    <string name="background_popups_perm_title">Background Pop-ups</string>
+    <string name="background_popups_perm_desc">Allows GeoVault to instantly launch the security screen from the background.</string>
+    <string name="battery_perm_title">Disable Battery Optimization</string>
+    <string name="battery_perm_desc">Prevents the system from killing GeoVault\'s protection service.</string>
+    <string name="grant_permission">GRANT PERMISSION</string>
+    <string name="security_monitoring_note">Security requires active system monitoring.</string>
+    <string name="search_apps">Search apps...</string>
+    <string name="recommended">RECOMMENDED</string>
+    <string name="all_apps">ALL APPS</string>
+    <string name="locked_apps_header">LOCKED APPS</string>
+    <string name="no_apps_in_zone">No apps locked yet</string>
+    <string name="unlock_all">UNLOCK ALL</string>
+    <string name="user_locked_stats">OVER %1$d%% OF USERS HAVE IT LOCKED</string>
+    <string name="bulk_action_title">Category Actions</string>
+    <string name="bulk_action_desc">Choose what to do with all items in this category.</string>
+    <string name="recover_all">RECOVER ALL</string>
+    <string name="delete_all">DELETE ALL</string>
+    <string name="delete_folder_confirm">Delete folder and all its files?</string>
+    <string name="recover_folder">Recover all files before deleting</string>
+    <string name="delete_permanently">Delete permanently</string>
+
+    <string-array name="faq_questions">
+        <item>What is Mapplock and how is it different from other app lockers?</item>
+        <item>How does Mapplock protect my data against \'Q-Day\'?</item>
+        <item>How does the \"Map-Gate\" feature work?</item>
+        <item>Are my private photos and videos stored on Mapplock\'s servers?</item>
+        <item>What happens if I forget my PIN or Pattern?</item>
+        <item>Will the map features work if I am offline or have no internet?</item>
+        <item>What is \"Intruder Capture\" and where can I see the photos?</item>
+        <item>What is \"File Loss Protection\" and why should I enable it?</item>
+    </string-array>
+    <string-array name="faq_answers">
+        <item>Mapplock is a next-generation security application developed by Aitoyz that uses location-based intelligence to protect your privacy. Unlike standard lockers that rely solely on PINs, Mapplock introduces \"Map-Gate\" technology, allowing you to define safe geographical zones. It provides a professional-grade vault for photos, videos, and files, combined with advanced intruder detection and stealth disguises. It is specifically built for users who want their phone\'s security to adapt automatically to their environment.</item>
+        <item>Mapplock is built with a Quantum-Resilient architecture. Most cloud-based lockers are vulnerable to \'Harvest Now, Decrypt Later\' attacks, where data is stolen today to be cracked by future quantum computers. Mapplock prevents this by using local-only AES-256 symmetric encryption and a zero-knowledge architecture. Since your data never leaves your device, it cannot be harvested. Even with quantum algorithms like Grover\'s, our 256-bit encryption remains computationally unbreakable for billions of years.</item>
+        <item>The Map-Gate feature allows you to set specific GPS coordinates as \"Safe Zones,\" such as your home or office. While you are within the designated radius of a safe zone, your protected apps can be accessed more conveniently or kept unlocked entirely. However, the moment you move outside this radius, Mapplock triggers a high-security lockdown automatically. This ensures that if your phone is lost, stolen, or accessed in a public area, your sensitive data remains completely inaccessible to others.</item>
+        <item>No, Aitoyz operates on a \"Privacy-First\" model, meaning Mapplock does not store any of your personal files on our servers. All photos, videos, and documents you move into the vault are encrypted locally on your device’s internal storage. We do not have any remote access to your private content, and we cannot see or share your files. This approach ensures that you have total control over your data and that it remains secure even if your internet connection is compromised.</item>
+        <item>If you forget your primary security code, you can use the secondary verification methods established during the initial setup. This includes biometric authentication, such as fingerprint or face unlock, if you have enabled those options in the settings menu. Additionally, you can use your \"Secret Map Point\" as a recovery method to reset your credentials. We strongly recommend setting up multiple recovery options to avoid a permanent lockout, as we cannot recover your PIN remotely for security reasons.</item>
+        <item>Yes, Mapplock is designed to remain fully functional even without an active data or Wi-Fi connection. The app proactively downloads and caches GPS map data for your current regional area as soon as you grant the required location permissions. This offline map engine allows the security interface to load instantly and accurately detect your location-based \"Safe Zones.\" This ensures that your Map-Gate security remains active and reliable, regardless of your signal strength or roaming status.</item>
+        <item>Intruder Capture is an automated security feature that takes a secret selfie of anyone attempting to break into your vault. If an incorrect PIN or Pattern is entered more than the allowed number of times, the app silently triggers the front camera to snap a photo of the user. These photos are stored within a dedicated \"Intruders\" category inside your vault, complete with a timestamp of the attempt. You can review these logs at any time to see exactly who tried to access your private apps without permission.</item>
+        <item>File Loss Protection is a critical safeguard that uses Device Administrator rights to prevent the accidental or unauthorized uninstallation of Mapplock. Because your files are encrypted and stored within the app\'s protected directory, a standard uninstallation would result in the permanent loss of all your hidden data. By enabling this feature, the system requires an extra verification step before the app can be removed from the device. This ensures that your important documents and memories are never deleted by a mistake or by someone else.</item>
+    </string-array>
 </resources>

@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material3.*
@@ -21,102 +22,122 @@ import com.geovault.ui.theme.*
 
 @Composable
 fun LanguageOnboardingScreen(
-    onLanguageSelected: (String) -> Unit
+    onLanguageSelected: (String) -> Unit,
+    onBack: (() -> Unit)? = null
 ) {
     var expanded by remember { mutableStateOf(false) }
     var selectedLanguage by remember { mutableStateOf("en") }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(24.dp)
-        ) {
-            Icon(
-                Icons.Default.Language,
-                contentDescription = null,
-                tint = CyberBlue,
-                modifier = Modifier.size(64.dp)
-            )
-            
-            Spacer(Modifier.height(24.dp))
-            
-            Text(
-                text = "SELECT LANGUAGE",
-                color = LightTextPrimary,
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Black
-            )
-            
-            Text(
-                text = "Choose your preferred language to continue",
-                color = LightTextSecondary,
-                fontSize = 14.sp,
-                modifier = Modifier.padding(top = 8.dp)
-            )
-
-            Spacer(Modifier.height(48.dp))
-
-            Box {
-                Surface(
-                    onClick = { expanded = true },
-                    color = Color.White,
-                    shape = RoundedCornerShape(16.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, LightOutline.copy(alpha = 0.2f)),
-                    modifier = Modifier.fillMaxWidth().height(64.dp),
-                    shadowElevation = 2.dp
+    Scaffold(
+        containerColor = Color.White,
+        topBar = {
+            if (onBack != null) {
+                IconButton(
+                    onClick = onBack,
+                    modifier = Modifier.padding(top = 32.dp, start = 8.dp).statusBarsPadding()
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = if (selectedLanguage == "hi") "हिन्दी (Hindi)" else "English",
-                            color = LightTextPrimary,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Icon(Icons.Default.ArrowDropDown, null, tint = CyberBlue)
-                    }
-                }
-
-                DropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false },
-                    modifier = Modifier
-                        .fillMaxWidth(0.85f)
-                        .background(Color.White)
-                ) {
-                    DropdownMenuItem(
-                        text = { Text("English", color = LightTextPrimary) },
-                        onClick = {
-                            selectedLanguage = "en"
-                            expanded = false
-                        }
-                    )
-                    DropdownMenuItem(
-                        text = { Text("हिन्दी (Hindi)", color = LightTextPrimary) },
-                        onClick = {
-                            selectedLanguage = "hi"
-                            expanded = false
-                        }
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back",
+                        tint = Color.Black
                     )
                 }
             }
-
-            Spacer(Modifier.height(64.dp))
-
-            Button(
-                onClick = { onLanguageSelected(selectedLanguage) },
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = CyberBlue),
-                shape = RoundedCornerShape(12.dp)
+        }
+    ) { padding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .background(Color.White),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.padding(24.dp)
             ) {
-                Text("CONTINUE", fontWeight = FontWeight.Black, fontSize = 18.sp, color = Color.White)
+                Icon(
+                    Icons.Default.Language,
+                    contentDescription = null,
+                    tint = CyberBlue,
+                    modifier = Modifier.size(64.dp)
+                )
+                
+                Spacer(Modifier.height(24.dp))
+                
+                Text(
+                    text = "SELECT LANGUAGE",
+                    color = LightTextPrimary,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Black
+                )
+                
+                Text(
+                    text = "Choose your preferred language to continue",
+                    color = LightTextSecondary,
+                    fontSize = 14.sp,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+
+                Spacer(Modifier.height(48.dp))
+
+                Box {
+                    Surface(
+                        onClick = { expanded = true },
+                        color = Color.White,
+                        shape = RoundedCornerShape(16.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, LightOutline.copy(alpha = 0.2f)),
+                        modifier = Modifier.fillMaxWidth().height(64.dp),
+                        shadowElevation = 2.dp
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = if (selectedLanguage == "hi") "हिन्दी (Hindi)" else "English",
+                                color = LightTextPrimary,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Icon(Icons.Default.ArrowDropDown, null, tint = CyberBlue)
+                        }
+                    }
+
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false },
+                        modifier = Modifier
+                            .fillMaxWidth(0.85f)
+                            .background(Color.White)
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("English", color = LightTextPrimary) },
+                            onClick = {
+                                selectedLanguage = "en"
+                                expanded = false
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("हिन्दी (Hindi)", color = LightTextPrimary) },
+                            onClick = {
+                                selectedLanguage = "hi"
+                                expanded = false
+                            }
+                        )
+                    }
+                }
+
+                Spacer(Modifier.height(64.dp))
+
+                Button(
+                    onClick = { onLanguageSelected(selectedLanguage) },
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = CyberBlue),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("CONTINUE", fontWeight = FontWeight.Black, fontSize = 18.sp, color = Color.White)
+                }
             }
         }
     }

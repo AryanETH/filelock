@@ -112,6 +112,7 @@ fun MediaViewerScreen(
 
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showRestoreDialog by remember { mutableStateOf(false) }
+    var pagerScrollEnabled by remember { mutableStateOf(true) }
 
     val pagerFiles = remember(file, allFiles) {
         if (allFiles.isEmpty()) listOf(file)
@@ -127,31 +128,34 @@ fun MediaViewerScreen(
         }
     }
 
-    val initialPage = remember(file, pagerFiles) {
+    val initialPage = remember(file.id) {
         val index = pagerFiles.indexOfFirst { it.id == file.id }
         if (index != -1) index else 0
     }
 
     val pagerState = rememberPagerState(initialPage = initialPage) { pagerFiles.size }
 
-    // Ultra Fast: Pre-decrypt neighboring files with optimized buffers
-    LaunchedEffect(pagerState.currentPage) {
+    // Optimization: Pre-decrypt neighboring files
+    LaunchedEffect(pagerState.currentPage, pagerFiles) {
         val cacheDir = File(context.cacheDir, "decrypted_vault")
         if (!cacheDir.exists()) cacheDir.mkdirs()
         
-        val nextIdx = pagerState.currentPage + 1
-        val prevIdx = pagerState.currentPage - 1
+        val currentIdx = pagerState.currentPage
+        val indicesToPreload = listOf(currentIdx - 1, currentIdx + 1)
         
-        listOfNotNull(pagerFiles.getOrNull(nextIdx), pagerFiles.getOrNull(prevIdx)).forEach { f ->
-            launch(Dispatchers.IO) {
-                val tempFile = File(cacheDir, "preview_${f.id}_${f.originalName}")
-                if (!tempFile.exists()) {
-                    try {
-                        cryptoManager.decryptToStream(
-                            File(f.encryptedPath).inputStream().buffered(1024 * 512), // Larger buffer for speed
-                            FileOutputStream(tempFile).buffered(1024 * 512)
-                        )
-                    } catch (e: Exception) {}
+        indicesToPreload.forEach { idx ->
+            if (idx in pagerFiles.indices) {
+                val f = pagerFiles[idx]
+                launch(Dispatchers.IO) {
+                    val tempFile = File(cacheDir, "preview_${f.id}_${f.originalName}")
+                    if (!tempFile.exists()) {
+                        try {
+                            cryptoManager.decryptToStream(
+                                File(f.encryptedPath).inputStream().buffered(1024 * 512),
+                                FileOutputStream(tempFile).buffered(1024 * 512)
+                            )
+                        } catch (e: Exception) {}
+                    }
                 }
             }
         }
@@ -192,8 +196,6 @@ fun MediaViewerScreen(
                                 if (tempFile.exists()) {
                                     onStartAction()
                                     shareFile(context, tempFile)
-                                    // FIX: Do NOT call onEndAction() here, let onResume handle it 
-                                    // to prevent the lock screen from appearing while sharing.
                                 }
                             }
                         }
@@ -222,38 +224,40 @@ fun MediaViewerScreen(
                 modifier = Modifier.padding(padding).fillMaxSize(),
                 pageSpacing = 16.dp,
                 beyondViewportPageCount = 1,
-                key = { pageIndex -> if (pageIndex < pagerFiles.size) pagerFiles[pageIndex].id else pageIndex }
+                key = { pageIndex -> if (pageIndex < pagerFiles.size) pagerFiles[pageIndex].id else "empty_$pageIndex" },
+                userScrollEnabled = pagerScrollEnabled 
             ) { pageIndex ->
-                val currentFile = pagerFiles[pageIndex]
+                val currentFile = pagerFiles.getOrNull(pageIndex) ?: return@HorizontalPager
                 val isVisible = pagerState.currentPage == pageIndex
+                
+                key(currentFile.id) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        var decryptedFile by remember { mutableStateOf<File?>(null) }
+                        var isDecrypting by remember { mutableStateOf(true) }
 
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    var decryptedFile by remember(currentFile.id) { mutableStateOf<File?>(null) }
-                    var isDecrypting by remember(currentFile.id) { mutableStateOf(true) }
-
-                    LaunchedEffect(currentFile.id) {
-                        isDecrypting = true
-                        withContext(Dispatchers.IO) {
-                            try {
-                                val cacheDir = File(context.cacheDir, "decrypted_vault")
-                                if (!cacheDir.exists()) cacheDir.mkdirs()
-                                
-                                val tempFile = File(cacheDir, "preview_${currentFile.id}_${currentFile.originalName}")
-                                
-                                // INSTANT OPEN STRATEGY:
-                                // If it's a small file (Images, Docs < 5MB), it should be instant.
-                                // We use a high-speed buffer and check existence first.
-                                if (!tempFile.exists()) {
-                                    cryptoManager.decryptToStream(
-                                        File(currentFile.encryptedPath).inputStream().buffered(1024 * 512), // 512KB buffer
-                                        FileOutputStream(tempFile).buffered(1024 * 512)
-                                    )
+                        LaunchedEffect(currentFile.id) {
+                            isDecrypting = true
+                            withContext(Dispatchers.IO) {
+                                try {
+                                    val cacheDir = File(context.cacheDir, "decrypted_vault")
+                                    if (!cacheDir.exists()) cacheDir.mkdirs()
+                                    
+                                    val tempFile = File(cacheDir, "preview_${currentFile.id}_${currentFile.originalName}")
+                                    
+                                    if (!tempFile.exists()) {
+                                        cryptoManager.decryptToStream(
+                                            File(currentFile.encryptedPath).inputStream().buffered(1024 * 512),
+                                            FileOutputStream(tempFile).buffered(1024 * 512)
+                                        )
+                                    }
+                                    decryptedFile = tempFile
+                                } catch (e: Exception) {
+                                    e.printStackTrace()
+                                } finally {
+                                    isDecrypting = false
                                 }
-                                decryptedFile = tempFile
-                            } catch (e: Exception) {}
-                            finally { isDecrypting = false }
+                            }
                         }
-                    }
 
                     if (decryptedFile != null) {
                         Box(Modifier.fillMaxSize()) {
@@ -265,7 +269,11 @@ fun MediaViewerScreen(
                                 }
 
                                 when (displayCategory) {
-                                    FileCategory.PHOTO, FileCategory.INTRUDER -> PhotoViewer(decryptedFile!!, isDark)
+                                    FileCategory.PHOTO, FileCategory.INTRUDER -> PhotoViewer(
+                                        file = decryptedFile!!, 
+                                        isDark = isDark,
+                                        onZoomChanged = { isZoomed -> pagerScrollEnabled = !isZoomed }
+                                    )
                                     FileCategory.VIDEO -> VideoViewer(decryptedFile!!, isVisible, isDark)
                                     FileCategory.AUDIO -> AudioViewer(decryptedFile!!, isVisible, currentFile.thumbnailPath, isDark)
                                     FileCategory.DOCUMENT -> {
@@ -294,8 +302,9 @@ fun MediaViewerScreen(
                     }
                 }
             }
+        }
 
-            if (showRestoreDialog) {
+        if (showRestoreDialog) {
                 MediaActionDialog(
                     title = stringResource(R.string.restore_file_title),
                     message = stringResource(R.string.restore_file_message),
@@ -326,52 +335,79 @@ fun MediaViewerScreen(
 }
 
 @Composable
-fun PhotoViewer(file: File, isDark: Boolean = true) {
+fun PhotoViewer(file: File, isDark: Boolean = true, onZoomChanged: (Boolean) -> Unit = {}) {
     var scale by remember { mutableFloatStateOf(1f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
     
-    val state = rememberTransformableState { zoomChange, offsetChange, _ ->
-        scale = (scale * zoomChange).coerceIn(1f, 5f)
-        offset += offsetChange
-    }
-
-    Box(
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
             .background(if (isDark) Color.Black else CreamWhite)
-            .pointerInput(scale) {
-                if (scale > 1f) {
-                    detectDragGestures { change, dragAmount ->
-                        change.consume()
-                        offset += dragAmount
-                    }
-                }
-            }
-            .pointerInput(Unit) {
-                detectTapGestures(onDoubleTap = {
-                    if (scale > 1f) {
-                        scale = 1f
-                        offset = Offset.Zero
-                    } else {
-                        scale = 3f
-                    }
-                })
-            }
-            .transformable(state = state)
     ) {
-        AsyncImage(
-            model = Uri.fromFile(file),
-            contentDescription = null,
+        val state = rememberTransformableState { zoomChange, panChange, _ ->
+            val oldScale = scale
+            // Apply zoom
+            scale = (scale * zoomChange).coerceIn(1f, 5f)
+            
+            // Allow panning ONLY with two fingers (the transformable state handles this)
+            if (scale > 1f) {
+                val extraWidth = (scale - 1) * constraints.maxWidth
+                val extraHeight = (scale - 1) * constraints.maxHeight
+                val maxX = extraWidth / 2
+                val maxY = extraHeight / 2
+                
+                offset = Offset(
+                    x = (offset.x + panChange.x * scale).coerceIn(-maxX, maxX),
+                    y = (offset.y + panChange.y * scale).coerceIn(-maxY, maxY)
+                )
+            } else {
+                offset = Offset.Zero
+            }
+            
+            // If scale is back to 1, reset exactly
+            if (scale <= 1.01f) {
+                scale = 1f
+                offset = Offset.Zero
+            }
+
+            if (scale != oldScale) {
+                onZoomChanged(scale > 1f)
+            }
+        }
+
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .graphicsLayer {
-                    scaleX = scale
-                    scaleY = scale
-                    translationX = offset.x
-                    translationY = offset.y
-                },
-            contentScale = ContentScale.Fit
-        )
+                .pointerInput(Unit) {
+                    detectTapGestures(onDoubleTap = {
+                        if (scale > 1f) {
+                            scale = 1f
+                            offset = Offset.Zero
+                            onZoomChanged(false)
+                        } else {
+                            scale = 3f
+                            onZoomChanged(true)
+                        }
+                    })
+                }
+                // REMOVED: detectDragGestures (One-finger drag)
+                // This ensures one-finger ALWAYS goes to the HorizontalPager
+                .transformable(state = state)
+        ) {
+            AsyncImage(
+                model = file,
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer {
+                        scaleX = scale
+                        scaleY = scale
+                        translationX = offset.x
+                        translationY = offset.y
+                    },
+                contentScale = ContentScale.Fit
+            )
+        }
     }
 }
 

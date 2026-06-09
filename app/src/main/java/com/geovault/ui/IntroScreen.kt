@@ -54,7 +54,7 @@ fun IntroScreen() {
             // App Logo
             Box(
                 modifier = Modifier
-                    .size(180.dp)
+                    .size(280.dp) // Increased container size to prevent cutting
                     .scale(scale)
                     .background(CyberNavy.copy(alpha = 0.1f * opacity), shape = androidx.compose.foundation.shape.CircleShape),
                 contentAlignment = Alignment.Center
@@ -62,7 +62,7 @@ fun IntroScreen() {
                 Image(
                     painter = painterResource(id = R.drawable.removed_background_18),
                     contentDescription = "Logo",
-                    modifier = Modifier.size(150.dp).scale(scale)
+                    modifier = Modifier.size(150.dp) // Kept logo size as requested
                 )
             }
         }

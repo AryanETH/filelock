@@ -50,10 +50,15 @@ import coil.compose.AsyncImage
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.graphics.graphicsLayer
 import java.io.File
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.graphics.Brush
 
 @Composable
 fun AuthUI(
@@ -232,16 +237,36 @@ fun AuthUI(
             AsyncImage(
                 model = File(customBgPath!!),
                 contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer {
+                        // Apply slight saturation boost and dimming as per Apple's material logic
+                        renderEffect = null 
+                    },
                 contentScale = ContentScale.Crop
             )
-            // Frosty overlay layer
-            Box(modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    if (isDarkMode) Color.Black.copy(alpha = 0.5f) 
-                    else Color.White.copy(alpha = 0.4f)
-                )
+            
+            // Primary Blur Layer (The "Secret" to readability)
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .blur(if (lockType == com.geovault.model.LockType.MAP) 10.dp else 40.dp) // Heavier blur for keypad
+                    .background(
+                        if (isDarkMode) Color.Black.copy(alpha = 0.4f)
+                        else Color.White.copy(alpha = 0.2f)
+                    )
+            )
+
+            // Dynamic Gradient Scrim (Bottom protection)
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(Color.Transparent, Color.Black.copy(alpha = 0.45f)),
+                            startY = 0.6f * constraints.maxHeight.toFloat()
+                        )
+                    )
             )
         }
 
@@ -263,7 +288,15 @@ fun AuthUI(
                 Box(
                     modifier = Modifier
                         .size(if (isSmallScreen) 80.dp else 110.dp)
-                        .then(if (hasCustomBg) Modifier.shadow(12.dp, CircleShape) else Modifier),
+                        .then(if (hasCustomBg) Modifier.shadow(12.dp, CircleShape) else Modifier)
+                        .background(
+                            if (hasCustomBg) Color.White.copy(alpha = 0.2f) else Color.Transparent, 
+                            CircleShape
+                        )
+                        .border(
+                            if (hasCustomBg) BorderStroke(1.dp, Color.White.copy(alpha = 0.3f)) else BorderStroke(0.dp, Color.Transparent),
+                            CircleShape
+                        ),
                     contentAlignment = Alignment.Center
                 ) {
                     Image(
@@ -322,7 +355,8 @@ fun AuthUI(
                             },
                             onError = captureIntruder,
                             isLightTheme = !isDarkMode && !hasCustomBg,
-                            isFullPage = true
+                            isFullPage = true,
+                            isGlassMode = hasCustomBg
                         )
                     }
                     com.geovault.model.LockType.PATTERN -> {
@@ -339,7 +373,8 @@ fun AuthUI(
                             },
                             onError = captureIntruder,
                             isLightTheme = !isDarkMode && !hasCustomBg,
-                            isFullPage = true
+                            isFullPage = true,
+                            isGlassMode = hasCustomBg
                         )
                     }
                     com.geovault.model.LockType.MAP -> {
@@ -373,7 +408,8 @@ fun AuthUI(
                                 }
                             },
                             onError = captureIntruder,
-                            isLightTheme = !isDarkMode && !hasCustomBg
+                            isLightTheme = !isDarkMode && !hasCustomBg,
+                            isGlassMode = hasCustomBg
                         )
                     }
                 }
@@ -383,10 +419,25 @@ fun AuthUI(
 
             // 4. Biometric Icon
             if (lockType != com.geovault.model.LockType.MAP && (isFingerprintEnabled || (isWithinRadius && radius > 0))) {
+                val glassSurfaceBrush = Brush.linearGradient(
+                    colors = listOf(Color.White.copy(alpha = 0.3f), Color.White.copy(alpha = 0.1f)),
+                    start = Offset.Zero, end = Offset.Infinite
+                )
+                val glassBorderBrush = Brush.linearGradient(
+                    colors = listOf(Color.White.copy(alpha = 0.5f), Color.White.copy(alpha = 0.1f)),
+                    start = Offset.Zero, end = Offset.Infinite
+                )
+
                 Box(
                     modifier = Modifier
                         .size(if (isSmallScreen) 64.dp else 80.dp)
-                        .then(if (hasCustomBg) Modifier.shadow(16.dp, CircleShape, ambientColor = Color.Black, spotColor = Color.Black) else Modifier)
+                        .then(
+                            if (hasCustomBg) Modifier
+                                .background(glassSurfaceBrush, CircleShape)
+                                .border(BorderStroke(1.dp, glassBorderBrush), CircleShape)
+                                .shadow(8.dp, CircleShape, spotColor = Color.White.copy(alpha = 0.2f))
+                            else Modifier
+                        )
                         .clickable {
                             haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
                             
@@ -436,7 +487,7 @@ fun AuthUI(
                                     
                                 biometricPrompt.authenticate(promptInfo)
                             } else {
-                                biometricStatusMessage = "Biometric unavailable"
+                                biometricStatusMessage = "Biometric unavailable\n(Use PIN)"
                             }
                         },
                     contentAlignment = Alignment.Center
@@ -454,6 +505,7 @@ fun AuthUI(
                         text = msg,
                         color = if (hasCustomBg) Color.White else Color.Gray,
                         style = MaterialTheme.typography.bodySmall,
+                        textAlign = TextAlign.Center,
                         modifier = Modifier.padding(top = 12.dp, bottom = 16.dp)
                     )
                 }

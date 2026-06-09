@@ -85,10 +85,10 @@ class LockActivity : AppCompatActivity() {
         val prefs = com.geovault.security.SecureManager.getInstance(this).prefs
         prefs.edit().putBoolean("lock_active_right_now", true).commit()
 
-        // Fullscreen Immersive
+        // Fullscreen Immersive - DISABLED to bring back system bars
         val controller = WindowCompat.getInsetsController(window, window.decorView)
-        controller.hide(WindowInsetsCompat.Type.statusBars() or WindowInsetsCompat.Type.navigationBars())
-        controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        controller.show(WindowInsetsCompat.Type.systemBars())
+        controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_DEFAULT
         
         val isIntruderEnabled = prefs.getBoolean("intruder_capture_enabled", false)
         if (isIntruderEnabled) {

@@ -138,16 +138,27 @@ fun DashboardTourOverlay(
         ) { idx ->
             val step = steps[idx]
             val config = LocalConfiguration.current
+            val density = androidx.compose.ui.platform.LocalDensity.current
+            
+            // Fix: Correctly detect if the target is in the bottom half of the screen
+            val screenHeightPx = with(density) { config.screenHeightDp.dp.toPx() }
             val inBottomHalf = step.targetRect?.let {
-                it.center.y > config.screenHeightDp * 3
+                it.center.y > screenHeightPx / 2
             } ?: false
 
             val cardAlignment = when {
                 step.targetRect == null -> Alignment.Center
-                inBottomHalf            -> Alignment.TopCenter
-                else                    -> Alignment.BottomCenter
+                // If it's the "Secret Vault" (Categories) step, force tooltip to top to avoid overlap
+                step.titleResId == R.string.tour_dash_categories_title -> Alignment.TopCenter
+                inBottomHalf -> Alignment.TopCenter
+                else -> Alignment.BottomCenter
             }
-            val cardPaddingV = if (step.targetRect == null) 0.dp else 120.dp
+            
+            val cardPaddingV = when {
+                step.targetRect == null -> 0.dp
+                step.titleResId == R.string.tour_dash_categories_title -> 64.dp // Space from top status bar
+                else -> 120.dp
+            }
 
             Box(modifier = Modifier.fillMaxSize()) {
                 Column(
@@ -210,17 +221,9 @@ fun DashboardTourOverlay(
                     // Buttons row
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
+                        horizontalArrangement = Arrangement.End,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        TextButton(onClick = onCompleted) {
-                            Text(
-                                stringResource(R.string.tour_skip),
-                                color = Color.Gray,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        }
-
                         Button(
                             onClick = {
                                 if (currentIdx < steps.size - 1) currentIdx++

@@ -47,6 +47,7 @@ fun PermissionScreen(
     val allGranted = state.hasUsageStatsPermission &&
             state.hasOverlayPermission &&
             state.hasLocationPermission &&
+            (android.os.Build.VERSION.SDK_INT < 29 || state.hasBackgroundLocationPermission) &&
             state.hasBatteryOptimizationPermission &&
             state.hasBackgroundPopupsPermission &&
             state.hasCameraPermission &&
@@ -65,7 +66,7 @@ fun PermissionScreen(
                 Button(
                     onClick = { 
                         if (!allGranted) {
-                            if (!state.hasLocationPermission) onGrantLocation()
+                            if (!state.hasLocationPermission || (android.os.Build.VERSION.SDK_INT >= 29 && !state.hasBackgroundLocationPermission)) onGrantLocation()
                             else if (!state.hasUsageStatsPermission) onGrantUsage()
                             else if (!state.hasOverlayPermission) onGrantOverlay()
                             else if (!state.hasBackgroundPopupsPermission) onGrantBackgroundPopups()
@@ -140,11 +141,11 @@ fun PermissionScreen(
 
             PermissionGuideRow(
                 title = stringResource(R.string.location_access),
-                desc = stringResource(R.string.location_access_desc),
+                desc = if (android.os.Build.VERSION.SDK_INT >= 29) "Required: 'Allow all the time' for background monitoring." else stringResource(R.string.location_access_desc),
                 icon = Icons.Default.LocationOn,
                 iconBgColor = Color(0xFFFFEBEE),
                 iconColor = Color(0xFFF44336),
-                granted = state.hasLocationPermission,
+                granted = state.hasLocationPermission && (android.os.Build.VERSION.SDK_INT < 29 || state.hasBackgroundLocationPermission),
                 onClick = onGrantLocation
             )
 

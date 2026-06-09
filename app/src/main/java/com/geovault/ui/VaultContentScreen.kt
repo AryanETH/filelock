@@ -45,6 +45,7 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -52,6 +53,11 @@ import androidx.compose.ui.window.Dialog
 import androidx.core.graphics.drawable.toBitmap
 import androidx.media3.common.util.UnstableApi
 import coil.compose.AsyncImage
+import coil.ImageLoader
+import coil.decode.GifDecoder
+import coil.decode.ImageDecoderDecoder
+import androidx.compose.ui.platform.LocalContext
+import coil.request.ImageRequest
 import com.geovault.R
 import com.geovault.model.*
 import com.geovault.ui.theme.*
@@ -132,11 +138,11 @@ fun LocalFilePicker(
                         ) {
                             Text(
                                 when(currentCategory) {
-                                    FileCategory.PHOTO -> "Photos"
-                                    FileCategory.VIDEO -> "Videos"
-                                    FileCategory.AUDIO -> "Audio"
-                                    FileCategory.DOCUMENT -> "Documents"
-                                    else -> "Files"
+                                    FileCategory.PHOTO -> stringResource(R.string.photos)
+                                    FileCategory.VIDEO -> stringResource(R.string.videos)
+                                    FileCategory.AUDIO -> stringResource(R.string.audio)
+                                    FileCategory.DOCUMENT -> stringResource(R.string.documents)
+                                    else -> stringResource(R.string.categories)
                                 },
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White
@@ -180,12 +186,12 @@ fun LocalFilePicker(
                         .padding(16.dp)
                 ) {
                     Button(
-                        onClick = { showPreviewSheet = true },
+                        onClick = { onHide(selectedUris.toList()) },
                         modifier = Modifier.fillMaxWidth().height(56.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = CyberBlue),
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text("PREVIEW & HIDE (${selectedUris.size})", fontWeight = FontWeight.Black, fontSize = 18.sp, color = Color.White)
+                        Text(stringResource(R.string.preview_and_hide, selectedUris.size), fontWeight = FontWeight.Black, fontSize = 18.sp, color = Color.White)
                     }
                 }
             }
@@ -442,6 +448,9 @@ fun VaultContentScreen(
     val appCloner = remember { AppCloner(context) }
     
     var currentScreen by rememberSaveable(stateSaver = ContentScreenSaver) { mutableStateOf<ContentScreen>(ContentScreen.Dashboard) }
+
+    var categoryForBulkAction by remember { mutableStateOf<FileCategory?>(null) }
+    var folderForBulkAction by remember { mutableStateOf<String?>(null) }
     var selectedCategoryForAdd by remember { mutableStateOf<FileCategory?>(null) }
     var viewingFile by remember { mutableStateOf<VaultFile?>(null) }
     var showBackupDialog by remember { mutableStateOf(false) }
@@ -505,6 +514,60 @@ fun VaultContentScreen(
     val isDark = state.isDarkMode
     val backgroundColor = if (isDark) CyberBlack else CreamWhite
 
+    if (folderForBulkAction != null) {
+        AlertDialog(
+            onDismissRequest = { folderForBulkAction = null },
+            title = { Text(stringResource(R.string.delete_folder_confirm), fontWeight = FontWeight.Bold) },
+            text = { Text(stringResource(R.string.bulk_action_desc)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    onDeleteFolder(folderForBulkAction!!, true)
+                    folderForBulkAction = null
+                }) {
+                    Text(stringResource(R.string.recover_folder), color = CyberBlue, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    onDeleteFolder(folderForBulkAction!!, false)
+                    folderForBulkAction = null
+                }) {
+                    Text(stringResource(R.string.delete), color = Color.Red)
+                }
+            },
+            containerColor = if (isDark) CyberDarkBlue else Color.White,
+            shape = RoundedCornerShape(28.dp)
+        )
+    }
+
+    if (categoryForBulkAction != null) {
+        AlertDialog(
+            onDismissRequest = { categoryForBulkAction = null },
+            title = { Text(stringResource(R.string.bulk_action_title), fontWeight = FontWeight.Bold) },
+            text = { Text(stringResource(R.string.bulk_action_desc)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    val ids = state.files.filter { it.category == categoryForBulkAction && it.folderName == null }.map { it.id }.toSet()
+                    if (ids.isNotEmpty()) onBulkRestore(ids)
+                    categoryForBulkAction = null
+                }) {
+                    Text(stringResource(R.string.recover_all), color = CyberBlue, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    val ids = state.files.filter { it.category == categoryForBulkAction && it.folderName == null }.map { it.id }.toSet()
+                    if (ids.isNotEmpty()) onBulkDelete(ids, categoryForBulkAction == FileCategory.RECYCLE_BIN)
+                    categoryForBulkAction = null
+                }) {
+                    Text(stringResource(if (categoryForBulkAction == FileCategory.RECYCLE_BIN) R.string.delete_confirm else R.string.delete), color = Color.Red)
+                }
+            },
+            containerColor = if (isDark) CyberDarkBlue else Color.White,
+            shape = RoundedCornerShape(28.dp)
+        )
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
             containerColor = backgroundColor,
@@ -520,6 +583,7 @@ fun VaultContentScreen(
                                     FileCategory.AUDIO -> stringResource(R.string.audio)
                                     FileCategory.DOCUMENT -> stringResource(R.string.documents)
                                     FileCategory.INTRUDER -> stringResource(R.string.wrong_unlocks)
+                                    FileCategory.RECYCLE_BIN -> stringResource(R.string.recycle_bin)
                                     else -> stringResource(R.string.categories)
                                 }
                             }
@@ -540,7 +604,7 @@ fun VaultContentScreen(
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 if (currentScreen is ContentScreen.Dashboard) {
                                     Image(
-                                        painter = painterResource(id = R.drawable.removed_background_18),
+                                        painter = painterResource(id = R.drawable.removed_background_19),
                                         contentDescription = null,
                                         modifier = Modifier.size(45.dp).padding(end = 8.dp)
                                     )
@@ -549,8 +613,9 @@ fun VaultContentScreen(
                                     title,
                                     fontWeight = FontWeight.Black, 
                                     color = CyberBlue,
-                                    fontSize = 26.sp,
-                                    letterSpacing = (-0.5).sp
+                                    fontSize = 22.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
                         }
@@ -678,7 +743,8 @@ fun VaultContentScreen(
                             onAppLockClick = { currentScreen = ContentScreen.AppLock },
                             onCategoryClick = { currentScreen = ContentScreen.CategoryView(it) },
                             onFolderClick = { currentScreen = ContentScreen.FolderView(it) },
-                            onDeleteFolder = onDeleteFolder,
+                            onCategoryBulkAction = { categoryForBulkAction = it },
+                            onFolderBulkAction = { folderForBulkAction = it },
                             onBackupClick = { showBackupDialog = true },
                             onHideAppsRectCaptured = { hideAppsRect = it },
                             onHistoryRectCaptured = { historyRect = it },
@@ -702,8 +768,8 @@ fun VaultContentScreen(
                     when (targetScreen) {
                         "NotificationPermission" -> {
                             AppLockPermissionScreen(
-                                title = "Enable Notifications",
-                                description = "GeoVault uses notifications to keep the protection service running reliably.",
+                                title = stringResource(R.string.notification_perm_title),
+                                description = stringResource(R.string.notification_perm_desc),
                                 icon = Icons.Default.Notifications,
                                 onGrant = { 
                                     onStartAction()
@@ -714,8 +780,8 @@ fun VaultContentScreen(
                         }
                         "UsagePermission" -> {
                             AppLockPermissionScreen(
-                                title = "Usage Stats Access",
-                                description = "GeoVault needs to know when an app is launched to show the lock screen.",
+                                title = stringResource(R.string.usage_perm_title),
+                                description = stringResource(R.string.usage_perm_desc),
                                 icon = Icons.Default.Timeline,
                                 onGrant = { 
                                     onStartAction()
@@ -726,8 +792,8 @@ fun VaultContentScreen(
                         }
                         "OverlayPermission" -> {
                             AppLockPermissionScreen(
-                                title = "Display Over Other Apps",
-                                description = "GeoVault needs to draw the lock screen over protected applications.",
+                                title = stringResource(R.string.overlay_perm_title),
+                                description = stringResource(R.string.overlay_perm_desc),
                                 icon = Icons.Default.Layers,
                                 onGrant = { 
                                     onStartAction()
@@ -738,8 +804,8 @@ fun VaultContentScreen(
                         }
                         "BackgroundPopupsPermission" -> {
                             AppLockPermissionScreen(
-                                title = "Background Pop-ups",
-                                description = "Allows GeoVault to instantly launch the security screen from the background.",
+                                title = stringResource(R.string.background_popups_perm_title),
+                                description = stringResource(R.string.background_popups_perm_desc),
                                 icon = Icons.Default.OpenInNew,
                                 onGrant = { 
                                     onStartAction()
@@ -750,8 +816,8 @@ fun VaultContentScreen(
                         }
                         "BatteryPermission" -> {
                             AppLockPermissionScreen(
-                                title = "Disable Battery Optimization",
-                                description = "Prevents the system from killing GeoVault's protection service.",
+                                title = stringResource(R.string.battery_perm_title),
+                                description = stringResource(R.string.battery_perm_desc),
                                 icon = Icons.Default.BatteryChargingFull,
                                 onGrant = { 
                                     onStartAction()
@@ -815,7 +881,7 @@ fun VaultContentScreen(
                             val gridState = rememberLazyGridState()
                             FileCategoryList(
                                 category = FileCategory.OTHER,
-                                files = state.files.filter { it.folderName == screen.folderName },
+                                files = state.files.filter { it.folderName == screen.folderName && it.category != FileCategory.RECYCLE_BIN },
                                 isDark = isDark,
                                 gridState = gridState,
                                 onFileClick = { viewingFile = it },
@@ -925,23 +991,24 @@ fun VaultContentScreen(
             onDismiss = { showBackupDialog = false },
             onRemoveVault = onRemoveVault,
             onRemoveAppFromVault = onRemoveAppFromVault,
-            onClearAll = onClearAllVaults
+            onClearAll = onClearAllVaults,
+            onStartAction = onStartAction
         )
     }
 
     if (showCreateFolderDialog) {
         AlertDialog(
             onDismissRequest = { showCreateFolderDialog = false },
-            title = { Text("Create New Folder", fontWeight = FontWeight.Bold) },
+            title = { Text(stringResource(R.string.create_new_folder), fontWeight = FontWeight.Bold) },
             text = {
                 Column {
-                    Text("Folders can contain any file type (Images, Videos, PDFs, etc).", fontSize = 12.sp, color = Color.Gray)
+                    Text(stringResource(R.string.create_new_folder_desc), fontSize = 12.sp, color = Color.Gray)
                     Spacer(Modifier.height(16.dp))
                     OutlinedTextField(
                         value = newFolderName,
                         onValueChange = { newFolderName = it },
                         modifier = Modifier.fillMaxWidth(),
-                        placeholder = { Text("Folder Name") },
+                        placeholder = { Text(stringResource(R.string.folder_name)) },
                         shape = RoundedCornerShape(12.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = FolderPurple,
@@ -1048,12 +1115,6 @@ fun VaultContentScreen(
                 onCompleteTour()
             }
         )
-        
-        // Show interactive guide after tour
-        InteractiveUserGuide(
-            onDismiss = { /* Already handled by tour completion usually */ },
-            isDark = isDark
-        )
     }
 }
 
@@ -1127,13 +1188,13 @@ fun AppLockPermissionScreen(
             colors = ButtonDefaults.buttonColors(containerColor = CyberBlue),
             shape = RoundedCornerShape(16.dp)
         ) {
-            Text("GRANT PERMISSION", fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+            Text(stringResource(R.string.grant_permission), fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
         }
         
         Spacer(Modifier.height(16.dp))
         
         Text(
-            "Security requires active system monitoring.",
+            stringResource(R.string.security_monitoring_note),
             style = MaterialTheme.typography.bodySmall,
             color = Color.Gray
         )
@@ -1147,7 +1208,8 @@ fun DashboardContent(
     onAppLockClick: () -> Unit,
     onCategoryClick: (FileCategory) -> Unit,
     onFolderClick: (String) -> Unit,
-    onDeleteFolder: (String, Boolean) -> Unit,
+    onCategoryBulkAction: (FileCategory) -> Unit,
+    onFolderBulkAction: (String) -> Unit,
     onBackupClick: () -> Unit,
     onHideAppsRectCaptured: (Rect) -> Unit = {},
     onHistoryRectCaptured: (Rect) -> Unit = {},
@@ -1155,6 +1217,7 @@ fun DashboardContent(
 ) {
     val isDark = state.isDarkMode
     
+    // Improved Loading State: Show skeleton only if truly initial load
     if (state.installedApps.isEmpty() && state.files.isEmpty()) {
         DashboardSkeleton(isDark)
         return
@@ -1163,33 +1226,6 @@ fun DashboardContent(
     val textPrimary = if (isDark) Color.White else LightTextPrimary
     val textSecondary = if (isDark) TextSecondary else LightTextSecondary
     var isGridView by rememberSaveable { mutableStateOf(false) }
-    var folderToDelete by remember { mutableStateOf<String?>(null) }
-
-    if (folderToDelete != null) {
-        AlertDialog(
-            onDismissRequest = { folderToDelete = null },
-            title = { Text("Delete Folder") },
-            text = { Text("Do you want to recover all data to the gallery or delete all data permanently?") },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        onDeleteFolder(folderToDelete!!, true)
-                        folderToDelete = null
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = CyberBlue)
-                ) { Text("RECOVER ALL") }
-            },
-            dismissButton = {
-                Button(
-                    onClick = {
-                        onDeleteFolder(folderToDelete!!, false)
-                        folderToDelete = null
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
-                ) { Text("DELETE ALL") }
-            }
-        )
-    }
 
     val categories = remember(state) {
         val list = mutableListOf(
@@ -1201,7 +1237,7 @@ fun DashboardContent(
             CategoryData(FileCategory.RECYCLE_BIN, "", state.recycleBinCount, Icons.Filled.Delete, IconGray, SoftGray, imageRes = R.drawable.recycle_bin)
         )
         state.customFolders.forEach { folderName ->
-            val count = state.files.count { it.folderName == folderName }
+            val count = state.files.count { it.folderName == folderName && it.category != FileCategory.RECYCLE_BIN }
             list.add(CategoryData(FileCategory.OTHER, folderName, count, Icons.Default.Folder, IconPurple, SoftPurple, folderName, R.drawable.custom_folder))
         }
         list
@@ -1261,106 +1297,174 @@ fun DashboardContent(
         }
 
         item {
-            Row(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 16.dp)
-                    .captureRect { onCategoriesRectCaptured(it) },
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                    .captureRect { onCategoriesRectCaptured(it) }
             ) {
-                Text(
-                    stringResource(R.string.categories),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = textPrimary,
-                    fontWeight = FontWeight.Black
-                )
-                IconButton(onClick = { isGridView = !isGridView }) {
-                    Icon(
-                        if (isGridView) Icons.AutoMirrored.Filled.ViewList else Icons.Default.GridView,
-                        null,
-                        tint = textSecondary,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-            }
-        }
-
-        if (isGridView) {
-            val chunks = localizedCategories.chunked(2)
-            items(chunks) { pair ->
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    pair.forEach { cat ->
-                        val modifier = Modifier.weight(1f)
-                        if (cat.customFolderName != null) {
+                    Text(
+                        stringResource(R.string.categories),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = textPrimary,
+                        fontWeight = FontWeight.Black
+                    )
+                    IconButton(onClick = { isGridView = !isGridView }) {
+                        Icon(
+                            if (isGridView) Icons.AutoMirrored.Filled.ViewList else Icons.Default.GridView,
+                            null,
+                            tint = textSecondary,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+
+                if (isGridView) {
+                    val chunks = localizedCategories.chunked(2)
+                    chunks.forEach { pair ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            pair.forEach { cat ->
+                                val modifier = Modifier.weight(1f)
+                                val dismissState = rememberSwipeToDismissBoxState(
+                                    confirmValueChange = {
+                                        if (it == SwipeToDismissBoxValue.EndToStart) {
+                                            if (cat.customFolderName != null) {
+                                                onFolderBulkAction(cat.customFolderName)
+                                            } else {
+                                                onCategoryBulkAction(cat.category)
+                                            }
+                                            false
+                                        } else false
+                                    }
+                                )
+                                SwipeToDismissBox(
+                                    state = dismissState,
+                                    modifier = modifier,
+                                    enableDismissFromStartToEnd = false,
+                                    backgroundContent = {
+                                        Box(
+                                            Modifier
+                                                .fillMaxSize()
+                                                .clip(RoundedCornerShape(24.dp))
+                                                .background(Color.Red)
+                                                .padding(horizontal = 20.dp),
+                                            contentAlignment = Alignment.CenterEnd
+                                        ) {
+                                            Icon(
+                                                Icons.Default.Delete,
+                                                contentDescription = "Delete",
+                                                tint = Color.White
+                                            )
+                                        }
+                                    }
+                                ) {
+                                    if (cat.customFolderName != null) {
+                                        CategoryGridItem(
+                                            cat.title,
+                                            cat.count,
+                                            cat.icon,
+                                            cat.color,
+                                            cat.bgColor,
+                                            isDark,
+                                            imageRes = cat.imageRes,
+                                            isLargeSquare = cat.isLargeSquare
+                                        ) {
+                                            onFolderClick(cat.customFolderName)
+                                        }
+                                    } else {
+                                        CategoryGridItem(
+                                            cat.title,
+                                            cat.count,
+                                            cat.icon,
+                                            cat.color,
+                                            cat.bgColor,
+                                            isDark,
+                                            Modifier.fillMaxSize(),
+                                            cat.imageRes,
+                                            isLargeSquare = cat.isLargeSquare
+                                        ) {
+                                            onCategoryClick(cat.category)
+                                        }
+                                    }
+                                }
+                            }
+                            if (pair.size == 1) Spacer(Modifier.weight(1f))
+                        }
+                    }
+                } else {
+                    localizedCategories.forEach { cat ->
+                        Box(modifier = Modifier.padding(bottom = 12.dp)) {
                             val dismissState = rememberSwipeToDismissBoxState(
                                 confirmValueChange = {
                                     if (it == SwipeToDismissBoxValue.EndToStart) {
-                                        folderToDelete = cat.customFolderName
+                                        if (cat.customFolderName != null) {
+                                            onFolderBulkAction(cat.customFolderName)
+                                        } else {
+                                            onCategoryBulkAction(cat.category)
+                                        }
                                         false
                                     } else false
                                 }
                             )
                             SwipeToDismissBox(
                                 state = dismissState,
-                                modifier = modifier,
                                 enableDismissFromStartToEnd = false,
                                 backgroundContent = {
                                     Box(
-                                        Modifier.fillMaxSize().clip(RoundedCornerShape(24.dp)).background(Color.Red).padding(horizontal = 20.dp),
+                                        Modifier
+                                            .fillMaxSize()
+                                            .clip(RoundedCornerShape(24.dp))
+                                            .background(Color.Red)
+                                            .padding(horizontal = 20.dp),
                                         contentAlignment = Alignment.CenterEnd
                                     ) {
-                                        Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color.White)
+                                        Icon(
+                                            Icons.Default.Delete,
+                                            contentDescription = "Delete",
+                                            tint = Color.White
+                                        )
                                     }
                                 }
                             ) {
-                                CategoryGridItem(cat.title, cat.count, cat.icon, cat.color, isDark, imageRes = cat.imageRes) {
-                                    onFolderClick(cat.customFolderName)
+                                if (cat.customFolderName != null) {
+                                    CategoryItem(
+                                        cat.title,
+                                        cat.count,
+                                        cat.icon,
+                                        cat.color,
+                                        cat.bgColor,
+                                        isDark,
+                                        cat.imageRes,
+                                        isLargeSquare = cat.isLargeSquare
+                                    ) {
+                                        onFolderClick(cat.customFolderName)
+                                    }
+                                } else {
+                                    CategoryItem(
+                                        cat.title,
+                                        cat.count,
+                                        cat.icon,
+                                        cat.color,
+                                        cat.bgColor,
+                                        isDark,
+                                        cat.imageRes,
+                                        isLargeSquare = cat.isLargeSquare
+                                    ) {
+                                        onCategoryClick(cat.category)
+                                    }
                                 }
                             }
-                        } else {
-                            CategoryGridItem(cat.title, cat.count, cat.icon, cat.color, isDark, modifier, cat.imageRes) {
-                                onCategoryClick(cat.category)
-                            }
-                        }
-                    }
-                    if (pair.size == 1) Spacer(Modifier.weight(1f))
-                }
-            }
-        } else {
-            items(localizedCategories) { cat ->
-                Box(modifier = Modifier.padding(bottom = 12.dp)) {
-                    if (cat.customFolderName != null) {
-                        val dismissState = rememberSwipeToDismissBoxState(
-                            confirmValueChange = {
-                                if (it == SwipeToDismissBoxValue.EndToStart) {
-                                    folderToDelete = cat.customFolderName
-                                    false
-                                } else false
-                            }
-                        )
-                        SwipeToDismissBox(
-                            state = dismissState,
-                            enableDismissFromStartToEnd = false,
-                            backgroundContent = {
-                                Box(
-                                    Modifier.fillMaxSize().clip(RoundedCornerShape(24.dp)).background(Color.Red).padding(horizontal = 20.dp),
-                                    contentAlignment = Alignment.CenterEnd
-                                ) {
-                                    Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color.White)
-                                }
-                            }
-                        ) {
-                            CategoryItem(cat.title, cat.count, cat.icon, cat.color, cat.bgColor, isDark, cat.imageRes) {
-                                onFolderClick(cat.customFolderName)
-                            }
-                        }
-                    } else {
-                        CategoryItem(cat.title, cat.count, cat.icon, cat.color, cat.bgColor, isDark, cat.imageRes) {
-                            onCategoryClick(cat.category)
                         }
                     }
                 }
@@ -1377,7 +1481,8 @@ private data class CategoryData(
     val color: Color,
     val bgColor: Color,
     val customFolderName: String? = null,
-    val imageRes: Int? = null
+    val imageRes: Int? = null,
+    val isLargeSquare: Boolean = false
 )
 
 @Composable
@@ -1386,9 +1491,11 @@ fun CategoryGridItem(
     count: Int,
     icon: ImageVector,
     color: Color,
+    bgColor: Color,
     isDark: Boolean,
     modifier: Modifier = Modifier,
     imageRes: Int? = null,
+    isLargeSquare: Boolean = false,
     onClick: () -> Unit
 ) {
     Surface(
@@ -1403,17 +1510,20 @@ fun CategoryGridItem(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Box(
-                modifier = Modifier
-                    .size(44.dp)
-                    .background(if (isDark) Color.White.copy(alpha = 0.05f) else color.copy(alpha = 0.1f), CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
+                Box(
+                    modifier = Modifier
+                        .size(if (isLargeSquare) 72.dp else 60.dp)
+                        .background(
+                            bgColor, 
+                            RoundedCornerShape(12.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
                 if (imageRes != null) {
                     Image(
                         painter = painterResource(id = imageRes),
                         contentDescription = null,
-                        modifier = Modifier.size(32.dp),
+                        modifier = Modifier.size(if (isLargeSquare) 60.dp else 48.dp),
                         contentScale = ContentScale.Fit
                     )
                 } else {
@@ -1421,7 +1531,7 @@ fun CategoryGridItem(
                         icon, 
                         null, 
                         tint = if (isDark) CyberBlue else color, 
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(32.dp)
                     )
                 }
             }
@@ -1432,8 +1542,8 @@ fun CategoryGridItem(
                 fontWeight = FontWeight.Black,
                 fontSize = 14.sp,
                 textAlign = TextAlign.Center,
-                maxLines = 2,
-                minLines = 1,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
                 lineHeight = 16.sp
             )
             Spacer(Modifier.height(2.dp))
@@ -1452,6 +1562,19 @@ fun CategoryGridItem(
 
 @Composable
 fun IllustrationBox(category: FileCategory, isDark: Boolean) {
+    val context = LocalContext.current
+    val imageLoader = remember {
+        ImageLoader.Builder(context)
+            .components {
+                if (Build.VERSION.SDK_INT >= 28) {
+                    add(ImageDecoderDecoder.Factory())
+                } else {
+                    add(GifDecoder.Factory())
+                }
+            }
+            .build()
+    }
+
     val imageRes = when(category) {
         FileCategory.PHOTO -> R.drawable.images
         FileCategory.VIDEO -> R.drawable.video
@@ -1463,8 +1586,11 @@ fun IllustrationBox(category: FileCategory, isDark: Boolean) {
     }
     
     Box(contentAlignment = Alignment.Center, modifier = Modifier.size(240.dp)) {
-        Image(
-            painter = painterResource(id = imageRes),
+        AsyncImage(
+            model = ImageRequest.Builder(context)
+                .data(imageRes)
+                .build(),
+            imageLoader = imageLoader,
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Fit
@@ -1720,7 +1846,7 @@ fun AppLockManagement(
             value = searchQuery,
             onValueChange = { searchQuery = it },
             modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
-            placeholder = { Text("Search apps...", color = textSecondary) },
+            placeholder = { Text(stringResource(R.string.search_apps), color = textSecondary) },
             leadingIcon = { Icon(Icons.Default.Search, null, tint = CyberBlue) },
             shape = RoundedCornerShape(16.dp),
             colors = OutlinedTextFieldDefaults.colors(
@@ -1736,7 +1862,7 @@ fun AppLockManagement(
             if (recommendedApps.isNotEmpty()) {
                 item {
                     Text(
-                        "RECOMMENDED",
+                        stringResource(R.string.recommended),
                         modifier = Modifier.padding(vertical = 8.dp),
                         style = MaterialTheme.typography.labelMedium,
                         color = CyberBlue.copy(alpha = 0.7f),
@@ -1760,7 +1886,7 @@ fun AppLockManagement(
             if (otherApps.isNotEmpty()) {
                 item {
                     Text(
-                        "ALL APPS",
+                        stringResource(R.string.all_apps),
                         modifier = Modifier.padding(top = 16.dp, bottom = 8.dp),
                         style = MaterialTheme.typography.labelMedium,
                         color = textSecondary.copy(alpha = 0.5f),
@@ -1807,20 +1933,25 @@ fun AppLockItem(
         Column(modifier = Modifier.weight(1f)) {
             Text(app.appName, color = textPrimary, fontWeight = FontWeight.Bold)
             if (stats != null) {
-                Text(
-                    text = buildAnnotatedString {
-                        append("OVER ")
-                        withStyle(
-                            SpanStyle(color = CyberBlue, fontWeight = FontWeight.Black)
-                        ) {
-                            append("$stats%")
+            Text(
+                text = buildAnnotatedString {
+                    val statsText = stringResource(R.string.user_locked_stats, stats ?: 0)
+                    val percentStr = "${stats}%"
+                    val start = statsText.indexOf(percentStr)
+                    if (start != -1) {
+                        append(statsText.substring(0, start))
+                        withStyle(style = SpanStyle(color = CyberBlue, fontWeight = FontWeight.Black)) {
+                            append(percentStr)
                         }
-                        append(" OF USERS HAVE IT LOCKED")
-                    },
-                    fontSize = 9.sp,
-                    letterSpacing = 0.2.sp,
-                    color = textSecondary
-                )
+                        append(statsText.substring(start + percentStr.length))
+                    } else {
+                        append(statsText)
+                    }
+                },
+                fontSize = 9.sp,
+                letterSpacing = 0.2.sp,
+                color = textSecondary
+            )
             }
         }
         
@@ -1955,6 +2086,7 @@ fun CategoryItem(
     bgColor: Color,
     isDark: Boolean,
     imageRes: Int? = null,
+    isLargeSquare: Boolean = false,
     onClick: () -> Unit
 ) {
     Surface(
@@ -1970,15 +2102,18 @@ fun CategoryItem(
         ) {
             Box(
                 modifier = Modifier
-                    .size(44.dp)
-                    .background(if (isDark) Color.White.copy(alpha = 0.05f) else color.copy(alpha = 0.15f), CircleShape),
+                    .size(if (isLargeSquare) 72.dp else 60.dp)
+                    .background(
+                        bgColor,
+                        CircleShape
+                    ),
                 contentAlignment = Alignment.Center
             ) {
                 if (imageRes != null) {
                     Image(
                         painter = painterResource(id = imageRes),
                         contentDescription = null,
-                        modifier = Modifier.size(32.dp),
+                        modifier = Modifier.size(if (isLargeSquare) 60.dp else 48.dp),
                         contentScale = ContentScale.Fit
                     )
                 } else {
@@ -1986,7 +2121,7 @@ fun CategoryItem(
                         icon, 
                         null, 
                         tint = if (isDark) CyberBlue else color, 
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(32.dp)
                     )
                 }
             }
@@ -1996,7 +2131,9 @@ fun CategoryItem(
                     title, 
                     color = if (isDark) Color.White else LightTextPrimary, 
                     fontWeight = FontWeight.Black,
-                    fontSize = 18.sp
+                    fontSize = 18.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     stringResource(R.string.items_count, count),
@@ -2096,8 +2233,8 @@ fun SettingsSection(
                             onCheckedChange = { onToggleScreenshotRestriction() }
                         )
                         SettingsToggleItem(
-                            title = "Intruder Capture",
-                            subtitle = "Snap a selfie of anyone who tries to break in",
+                            title = stringResource(R.string.intruder_capture),
+                            subtitle = stringResource(R.string.intruder_capture_desc),
                             icon = Icons.Default.CameraAlt,
                             checked = state.isIntruderCaptureEnabled,
                             isDark = isDark,
@@ -2117,7 +2254,7 @@ fun SettingsSection(
         // Appearance Section
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
-                "Appearance",
+                stringResource(R.string.appearance),
                 color = CyberBlue,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Black,
@@ -2145,8 +2282,8 @@ fun SettingsSection(
                         
                         Column {
                             SettingsLinkItem(
-                                title = "Custom Lock Background",
-                                subtitle = "Image Active • Tap to manage",
+                                title = stringResource(R.string.custom_lock_background),
+                                subtitle = stringResource(R.string.bg_active_desc),
                                 icon = Icons.Default.Image,
                                 isDark = isDark,
                                 onClick = { showBgOptions = !showBgOptions }
@@ -2183,7 +2320,7 @@ fun SettingsSection(
                                             colors = ButtonDefaults.buttonColors(containerColor = CyberBlue),
                                             shape = RoundedCornerShape(8.dp)
                                         ) {
-                                            Text("CHANGE", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                            Text(stringResource(R.string.change), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                                         }
                                         Spacer(Modifier.height(8.dp))
                                         OutlinedButton(
@@ -2193,7 +2330,7 @@ fun SettingsSection(
                                             border = BorderStroke(1.dp, Color.Red.copy(alpha = 0.6f)),
                                             shape = RoundedCornerShape(8.dp)
                                         ) {
-                                            Text("REMOVE", fontSize = 12.sp, color = Color.Red.copy(alpha = 0.8f))
+                                            Text(stringResource(R.string.remove_btn), fontSize = 12.sp, color = Color.Red.copy(alpha = 0.8f))
                                         }
                                     }
                                 }
@@ -2201,8 +2338,8 @@ fun SettingsSection(
                         }
                     } else {
                         SettingsLinkItem(
-                            title = "Custom Lock Background",
-                            subtitle = "Set your personal background",
+                            title = stringResource(R.string.custom_lock_background),
+                            subtitle = stringResource(R.string.custom_lock_background_desc),
                             icon = Icons.Default.Image,
                             isDark = isDark,
                             onClick = {
@@ -2233,19 +2370,30 @@ fun SettingsSection(
             ) {
                 Column {
                     SettingsActionItem(stringResource(R.string.tutorial), Icons.Default.PlayCircleOutline, isDark) {
+                        onStartAction()
                         val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.youtube.com/watch?v=YOUR_VIDEO_ID"))
                         context.startActivity(intent)
                     }
                     SettingsActionItem(stringResource(R.string.feedback), Icons.Default.ChatBubbleOutline, isDark) {
+                        onStartAction()
                         val intent = Intent(Intent.ACTION_SENDTO).apply {
                             data = Uri.parse("mailto:hello@aitoyz.in")
-                            putExtra(Intent.EXTRA_SUBJECT, "Feedback for GeoVault")
+                            putExtra(Intent.EXTRA_SUBJECT, "Feedback for Mapplock")
                         }
                         try {
                             context.startActivity(intent)
                         } catch (e: Exception) {
                             Toast.makeText(context, "No email app found", Toast.LENGTH_SHORT).show()
                         }
+                    }
+                    SettingsActionItem(stringResource(R.string.share_mapplock), Icons.Default.Share, isDark) {
+                        onStartAction()
+                        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                            type = "text/plain"
+                            val shareMessage = "Discover the Next Generation of App Locking and File Protection\n\nThe Future of App Security and File Privacy : https://maps.aitoyz.in"
+                            putExtra(Intent.EXTRA_TEXT, shareMessage)
+                        }
+                        context.startActivity(Intent.createChooser(shareIntent, "Share via"))
                     }
                     SettingsActionItem(stringResource(R.string.faq), Icons.Default.HelpOutline, isDark) {
                         onOpenFAQ()
@@ -2288,17 +2436,11 @@ fun SettingsSection(
 
 @Composable
 fun FAQScreen(isDark: Boolean) {
+    val context = LocalContext.current
     val faqs = remember {
-        listOf(
-            "What is Mapplock and how is it different from other app lockers?" to "Mapplock is a next-generation security application developed by Aitoyz that uses location-based intelligence to protect your privacy. Unlike standard lockers that rely solely on PINs, Mapplock introduces \"Map-Gate\" technology, allowing you to define safe geographical zones. It provides a professional-grade vault for photos, videos, and files, combined with advanced intruder detection and stealth disguises. It is specifically built for users who want their phone's security to adapt automatically to their environment.",
-            "How does Mapplock protect my data against 'Q-Day'?" to "Mapplock is built with a Quantum-Resilient architecture. Most cloud-based lockers are vulnerable to 'Harvest Now, Decrypt Later' attacks, where data is stolen today to be cracked by future quantum computers. Mapplock prevents this by using local-only AES-256 symmetric encryption and a zero-knowledge architecture. Since your data never leaves your device, it cannot be harvested. Even with quantum algorithms like Grover's, our 256-bit encryption remains computationally unbreakable for billions of years.",
-            "How does the \"Map-Gate\" feature work?" to "The Map-Gate feature allows you to set specific GPS coordinates as \"Safe Zones,\" such as your home or office. While you are within the designated radius of a safe zone, your protected apps can be accessed more conveniently or kept unlocked entirely. However, the moment you move outside this radius, Mapplock triggers a high-security lockdown automatically. This ensures that if your phone is lost, stolen, or accessed in a public area, your sensitive data remains completely inaccessible to others.",
-            "Are my private photos and videos stored on Mapplock's servers?" to "No, Aitoyz operates on a \"Privacy-First\" model, meaning Mapplock does not store any of your personal files on our servers. All photos, videos, and documents you move into the vault are encrypted locally on your device’s internal storage. We do not have any remote access to your private content, and we cannot see or share your files. This approach ensures that you have total control over your data and that it remains secure even if your internet connection is compromised.",
-            "What happens if I forget my PIN or Pattern?" to "If you forget your primary security code, you can use the secondary verification methods established during the initial setup. This includes biometric authentication, such as fingerprint or face unlock, if you have enabled those options in the settings menu. Additionally, you can use your \"Secret Map Point\" as a recovery method to reset your credentials. We strongly recommend setting up multiple recovery options to avoid a permanent lockout, as we cannot recover your PIN remotely for security reasons.",
-            "Will the map features work if I am offline or have no internet?" to "Yes, Mapplock is designed to remain fully functional even without an active data or Wi-Fi connection. The app proactively downloads and caches GPS map data for your current regional area as soon as you grant the required location permissions. This offline map engine allows the security interface to load instantly and accurately detect your location-based \"Safe Zones.\" This ensures that your Map-Gate security remains active and reliable, regardless of your signal strength or roaming status.",
-            "What is \"Intruder Capture\" and where can I see the photos?" to "Intruder Capture is an automated security feature that takes a secret selfie of anyone attempting to break into your vault. If an incorrect PIN or Pattern is entered more than the allowed number of times, the app silently triggers the front camera to snap a photo of the user. These photos are stored within a dedicated \"Intruders\" category inside your vault, complete with a timestamp of the attempt. You can review these logs at any time to see exactly who tried to access your private apps without permission.",
-            "What is \"File Loss Protection\" and why should I enable it?" to "File Loss Protection is a critical safeguard that uses Device Administrator rights to prevent the accidental or unauthorized uninstallation of Mapplock. Because your files are encrypted and stored within the app's protected directory, a standard uninstallation would result in the permanent loss of all your hidden data. By enabling this feature, the system requires an extra verification step before the app can be removed from the device. This ensures that your important documents and memories are never deleted by a mistake or by someone else."
-        )
+        val questions = context.resources.getStringArray(R.array.faq_questions)
+        val answers = context.resources.getStringArray(R.array.faq_answers)
+        questions.zip(answers)
     }
 
     LazyColumn(
@@ -2467,7 +2609,8 @@ fun BackupManagementDialog(
     onDismiss: () -> Unit,
     onRemoveVault: (String) -> Unit,
     onRemoveAppFromVault: (String, String) -> Unit,
-    onClearAll: () -> Unit
+    onClearAll: () -> Unit,
+    onStartAction: () -> Unit = {}
 ) {
     val context = LocalContext.current
     Dialog(onDismissRequest = onDismiss) {
@@ -2479,7 +2622,7 @@ fun BackupManagementDialog(
         ) {
             Column(modifier = Modifier.padding(24.dp)) {
                 Text(
-                    "LOCKED APPS",
+                    stringResource(R.string.locked_apps_header),
                     color = if (state.isDarkMode) Color.White else Color.Black, 
                     fontWeight = FontWeight.Black, 
                     fontSize = 20.sp,
@@ -2488,7 +2631,23 @@ fun BackupManagementDialog(
                 Spacer(Modifier.height(16.dp))
                 
                 if (state.vaults.isEmpty()) {
-                    Text(stringResource(R.string.vault_empty), color = Color.Gray)
+                    Column(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 32.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.locked_apps),
+                            contentDescription = null,
+                            modifier = Modifier.size(180.dp)
+                        )
+                        Spacer(Modifier.height(16.dp))
+                        Text(
+                            stringResource(R.string.vault_empty),
+                            color = Color.Gray,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 } else {
                     LazyColumn(
                         modifier = Modifier.heightIn(max = 450.dp),
@@ -2500,6 +2659,7 @@ fun BackupManagementDialog(
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
                                     modifier = Modifier.clickable {
+                                        onStartAction()
                                         val lat = vault.location.latitude
                                         val lon = vault.location.longitude
                                         val gmmIntentUri = Uri.parse("geo:$lat,$lon?q=$lat,$lon")
@@ -2559,7 +2719,23 @@ fun BackupManagementDialog(
                                 }
                                 
                                 if (vault.hiddenApps.isEmpty()) {
-                                    Text("No apps in this zone", color = Color.Gray, fontSize = 12.sp, modifier = Modifier.padding(start = 28.dp))
+                                    Column(
+                                        modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ) {
+                                        Image(
+                                            painter = painterResource(id = R.drawable.locked_apps),
+                                            contentDescription = null,
+                                            modifier = Modifier.size(100.dp)
+                                        )
+                                        Spacer(Modifier.height(8.dp))
+                                        Text(
+                                            stringResource(R.string.no_apps_in_zone),
+                                            color = Color.Gray,
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -2574,10 +2750,10 @@ fun BackupManagementDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     TextButton(onClick = onDismiss) {
-                        Text("CLOSE", color = Color.Gray, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.close), color = Color.Gray, fontWeight = FontWeight.Bold)
                     }
                     TextButton(onClick = { onClearAll(); onDismiss() }) {
-                        Text("UNLOCK ALL", fontWeight = FontWeight.Black, color = CyberNeonRed)
+                        Text(stringResource(R.string.unlock_all), fontWeight = FontWeight.Black, color = CyberNeonRed)
                     }
                 }
             }

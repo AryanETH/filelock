@@ -86,7 +86,9 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
         checkPermissions()
         updateFileCounts()
         
-        lock()
+        // Removed lock() from init to prevent re-locking on activity/process recreation 
+        // (e.g. when granting system permissions or on configuration changes).
+        // The locked state is already managed via loadPersistedVaults() and onPause().
         
         if (!prefs.getBoolean("is_first_run", true)) {
             startMapDownload()
@@ -112,8 +114,7 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
 
     fun completeOnboarding() {
         prefs.edit().putBoolean("is_first_run", false).putBoolean("disclaimer_accepted", true).apply()
-        val tourCompleted = prefs.getBoolean("tour_completed", false)
-        _uiState.update { it.copy(isFirstRun = false, disclaimerAccepted = true, isMapDownloading = false, showTour = !tourCompleted) }
+        _uiState.update { it.copy(isFirstRun = false, disclaimerAccepted = true, isMapDownloading = false, showTour = false) }
         startMapDownload()
     }
 
@@ -177,7 +178,7 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
             } ?: run {
                 // If no location yet, just let them in after a tiny delay
                 viewModelScope.launch {
-                    delay(1000)
+                    delay(500)
                     _uiState.update { it.copy(isMapDownloading = false) }
                 }
             }
@@ -401,6 +402,7 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
     private fun saveFileInfo(id: String, name: String, path: String, category: FileCategory, size: Long, thumbPath: String? = null, folderName: String? = null) {
         val fileIds = (prefs.getStringSet("vault_file_ids", emptySet()) ?: emptySet()).toMutableSet()
         fileIds.add(id)
+        val activeVaultId = _uiState.value.activeVaultId
         prefs.edit().apply {
             putStringSet("vault_file_ids", fileIds)
             putString("file_${id}_name", name)
@@ -410,6 +412,7 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
             putLong("file_${id}_timestamp", System.currentTimeMillis())
             thumbPath?.let { putString("file_${id}_thumb", it) }
             folderName?.let { putString("file_${id}_folder", it) }
+            putString("file_${id}_vault_id", activeVaultId)
             apply()
         }
     }
@@ -417,16 +420,21 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
     private fun updateFileCounts() {
         val fileIds = prefs.getStringSet("vault_file_ids", emptySet()) ?: emptySet()
         val customFolders = (prefs.getStringSet("custom_folders", emptySet()) ?: emptySet()).toList().sorted()
+        val activeVaultId = _uiState.value.activeVaultId
         val files = mutableListOf<VaultFile>()
         var photos = 0; var videos = 0; var audio = 0; var docs = 0; var intruders = 0; var trashed = 0
         fileIds.forEach { id ->
+            val vaultId = prefs.getString("file_${id}_vault_id", null)
+            // Filter files by active vault ID
+            if (vaultId != activeVaultId) return@forEach
+
             val name = prefs.getString("file_${id}_name", "") ?: ""
             val path = prefs.getString("file_${id}_path", "") ?: ""
             val catStr = prefs.getString("file_${id}_category", "") ?: ""
             val category = try { FileCategory.valueOf(catStr) } catch (e: Exception) { FileCategory.OTHER }
             val thumbPath = prefs.getString("file_${id}_thumb", null)
             val folderName = prefs.getString("file_${id}_folder", null)
-            val file = VaultFile(id, name, path, category, prefs.getLong("file_${id}_size", 0), prefs.getLong("file_${id}_timestamp", 0), thumbPath, folderName)
+            val file = VaultFile(id, name, path, category, prefs.getLong("file_${id}_size", 0), prefs.getLong("file_${id}_timestamp", 0), thumbPath, folderName, vaultId)
             files.add(file)
             
             if (category == FileCategory.RECYCLE_BIN) {
@@ -452,16 +460,21 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
         val hasOverlay = Settings.canDrawOverlays(context)
         val hasCamera = androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
         val hasLocation = androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        val hasBackgroundLocation = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_BACKGROUND_LOCATION) == PackageManager.PERMISSION_GRANTED
+        } else true
         val hasBattery = hasBatteryOptimizationPermission(context)
         val hasBackgroundPopups = prefs.getBoolean("perm_background_popups", false)
         val hasNotifications = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
         } else true
-        val hasStorage = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_MEDIA_IMAGES) == PackageManager.PERMISSION_GRANTED else androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+        val hasStorage = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_MEDIA_IMAGES) == PackageManager.PERMISSION_GRANTED
+        } else {
+            androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+        }
         val hasFullStorage = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) Environment.isExternalStorageManager() else true
         
-        val isDeviceAdmin = false // Force disabled
-
         if (hasLocation && !_uiState.value.hasLocationPermission) startMapDownload()
         _uiState.update {
             it.copy(
@@ -469,12 +482,12 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
                 hasOverlayPermission = hasOverlay,
                 hasCameraPermission = hasCamera,
                 hasLocationPermission = hasLocation,
+                hasBackgroundLocationPermission = hasBackgroundLocation,
                 hasStoragePermission = hasStorage,
                 hasFullStoragePermission = hasFullStorage,
                 hasBatteryOptimizationPermission = hasBattery,
                 hasBackgroundPopupsPermission = hasBackgroundPopups,
-                hasNotificationPermission = hasNotifications,
-                isUninstallShieldEnabled = isDeviceAdmin
+                hasNotificationPermission = hasNotifications
             )
         }
     }
@@ -490,6 +503,7 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
                 putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, "Protects your hidden files from accidental deletion.")
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
+            setPerformingAction(true)
             context.startActivity(intent)
         } else {
             dpm.removeActiveAdmin(adminComponent)
@@ -517,6 +531,7 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
                 val intent = Intent(Intent.ACTION_DELETE)
                 intent.data = Uri.parse("package:${context.packageName}")
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                setPerformingAction(true)
                 context.startActivity(intent)
             }
         }
@@ -627,13 +642,43 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
 
     fun openBackgroundPopupSettings() {
         val context = getApplication<Application>()
+        val packageName = context.packageName
 
-        try {
-            val intent = Intent(Settings.ACTION_SETTINGS).apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-            context.startActivity(intent)
-        } catch (_: Exception) {}
+        val intents = listOf(
+            // Xiaomi / MIUI
+            Intent("miui.intent.action.APP_PERM_EDITOR").apply {
+                putExtra("extra_pkgname", packageName)
+                setClassName("com.miui.securitycenter", "com.miui.permcenter.permissions.PermissionsEditorActivity")
+            },
+            Intent("miui.intent.action.APP_PERM_EDITOR").apply {
+                putExtra("extra_pkgname", packageName)
+            },
+            // Vivo
+            Intent().apply {
+                component = ComponentName("com.vivo.permissionmanager", "com.vivo.permissionmanager.activity.SoftPermissionDetailActivity")
+                putExtra("packagename", packageName)
+            },
+            // Oppo / Realme
+            Intent("com.coloros.safecenter.permission.PermissionManagerActivity"),
+            // General App Info as fallback
+            Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName"))
+        )
+
+        var opened = false
+        for (intent in intents) {
+            try {
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                context.startActivity(intent)
+                opened = true
+                break
+            } catch (e: Exception) {}
+        }
+
+        if (!opened) {
+            try {
+                context.startActivity(Intent(Settings.ACTION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            } catch (_: Exception) {}
+        }
 
         setShowBackgroundPopupGuide(false)
         
@@ -665,8 +710,8 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun ensureOffline(location: GeoPoint, isInitial: Boolean = false) {
-        // Reduced radius and zoom for ULTRA FAST initialization
-        val offset = if (isInitial) 0.01 else 0.05 // 1km vs 5km
+        // ACCELERATED DOWNLOAD: Increased radius for better initial coverage
+        val offset = if (isInitial) 0.05 else 0.08 // 5km vs 8km
         val bounds = LatLngBounds.Builder()
             .include(LatLng(location.latitude + offset, location.longitude + offset))
             .include(LatLng(location.latitude - offset, location.longitude - offset))
@@ -675,8 +720,8 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
         offlineHelper.downloadRegion(
             styleUrl = "https://tiles.openfreemap.org/styles/dark",
             bounds = bounds,
-            minZoom = 12.0,
-            maxZoom = 15.0, // Reduced from 16 to 15 (4x fewer tiles)
+            minZoom = 10.0,
+            maxZoom = 15.0,
             regionName = "Vault_${location.latitude}_${location.longitude}",
             onProgress = {},
             onComplete = {
@@ -814,11 +859,20 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
             val current = _uiState.value.currentLocation ?: return false
             if (LocationHelper.calculateDistance(current.latitude, current.longitude, nearbyVault.location.latitude, nearbyVault.location.longitude) > nearbyVault.radius) return false
         }
-        if (pin == nearbyVault.secret) { prefs.edit().putBoolean("is_locked", false).putString("active_vault_id", nearbyVault.id).apply(); _uiState.update { it.copy(isLocked = false, activeVaultId = nearbyVault.id) }; return true }
+        if (pin == nearbyVault.secret) { 
+            prefs.edit().putBoolean("is_locked", false).putString("active_vault_id", nearbyVault.id).apply()
+            _uiState.update { it.copy(isLocked = false, activeVaultId = nearbyVault.id) }
+            updateFileCounts()
+            return true 
+        }
         return false
     }
 
-    fun lock() { prefs.edit().putBoolean("is_locked", true).remove("active_vault_id").apply(); _uiState.update { it.copy(isLocked = true, activeVaultId = null) } }
+    fun lock() { 
+        prefs.edit().putBoolean("is_locked", true).remove("active_vault_id").apply()
+        _uiState.update { it.copy(isLocked = true, activeVaultId = null) }
+        updateFileCounts()
+    }
 
     fun removeVault(id: String) {
         val vaultIds = (prefs.getStringSet("vault_ids", emptySet()) ?: emptySet()).toMutableSet()
@@ -870,6 +924,10 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
         _uiState.update { it.copy(currentLanguage = langCode, isLanguageSelected = true) }
         com.geovault.security.LocaleManager.applyLanguage(getApplication(), langCode) 
         viewModelScope.launch { _recreateEvent.emit(Unit) }
+    }
+
+    fun resetLanguageSelection() {
+        _uiState.update { it.copy(isLanguageSelected = false) }
     }
 
     fun setCustomBackground(path: String?) {

@@ -1,99 +1,133 @@
 package com.geovault.service
 
 import android.accessibilityservice.AccessibilityService
+import android.accessibilityservice.AccessibilityServiceInfo
 import android.content.Intent
 import android.view.accessibility.AccessibilityEvent
+import android.content.SharedPreferences
+import android.util.Log
+import com.geovault.security.SecureManager
+import com.geovault.LockActivity
 
 /**
- * Professional-grade detection using Accessibility Services.
- * This provides 0ms latency for window state changes.
+ * 0ms LATENCY INTERCEPTOR.
+ * This service runs as a system-level accessibility service.
+ * It is NOT subject to standard background restrictions and provides instant detection.
  */
 class WindowChangeDetector : AccessibilityService() {
 
+    private var prefs: SharedPreferences? = null
     private var lockedPackages = emptySet<String>()
     private var isMasterStealthEnabled = false
+    private val launcherPackages = mutableSetOf<String>()
     private var lastPackage = ""
+    private var bypassPackage: String? = null
+
+    private val preferenceListener = SharedPreferences.OnSharedPreferenceChangeListener { p, key ->
+        if (key == "vault_ids" || key?.startsWith("vault_") == true || key == "master_stealth_enabled") {
+            refreshLockedPackages(p)
+        } else if (key == "bypass_package") {
+            bypassPackage = p.getString("bypass_package", null)
+        }
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+        val p = SecureManager.getInstance(this).prefs
+        prefs = p
+        bypassPackage = p.getString("bypass_package", null)
+        p.registerOnSharedPreferenceChangeListener(preferenceListener)
+        updateLauncherPackages()
+        refreshLockedPackages(p)
+    }
 
     override fun onServiceConnected() {
         super.onServiceConnected()
-        refreshLockedPackages()
+        val info = AccessibilityServiceInfo().apply {
+            eventTypes = AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED or AccessibilityEvent.TYPE_WINDOWS_CHANGED
+            feedbackType = AccessibilityServiceInfo.FEEDBACK_GENERIC
+            flags = AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS or
+                    AccessibilityServiceInfo.FLAG_INCLUDE_NOT_IMPORTANT_VIEWS or
+                    AccessibilityServiceInfo.FLAG_REPORT_VIEW_IDS
+            notificationTimeout = 0 // INSTANT NOTIFICATION
+        }
+        this.serviceInfo = info
+        Log.d("WindowChangeDetector", "System Interceptor Connected (0ms Latency)")
     }
 
-    private fun refreshLockedPackages() {
-        val prefs = com.geovault.security.SecureManager.getInstance(this).prefs
-        val allVaultIds = prefs.getStringSet("vault_ids", emptySet()) ?: emptySet()
+    private fun refreshLockedPackages(p: SharedPreferences) {
+        val allVaultIds = p.getStringSet("vault_ids", emptySet()) ?: emptySet()
         val apps = mutableSetOf<String>()
         allVaultIds.forEach { id ->
-            val vaultApps = prefs.getStringSet("vault_${id}_apps", emptySet()) ?: emptySet()
-            apps.addAll(vaultApps)
-            android.util.Log.d("WindowChangeDetector", "Vault $id has ${vaultApps.size} apps: $vaultApps")
+            apps.addAll(p.getStringSet("vault_${id}_apps", emptySet()) ?: emptySet())
         }
         lockedPackages = apps
-        android.util.Log.d("WindowChangeDetector", "Total locked apps updated: ${lockedPackages.size} -> $lockedPackages")
-        isMasterStealthEnabled = prefs.getBoolean("master_stealth_enabled", false)
+        isMasterStealthEnabled = p.getBoolean("master_stealth_enabled", false)
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
-        if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
-            val packageName = event.packageName?.toString() ?: return
-            
-            val prefs = com.geovault.security.SecureManager.getInstance(this).prefs
-            val bypassPackage = prefs.getString("bypass_package", null)
-            val myPackage = this.packageName
+        // High-Speed Identification
+        val packageName = event.packageName?.toString() ?: return
+        if (packageName == this.packageName) return
 
-            // 1. FORCE RE-LOCK: Clear bypass the instant the user leaves the app
-            // If the package is NOT the one currently bypassed and NOT our own app, clear it.
-            if (bypassPackage != null && packageName != bypassPackage && packageName != myPackage) {
-                prefs.edit().remove("bypass_package").commit() // commit() for instant synchronous update
-            }
+        // Instant Escape Detection
+        val isLauncher = launcherPackages.contains(packageName) || 
+                         packageName.contains("launcher", ignoreCase = true) ||
+                         packageName.contains("home", ignoreCase = true)
 
-            val isSystemTarget = packageName == "com.android.packageinstaller" || 
-                                 packageName == "com.google.android.packageinstaller"
-            
-            val shouldLock = lockedPackages.contains(packageName) || 
-                             (isMasterStealthEnabled && isSystemTarget)
-
-            // 2. High-Speed Detection & Trigger
-            if (shouldLock && packageName != bypassPackage && packageName != myPackage) {
-                val isFingerprintEnabled = prefs.getBoolean("fingerprint_enabled", true)
-                val lockIntent = Intent(this, com.geovault.LockActivity::class.java).apply {
-                    putExtra("target_package", packageName)
-                    putExtra("request_biometric", isFingerprintEnabled)
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or 
-                             Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or 
-                             Intent.FLAG_ACTIVITY_NO_ANIMATION)
-                }
-                startActivity(lockIntent)
-            }
-
-            // 3. Notify the main AppLockerService for background monitoring
-            val intent = Intent(this, AppLockerService::class.java).apply {
-                putExtra("event_package_name", packageName)
-                putExtra("is_accessibility_event", true)
-            }
-            startService(intent)
-
-            // 3. RECENTS PROTECTION:
-            // We only relaunch if the user is switching context from a locked app.
-            // If they are already in SystemUI (Home/Recents), we don't force them back,
-            // allowing them to exit to Home.
-            val isLockActive = prefs.getBoolean("lock_active_right_now", false)
-            val isSystemUI = packageName == "android" || packageName == "com.android.systemui" || packageName.contains("launcher")
-            
-            // Re-trigger the lock ONLY if we are transitioning INTO a locked app
-            // or if the user is in the middle of a task switch from a locked app.
-            if (isLockActive && isSystemUI) {
-                // Do nothing here - let the user go home.
-                // The LockActivity is already in the stack and will show up in Recents automatically.
+        if (isLauncher || (bypassPackage != null && packageName != bypassPackage)) {
+            if (bypassPackage != null) {
+                bypassPackage = null
+                prefs?.edit()?.remove("bypass_package")?.commit() // Synchronous kill
             }
         }
+
+        // Logic check
+        val isSystemTarget = isMasterStealthEnabled && (packageName == "com.android.packageinstaller" || packageName == "com.google.android.packageinstaller")
+        val shouldLock = lockedPackages.contains(packageName) || isSystemTarget
+
+        if (shouldLock && packageName != bypassPackage) {
+            // TRIPLE-PATH INTERCEPTION:
+            // 1. Launch activity directly (Reliable)
+            // 2. Notify watchdog service (Redundant check)
+            
+            if (packageName != lastPackage) {
+                Log.d("WindowChangeDetector", "Instant Lock -> $packageName")
+                triggerLock(packageName)
+                
+                // Redundant sync with AppLockerService for watchdog polling
+                val serviceIntent = Intent(this, AppLockerService::class.java).apply {
+                    putExtra("event_package_name", packageName)
+                    putExtra("is_accessibility_event", true)
+                }
+                startService(serviceIntent)
+            }
+        }
+        lastPackage = packageName
     }
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        if (intent?.getBooleanExtra("refresh_locked_apps", false) == true) {
-            refreshLockedPackages()
+    private fun triggerLock(packageName: String) {
+        val isFingerprintEnabled = prefs?.getBoolean("fingerprint_enabled", true) ?: true
+        val lockIntent = Intent(this, LockActivity::class.java).apply {
+            putExtra("target_package", packageName)
+            putExtra("request_biometric", isFingerprintEnabled)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or 
+                     Intent.FLAG_ACTIVITY_CLEAR_TOP or 
+                     Intent.FLAG_ACTIVITY_NO_ANIMATION)
         }
-        return super.onStartCommand(intent, flags, startId)
+        startActivity(lockIntent)
+    }
+
+    private fun updateLauncherPackages() {
+        try {
+            val intent = Intent(Intent.ACTION_MAIN).apply { addCategory(Intent.CATEGORY_HOME) }
+            val resolveInfos = packageManager.queryIntentActivities(intent, 0)
+            launcherPackages.clear()
+            launcherPackages.add("android")
+            launcherPackages.add("com.android.systemui")
+            launcherPackages.add("com.android.settings")
+            resolveInfos.forEach { launcherPackages.add(it.activityInfo.packageName) }
+        } catch (e: Exception) {}
     }
 
     override fun onInterrupt() {}

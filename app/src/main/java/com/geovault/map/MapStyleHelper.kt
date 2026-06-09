@@ -100,28 +100,28 @@ object MapStyleHelper {
         try {
             val layers = style.layers
 
-            // Re-style existing administrative boundaries to be less prominent
+            // Boost visibility of administrative boundaries (States, Districts/Counties)
             layers.forEach { layer ->
                 val id = layer.id.lowercase()
                 if (id.contains("admin") || id.contains("boundary") || id.contains("country") || 
-                    id.contains("state") || id.contains("province") || id.contains("county")) {
+                    id.contains("state") || id.contains("province") || id.contains("county") || id.contains("district")) {
                     
                     if (layer is LineLayer) {
                         layer.setProperties(
                             visibility(Property.VISIBLE),
-                            lineColor(Color.parseColor("#dbdbdb")),
+                            lineColor(Color.parseColor("#bdbdbd")), // Slightly darker for better visibility
                             lineWidth(
                                 interpolate(
                                     linear(), 
                                     zoom(),
-                                    stop(1, 0.6f),
-                                    stop(4, 0.9f),
-                                    stop(7, 1.25f),
-                                    stop(10, 1.75f),
-                                    stop(12, 2.25f)
+                                    stop(1, 0.8f),
+                                    stop(4, 1.2f),
+                                    stop(7, 1.8f),
+                                    stop(10, 2.4f),
+                                    stop(12, 3.0f)
                                 )
                             ),
-                            lineOpacity(0.9f),
+                            lineOpacity(1.0f),
                             lineJoin(Property.LINE_JOIN_ROUND),
                             lineCap(Property.LINE_CAP_ROUND)
                         )

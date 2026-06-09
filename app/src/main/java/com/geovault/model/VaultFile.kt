@@ -12,5 +12,6 @@ data class VaultFile(
     val size: Long,
     val addedTimestamp: Long,
     val thumbnailPath: String? = null,
-    val folderName: String? = null
+    val folderName: String? = null,
+    val vaultId: String? = null
 )

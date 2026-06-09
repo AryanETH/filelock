@@ -87,6 +87,18 @@ fun MapSelectionScreen(
     var showSetupDialog by remember { mutableStateOf(false) }
     var selectedVaultId by remember { mutableStateOf<String?>(null) }
     var selectedLatLng by remember { mutableStateOf<LatLng?>(null) }
+    var showWeatherSheet by remember { mutableStateOf(false) }
+    var showMenu by remember { mutableStateOf(false) }
+
+    val mockWeather = remember {
+        WeatherData(
+            aqi = 42,
+            temperature = 24.5f,
+            humidity = 65,
+            locationName = "Sector 7-G",
+            status = "Partly Cloudy"
+        )
+    }
 
     val isDarkTheme = state.isDarkMode
     var isSatelliteMode by remember { mutableStateOf(state.isSatelliteMode) }
@@ -160,12 +172,7 @@ fun MapSelectionScreen(
     }
 
     Scaffold(
-        containerColor = if (isDarkTheme) CyberBlack else Color.White,
-        bottomBar = {
-            if (state.vaults.isEmpty()) {
-                CyberSetupOverlay(accentColor = accentColor)
-            }
-        }
+        containerColor = if (isDarkTheme) CyberBlack else Color.White
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {
             // Map Layer
@@ -175,6 +182,7 @@ fun MapSelectionScreen(
                     mapView.apply {
                         getMapAsync { map ->
                             mapLibreMap = map
+                            
                             map.setStyle(currentStyleUrl)
 
                             map.addOnMapLongClickListener { point ->
@@ -218,11 +226,32 @@ fun MapSelectionScreen(
                 }
             }
 
-            // Style Selector (Floating)
+            // Style Selector & Menu (Floating)
             Column(
                 modifier = Modifier.align(Alignment.TopEnd).padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalAlignment = Alignment.End
             ) {
+                Box {
+                    StyleFab(icon = Icons.Default.MoreVert, active = showMenu, accentColor = accentColor, isDark = isDark) { 
+                        showMenu = true 
+                    }
+                    DropdownMenu(
+                        expanded = showMenu,
+                        onDismissRequest = { showMenu = false },
+                        modifier = Modifier.background(CyberDarkBlue).border(1.dp, accentColor.copy(0.2f), RoundedCornerShape(8.dp))
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Weather Details", color = Color.White) },
+                            leadingIcon = { Icon(Icons.Default.Cloud, contentDescription = null, tint = accentColor) },
+                            onClick = {
+                                showMenu = false
+                                showWeatherSheet = true
+                            }
+                        )
+                    }
+                }
+                
                 StyleFab(icon = Icons.Default.Public, active = isSatelliteMode, accentColor = accentColor, isDark = isDark) { 
                     isSatelliteMode = !isSatelliteMode 
                 }
@@ -273,6 +302,13 @@ fun MapSelectionScreen(
                 }
             )
         }
+    }
+
+    if (showWeatherSheet) {
+        WeatherDetailSheet(
+            data = mockWeather,
+            onDismiss = { showWeatherSheet = false }
+        )
     }
 }
 
@@ -352,33 +388,6 @@ fun CyberActionButton(icon: ImageVector, accentColor: Color, active: Boolean = f
     }
 }
 
-@Composable
-fun CyberSetupOverlay(accentColor: Color) {
-    Surface(
-        modifier = Modifier.fillMaxWidth().height(100.dp),
-        color = CyberBlack.copy(alpha = 0.9f),
-        border = BorderStroke(1.dp, Brush.verticalGradient(listOf(accentColor.copy(alpha = 0.3f), Color.Transparent)))
-    ) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Text(
-                stringResource(R.string.system_initialization),
-                style = MaterialTheme.typography.labelLarge,
-                color = accentColor,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 3.sp
-            )
-            Text(
-                stringResource(R.string.system_initialization_desc),
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.White.copy(alpha = 0.5f)
-            )
-        }
-    }
-}
 
 @Composable
 fun CyberSetupDialog(apps: List<AppInfo>, accentColor: Color, onDismiss: () -> Unit, onConfirm: (String, Set<String>, LockType) -> Unit) {

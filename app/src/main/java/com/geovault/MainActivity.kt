@@ -30,6 +30,13 @@ import com.geovault.ui.BackgroundPopupGuideDialog
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -40,11 +47,22 @@ import androidx.compose.foundation.background
 import androidx.compose.ui.Alignment
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Icon
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.foundation.layout.statusBarsPadding
+import android.net.Uri
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import com.geovault.ui.theme.GeoVaultTheme
 import com.geovault.ui.theme.CyberBlue
-import com.geovault.ui.theme.CyberNavy
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.res.stringResource
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
@@ -64,6 +82,8 @@ import org.maplibre.android.MapLibre
 import android.os.Build
 import android.view.WindowManager
 import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.content.edit
 
 import androidx.appcompat.app.AppCompatActivity
@@ -72,6 +92,7 @@ import com.geovault.security.LocaleManager
 import android.widget.Toast
 import androidx.annotation.OptIn
 import androidx.media3.common.util.UnstableApi
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 
 import androidx.compose.runtime.saveable.rememberSaveable
 
@@ -85,6 +106,7 @@ class MainActivity : AppCompatActivity() {
 
     @OptIn(UnstableApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen()
         super.onCreate(savedInstanceState)
 
         // Root Detection
@@ -102,11 +124,10 @@ class MainActivity : AppCompatActivity() {
 
         setContent {
             val uiState by viewModel.uiState.collectAsState()
-            var showSplash by rememberSaveable { mutableStateOf(true) }
+            var showSplash by rememberSaveable { mutableStateOf(false) }
 
             LaunchedEffect(Unit) {
-                delay(1500)
-                showSplash = false
+                // showSplash = false // Removed initial custom splash delay to use System Splash only
             }
 
             LaunchedEffect(uiState.isScreenshotRestricted) {
@@ -120,6 +141,16 @@ class MainActivity : AppCompatActivity() {
             LaunchedEffect(Unit) {
                 viewModel.recreateEvent.collect {
                     recreate()
+                }
+            }
+
+            LaunchedEffect(uiState.isLocked) {
+                val insetsController = WindowCompat.getInsetsController(window, window.decorView)
+                // Always show system bars to satisfy user request
+                insetsController.show(WindowInsetsCompat.Type.systemBars())
+                
+                if (uiState.isLocked) {
+                    insetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_DEFAULT
                 }
             }
 
@@ -171,17 +202,15 @@ class MainActivity : AppCompatActivity() {
                 LaunchedEffect(Unit) {
                     viewModel.checkPermissions()
                     val serviceIntent = Intent(context, com.geovault.service.AppLockerService::class.java)
-                    context.startService(serviceIntent)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        context.startForegroundService(serviceIntent)
+                    } else {
+                        context.startService(serviceIntent)
+                    }
                 }
 
                 LaunchedEffect(uiState.vaults) {
                     if (uiState.vaults.isEmpty()) return@LaunchedEffect
-                    
-                    val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
-                    // BATTERY OPTIMIZATION: Reduce interval to 15 seconds instead of 5, and use BALANCED power
-                    val locationRequest = LocationRequest.Builder(Priority.PRIORITY_BALANCED_POWER_ACCURACY, 15000)
-                        .setMinUpdateIntervalMillis(10000)
-                        .build()
                     
                     val locationCallback = object : LocationCallback() {
                         override fun onLocationResult(result: LocationResult) {
@@ -190,10 +219,39 @@ class MainActivity : AppCompatActivity() {
                             }
                         }
                     }
-                    
+
+                    // Attempt GMS Location first
                     try {
-                        fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, null)
-                    } catch (_: SecurityException) {}
+                        val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+                        val locationRequest = LocationRequest.Builder(Priority.PRIORITY_BALANCED_POWER_ACCURACY, 15000)
+                            .setMinUpdateIntervalMillis(10000)
+                            .build()
+                        if (androidx.core.content.ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                            fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, null)
+                        }
+                    } catch (_: Exception) {
+                        // Fallback to standard LocationManager for Huawei/Non-GMS devices
+                        val locationManager = getSystemService(LOCATION_SERVICE) as android.location.LocationManager
+                        val listener = object : android.location.LocationListener {
+                            override fun onLocationChanged(l: android.location.Location) {
+                                viewModel.onLocationChanged(l.latitude, l.longitude)
+                            }
+                            @Deprecated("Deprecated in Java")
+                            override fun onStatusChanged(p: String?, s: Int, e: Bundle?) {}
+                            override fun onProviderEnabled(p: String) {}
+                            override fun onProviderDisabled(p: String) {}
+                        }
+                        try {
+                            locationManager.requestLocationUpdates(
+                                android.location.LocationManager.GPS_PROVIDER,
+                                15000L, 500f, listener
+                            )
+                            locationManager.requestLocationUpdates(
+                                android.location.LocationManager.NETWORK_PROVIDER,
+                                15000L, 500f, listener
+                            )
+                        } catch (_: SecurityException) {}
+                    }
                 }
                 
                 Surface(
@@ -204,6 +262,7 @@ class MainActivity : AppCompatActivity() {
                         targetState = when {
                             showSplash -> "intro"
                             uiState.isFirstRun && !uiState.isLanguageSelected -> "language_selection"
+                            uiState.isFirstRun && !uiState.hasLocationPermission -> "onboarding_location"
                             uiState.isFirstRun || !uiState.disclaimerAccepted -> "onboarding"
 
                             uiState.isMapDownloading -> "downloading"
@@ -219,16 +278,29 @@ class MainActivity : AppCompatActivity() {
                                     .togetherWith(fadeOut(animationSpec = tween(duration / 2)))
                             }
                         },
-                        label = "ScreenTransition"
+                        label = "ScreenTransition",
+                        modifier = Modifier.fillMaxSize()
                     ) { target ->
                         when (target) {
                             "intro" -> IntroScreen()
                             "language_selection" -> {
-                                LanguageOnboardingScreen(onLanguageSelected = { viewModel.setLanguage(it) })
+                                LanguageOnboardingScreen(
+                                    onLanguageSelected = { viewModel.setLanguage(it) },
+                                    onBack = null
+                                )
+                            }
+                            "onboarding_location" -> {
+                                OnboardingLocationGrant(
+                                    onGranted = { viewModel.checkPermissions() },
+                                    onBack = { viewModel.resetLanguageSelection() },
+                                    onStartAction = { viewModel.setPerformingAction(true) },
+                                    onEndAction = { viewModel.setPerformingAction(false) }
+                                )
                             }
                             "onboarding" -> {
                                 OnboardingScreen(
                                     onFinished = { viewModel.completeOnboarding() },
+                                    onBack = { viewModel.resetLanguageSelection() },
                                     onStartAction = { viewModel.setPerformingAction(true) },
                                     onEndAction = { viewModel.setPerformingAction(false) }
                                 )
@@ -242,12 +314,16 @@ class MainActivity : AppCompatActivity() {
                                     onGrantLocation = {
                                         viewModel.setPerformingAction(true)
                                         checkLocationSettings(this@MainActivity, resolutionLauncher) {
-                                            permissionLauncher.launch(
-                                                arrayOf(
-                                                    Manifest.permission.ACCESS_FINE_LOCATION,
-                                                    Manifest.permission.ACCESS_COARSE_LOCATION
+                                            if (!uiState.hasLocationPermission) {
+                                                permissionLauncher.launch(
+                                                    arrayOf(
+                                                        Manifest.permission.ACCESS_FINE_LOCATION,
+                                                        Manifest.permission.ACCESS_COARSE_LOCATION
+                                                    )
                                                 )
-                                            )
+                                            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && !uiState.hasBackgroundLocationPermission) {
+                                                permissionLauncher.launch(arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION))
+                                            }
                                         }
                                     },
                                     onGrantBattery = {
@@ -438,24 +514,152 @@ class MainActivity : AppCompatActivity() {
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 CircularProgressIndicator(
-                    color = CyberNavy,
+                    color = CyberBlue,
                     modifier = Modifier.size(64.dp),
                     strokeWidth = 6.dp
                 )
                 Spacer(modifier = Modifier.height(24.dp))
                 Text(
-                    "INITIALIZING OFFLINE SYSTEM",
+                    "Starting Map Engine",
                     style = MaterialTheme.typography.titleMedium,
                     color = Color.Black,
                     fontWeight = FontWeight.Black,
                     letterSpacing = 2.sp
                 )
                 Text(
-                    "Downloading regional map data...",
+                    "Initializing local security layers...",
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.Gray,
                     modifier = Modifier.padding(top = 8.dp)
                 )
+            }
+        }
+    }
+
+    @Composable
+    fun OnboardingLocationGrant(
+        onGranted: () -> Unit,
+        onBack: () -> Unit,
+        onStartAction: () -> Unit,
+        onEndAction: () -> Unit
+    ) {
+        val context = LocalContext.current
+        val prefs = remember { com.geovault.security.SecureManager.getInstance(context).prefs }
+        var showDialog by remember { mutableStateOf(false) }
+        val launcher = rememberLauncherForActivityResult(
+            ActivityResultContracts.RequestMultiplePermissions()
+        ) { results ->
+            onEndAction()
+            if (results.values.any { it }) {
+                onGranted()
+            } else {
+                showDialog = true
+            }
+        }
+
+        val requestLocation = {
+            onStartAction()
+            val fineDenied = androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale(this@MainActivity, Manifest.permission.ACCESS_FINE_LOCATION)
+            if (fineDenied || !prefs.getBoolean("location_asked", false)) {
+                launcher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
+                prefs.edit().putBoolean("location_asked", true).apply()
+            } else {
+                // Redirect to settings if permanently denied
+                try {
+                    val intent = Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:${context.packageName}"))
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    context.startActivity(intent)
+                } catch (e: Exception) {
+                    launcher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
+                }
+            }
+        }
+
+        Scaffold(
+            containerColor = Color.White,
+            topBar = {
+                IconButton(
+                    onClick = onBack,
+                    modifier = Modifier.padding(top = 32.dp, start = 8.dp).statusBarsPadding()
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back",
+                        tint = Color.Black
+                    )
+                }
+            }
+        ) { padding ->
+            if (showDialog) {
+                AlertDialog(
+                    onDismissRequest = { },
+                    title = { Text(stringResource(R.string.location_required_title), fontWeight = FontWeight.Bold) },
+                    text = { Text(stringResource(R.string.location_required_message)) },
+                    confirmButton = {
+                        Button(
+                            onClick = {
+                                showDialog = false
+                                requestLocation()
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = CyberBlue)
+                        ) {
+                            Text(stringResource(R.string.location_allow_btn))
+                        }
+                    },
+                    containerColor = Color.White,
+                    shape = RoundedCornerShape(24.dp)
+                )
+            }
+
+            Box(modifier = Modifier.fillMaxSize().padding(padding).background(Color.White), contentAlignment = Alignment.Center) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(24.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.LocationOn,
+                        contentDescription = null,
+                        modifier = Modifier.size(100.dp),
+                        tint = CyberBlue
+                    )
+                    
+                    Spacer(modifier = Modifier.height(24.dp))
+                    
+                    Text(
+                        text = stringResource(R.string.location_access_title),
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Black,
+                        color = Color.Black
+                    )
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    Text(
+                        text = stringResource(R.string.location_access_message),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.Gray,
+                        textAlign = TextAlign.Center
+                    )
+                    
+                    Spacer(modifier = Modifier.height(48.dp))
+                    
+                    Button(
+                        onClick = { requestLocation() },
+                        modifier = Modifier.fillMaxWidth().height(56.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = CyberBlue),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text(stringResource(R.string.grant_location_access), fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    }
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    Text(
+                        stringResource(R.string.system_initialization),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.LightGray
+                    )
+                }
             }
         }
     }

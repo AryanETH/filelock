@@ -63,6 +63,7 @@ data class VaultState(
     val hasOverlayPermission: Boolean = false,
     val hasCameraPermission: Boolean = false,
     val hasLocationPermission: Boolean = false,
+    val hasBackgroundLocationPermission: Boolean = false,
     val hasStoragePermission: Boolean = false,
     val hasFullStoragePermission: Boolean = false,
     val hasBatteryOptimizationPermission: Boolean = false,
