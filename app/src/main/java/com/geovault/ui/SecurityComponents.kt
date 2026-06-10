@@ -286,9 +286,9 @@ fun CompactPatternGrid(
         val availableWidth = maxWidth
         val availableHeight = maxHeight
         
-        val gridSize = (availableWidth * 0.8f).coerceIn(240.dp, 400.dp)
-        val dotRadius = (gridSize.value / 35).dp
-        val lineWidth = (gridSize.value / 60).dp
+        val gridSize = (availableWidth * 0.95f).coerceIn(280.dp, 450.dp)
+        val dotRadius = (gridSize.value / 22).dp
+        val lineWidth = (gridSize.value / 45).dp
 
         val inactiveDotColor = if (isGlassMode) Color.White.copy(alpha = 0.35f) else (if (isLightTheme) LightOutline.copy(alpha = 0.3f) else Color.White.copy(alpha = 0.1f))
         val activeDotColor = CyberBlue

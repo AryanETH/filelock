@@ -54,6 +54,7 @@
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
     <!--  📦 App Management - Required to Detect Launched Apps  -->
+    <uses-permission android:name="android.permission.GET_TASKS" />
     <uses-permission
         android:name="android.permission.QUERY_ALL_PACKAGES"
         tools:ignore="QueryAllPackagesPermission" />
@@ -128,7 +129,7 @@
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="App usage monitoring for security and privacy protection" />
             <property
-                android:name="android.app.PROPERTY_SPECIAL_USE_FQS_REASON"
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_REASON"
                 android:value="This service monitors app launches to provide real-time security overlays for user-selected applications." />
         </service>
 
@@ -137,6 +138,9 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON" />
             </intent-filter>
         </receiver>
 

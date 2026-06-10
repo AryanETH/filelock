@@ -903,41 +903,60 @@ fun VaultSetupDialog(
         Surface(
             modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(16.dp),
             shape = RoundedCornerShape(24.dp),
-            color = CreamWhite, // Always light theme for setup
+            color = if (isDark) CyberBlack else CreamWhite,
             shadowElevation = 8.dp
         ) {
             Column(
                 modifier = Modifier.padding(20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(stringResource(R.string.setup_lock), style = MaterialTheme.typography.titleLarge, color = CyberBlue, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.setup_lock), style = MaterialTheme.typography.titleLarge, color = if (isDark) Color.White else CyberBlue, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.height(16.dp))
                 if (isNativeEligible) {
                     Row(
-                        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(CyberBlue.copy(alpha = 0.05f)).padding(12.dp),
+                        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(if (isDark) Color.White.copy(alpha = 0.05f) else CyberBlue.copy(alpha = 0.05f)).padding(12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Native Mode", fontWeight = FontWeight.Bold, color = CyberBlue, modifier = Modifier.weight(1f))
-                        Switch(checked = isNativeEnabled, onCheckedChange = { isNativeEnabled = it })
+                        Text("Native Mode", fontWeight = FontWeight.Bold, color = if (isDark) Color.White else CyberBlue, modifier = Modifier.weight(1f))
+                        Switch(
+                            checked = isNativeEnabled, 
+                            onCheckedChange = { isNativeEnabled = it },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = Color.White,
+                                checkedTrackColor = CyberBlue,
+                                uncheckedThumbColor = if (isDark) Color.Gray else Color.White,
+                                uncheckedTrackColor = if (isDark) Color.DarkGray else Color.LightGray
+                            )
+                        )
                     }
                     if (isNativeEnabled) {
-                        Slider(value = radius, onValueChange = { radius = it }, valueRange = 100f..2000f, steps = 19)
-                        Text("${radius.toInt()}m", color = CyberBlue, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        Slider(
+                            value = radius, 
+                            onValueChange = { radius = it }, 
+                            valueRange = 100f..2000f, 
+                            steps = 19,
+                            colors = SliderDefaults.colors(
+                                thumbColor = CyberBlue,
+                                activeTrackColor = CyberBlue,
+                                inactiveTrackColor = if (isDark) Color.DarkGray else Color.LightGray
+                            )
+                        )
+                        Text("${radius.toInt()}m", color = if (isDark) Color.White else CyberBlue, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                     }
                     Spacer(Modifier.height(12.dp))
                 }
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    VaultLockTypeButton(stringResource(R.string.lock_type_pin), lockType == LockType.PIN, false) { lockType = LockType.PIN }
-                    VaultLockTypeButton(stringResource(R.string.lock_type_pattern), lockType == LockType.PATTERN, false) { lockType = LockType.PATTERN }
+                    VaultLockTypeButton(stringResource(R.string.lock_type_pin), lockType == LockType.PIN, isDark) { lockType = LockType.PIN }
+                    VaultLockTypeButton(stringResource(R.string.lock_type_pattern), lockType == LockType.PATTERN, isDark) { lockType = LockType.PATTERN }
                 }
                 Spacer(Modifier.height(20.dp))
                 if (lockType == LockType.PIN) {
-                    CompactPinPad(isLightTheme = true, autoConfirm = false, onPinComplete = { onConfirm(it, emptySet(), lockType, if (isNativeEnabled) radius else 0f) })
+                    CompactPinPad(isLightTheme = !isDark, autoConfirm = false, onPinComplete = { onConfirm(it, emptySet(), lockType, if (isNativeEnabled) radius else 0f) })
                 } else {
-                    CompactPatternGrid(isLightTheme = true, showConfirmButton = true, onPatternComplete = { onConfirm(it, emptySet(), lockType, if (isNativeEnabled) radius else 0f) })
+                    CompactPatternGrid(isLightTheme = !isDark, showConfirmButton = true, onPatternComplete = { onConfirm(it, emptySet(), lockType, if (isNativeEnabled) radius else 0f) })
                 }
                 Spacer(Modifier.height(12.dp))
-                TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel), color = Color.Gray) }
+                TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel), color = if (isDark) Color.Gray else Color.Gray) }
             }
         }
     }
@@ -947,7 +966,10 @@ fun VaultSetupDialog(
 fun RowScope.VaultLockTypeButton(text: String, selected: Boolean, isDark: Boolean, onClick: () -> Unit) {
     Button(
         onClick = onClick,
-        colors = ButtonDefaults.buttonColors(containerColor = if (selected) CyberBlue.copy(alpha = 0.15f) else Color.Transparent, contentColor = if (selected) CyberBlue else Color.Gray),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = if (selected) CyberBlue.copy(alpha = 0.15f) else (if (isDark) Color.White.copy(alpha = 0.05f) else Color.Transparent), 
+            contentColor = if (selected) CyberBlue else (if (isDark) Color.Gray else Color.Gray)
+        ),
         modifier = Modifier.height(40.dp).weight(1f),
         shape = RoundedCornerShape(12.dp),
         elevation = null // Fix square shadow

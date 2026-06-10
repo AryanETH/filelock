@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.geovault.ui.theme.GeoVaultTheme
 import com.geovault.ui.theme.CyberBlack
+import com.geovault.security.UnlockSessionManager
 import com.geovault.ui.AuthUI
 import com.geovault.security.IntruderManager
 import android.content.Context
@@ -137,8 +138,7 @@ class LockActivity : AppCompatActivity() {
                         autoRequestBiometric = requestBiometric,
                         onAuthenticated = {
                             isUnlocked = true
-                            val authPrefs = com.geovault.security.SecureManager.getInstance(this).prefs
-                            authPrefs.edit().putString("bypass_package", currentTargetPackage).commit()
+                            UnlockSessionManager.getInstance(this).unlock(currentTargetPackage)
                             unlock(currentTargetPackage)
                         },
                     ) {
@@ -180,10 +180,7 @@ class LockActivity : AppCompatActivity() {
                 override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
                     super.onAuthenticationSucceeded(result)
                     isUnlocked = true
-                    val prefs = com.geovault.security.SecureManager.getInstance(this@LockActivity).prefs
-                    prefs.edit()
-                        .putString("bypass_package", targetPackage)
-                        .commit()
+                    UnlockSessionManager.getInstance(this@LockActivity).unlock(targetPackage)
                     finish()
                 }
             }
@@ -201,11 +198,8 @@ class LockActivity : AppCompatActivity() {
     }
 
     private fun unlock(targetPackage: String) {
-        val launchIntent = packageManager.getLaunchIntentForPackage(targetPackage)
-        launchIntent?.let {
-            it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            startActivity(it)
-        }
+        // Just finish. The singleTask/REORDER_TO_FRONT launch revealed the target app behind us.
+        // Re-launching intent can cause duplicate accessibility events and loops.
         finish()
     }
 }

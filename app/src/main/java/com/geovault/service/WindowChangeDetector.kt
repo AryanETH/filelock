@@ -6,8 +6,8 @@ import android.content.Intent
 import android.view.accessibility.AccessibilityEvent
 import android.content.SharedPreferences
 import android.util.Log
+import com.geovault.security.UnlockSessionManager
 import com.geovault.security.SecureManager
-import com.geovault.LockActivity
 
 /**
  * 0ms LATENCY INTERCEPTOR.
@@ -20,14 +20,10 @@ class WindowChangeDetector : AccessibilityService() {
     private var lockedPackages = emptySet<String>()
     private var isMasterStealthEnabled = false
     private val launcherPackages = mutableSetOf<String>()
-    private var lastPackage = ""
-    private var bypassPackage: String? = null
 
     private val preferenceListener = SharedPreferences.OnSharedPreferenceChangeListener { p, key ->
         if (key == "vault_ids" || key?.startsWith("vault_") == true || key == "master_stealth_enabled") {
             refreshLockedPackages(p)
-        } else if (key == "bypass_package") {
-            bypassPackage = p.getString("bypass_package", null)
         }
     }
 
@@ -35,10 +31,23 @@ class WindowChangeDetector : AccessibilityService() {
         super.onCreate()
         val p = SecureManager.getInstance(this).prefs
         prefs = p
-        bypassPackage = p.getString("bypass_package", null)
         p.registerOnSharedPreferenceChangeListener(preferenceListener)
         updateLauncherPackages()
         refreshLockedPackages(p)
+        startAppLockerService()
+    }
+
+    private fun startAppLockerService() {
+        val serviceIntent = Intent(this, AppLockerService::class.java)
+        try {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                startForegroundService(serviceIntent)
+            } else {
+                startService(serviceIntent)
+            }
+        } catch (e: Exception) {
+            Log.e("WindowChangeDetector", "Failed to start monitoring service", e)
+        }
     }
 
     override fun onServiceConnected() {
@@ -66,57 +75,66 @@ class WindowChangeDetector : AccessibilityService() {
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
-        // High-Speed Identification
+        // FAST FILTER: Ignore non-relevant events
+        if (event.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED && 
+            event.eventType != AccessibilityEvent.TYPE_WINDOWS_CHANGED) return
+
         val packageName = event.packageName?.toString() ?: return
-        if (packageName == this.packageName) return
+        val myPackage = this.packageName
+        
+        // SELF-TRIGGER PREVENTION: Ignore our own app
+        if (packageName == myPackage) return
+        
+        // SYSTEM UI PREVENTION: Ignore common system packages
+        if (packageName == "android" || packageName == "com.android.systemui") return
 
-        // Instant Escape Detection
-        val isLauncher = launcherPackages.contains(packageName) || 
-                         packageName.contains("launcher", ignoreCase = true) ||
-                         packageName.contains("home", ignoreCase = true)
+        // Ensure AppLockerService is alive (Heartbeat)
+        // Using a throttled approach for heartbeat
+        heartbeatService()
 
-        if (isLauncher || (bypassPackage != null && packageName != bypassPackage)) {
-            if (bypassPackage != null) {
-                bypassPackage = null
-                prefs?.edit()?.remove("bypass_package")?.commit() // Synchronous kill
-            }
-        }
+        // PREVENT SELF-TRIGGERING: Check if lock is currently active
+        // We use a memory cache + preference check for absolute safety
+        if (isLockVisible) return
+        if (prefs?.getBoolean("lock_active_right_now", false) == true) return
 
-        // Logic check
+        val sessionManager = UnlockSessionManager.getInstance(this)
+
+        // Logic check for locking
         val isSystemTarget = isMasterStealthEnabled && (packageName == "com.android.packageinstaller" || packageName == "com.google.android.packageinstaller")
-        val shouldLock = lockedPackages.contains(packageName) || isSystemTarget
+        val shouldLock = (lockedPackages.contains(packageName) || isSystemTarget) && !launcherPackages.contains(packageName)
 
-        if (shouldLock && packageName != bypassPackage) {
-            // TRIPLE-PATH INTERCEPTION:
-            // 1. Launch activity directly (Reliable)
-            // 2. Notify watchdog service (Redundant check)
-            
-            if (packageName != lastPackage) {
-                Log.d("WindowChangeDetector", "Instant Lock -> $packageName")
-                triggerLock(packageName)
+        if (shouldLock) {
+            if (!sessionManager.isUnlocked(packageName)) {
+                Log.d("WindowChangeDetector", "Detected Lockable App: $packageName")
                 
-                // Redundant sync with AppLockerService for watchdog polling
-                val serviceIntent = Intent(this, AppLockerService::class.java).apply {
-                    putExtra("event_package_name", packageName)
-                    putExtra("is_accessibility_event", true)
-                }
-                startService(serviceIntent)
+                // NOTIFY APP LOCKER SERVICE FOR INSTANT OVERLAY AND LOCK UI
+                AppLockerService.onPackageDetected(packageName)
             }
         }
-        lastPackage = packageName
     }
 
-    private fun triggerLock(packageName: String) {
-        val isFingerprintEnabled = prefs?.getBoolean("fingerprint_enabled", true) ?: true
-        val lockIntent = Intent(this, LockActivity::class.java).apply {
-            putExtra("target_package", packageName)
-            putExtra("request_biometric", isFingerprintEnabled)
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or 
-                     Intent.FLAG_ACTIVITY_CLEAR_TOP or 
-                     Intent.FLAG_ACTIVITY_NO_ANIMATION)
+    private var lastHeartbeat = 0L
+    private fun heartbeatService() {
+        if (AppLockerService.isRunning()) return
+        
+        val now = System.currentTimeMillis()
+        if (now - lastHeartbeat > 10000L) { // Less frequent heartbeat
+            lastHeartbeat = now
+            val serviceIntent = Intent(this, AppLockerService::class.java)
+            try {
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                    startForegroundService(serviceIntent)
+                } else {
+                    startService(serviceIntent)
+                }
+            } catch (e: Exception) {
+                // Ignore
+            }
         }
-        startActivity(lockIntent)
     }
+
+    private val isLockVisible: Boolean
+        get() = prefs?.getBoolean("lock_active_right_now", false) ?: false
 
     private fun updateLauncherPackages() {
         try {
@@ -126,6 +144,11 @@ class WindowChangeDetector : AccessibilityService() {
             launcherPackages.add("android")
             launcherPackages.add("com.android.systemui")
             launcherPackages.add("com.android.settings")
+            launcherPackages.add("com.google.android.settings")
+            
+            // Add internal packages to ignore
+            launcherPackages.add(this.packageName)
+
             resolveInfos.forEach { launcherPackages.add(it.activityInfo.packageName) }
         } catch (e: Exception) {}
     }

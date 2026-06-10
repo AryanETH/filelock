@@ -15,10 +15,14 @@ import androidx.savedstate.SavedStateRegistry
 import androidx.savedstate.SavedStateRegistryController
 import androidx.savedstate.SavedStateRegistryOwner
 import com.geovault.security.IntruderManager
+import com.geovault.security.UnlockSessionManager
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
+
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 class AppLockerService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedStateRegistryOwner {
 
@@ -36,6 +40,7 @@ class AppLockerService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedSt
     private lateinit var prefs: android.content.SharedPreferences
     
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    private val detectionMutex = Mutex()
     private var isOverlayAttached = false
     private var lastForegroundPackage = ""
     private var lastResumeTime = 0L
@@ -58,7 +63,7 @@ class AppLockerService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedSt
                 android.content.Intent.ACTION_SCREEN_OFF -> {
                     screenStateFlow.value = false
                     serviceScope.launch {
-                        com.geovault.security.SecureManager.getInstance(this@AppLockerService).prefs.edit().remove("bypass_package").commit()
+                        UnlockSessionManager.getInstance(this@AppLockerService).clearAll()
                         hideOverlayImmediate()
                     }
                 }
@@ -85,27 +90,28 @@ class AppLockerService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedSt
         }
     }
 
-    private var wakeLock: android.os.PowerManager.WakeLock? = null
+    companion object {
+        private var instance: AppLockerService? = null
+        
+        fun isRunning(): Boolean = instance != null
+
+        fun onPackageDetected(packageName: String) {
+            instance?.let { service ->
+                service.serviceScope.launch {
+                    service.handlePackageChange(packageName, isEventDriven = true)
+                }
+            }
+        }
+    }
 
     override fun onCreate() {
         super.onCreate()
-        
-        // 1. MUST CALL startForeground IMMEDIATELY to avoid bg restrictions
-        try {
-            if (Build.VERSION.SDK_INT >= 34) {
-                startForeground(1001, createNotification(), android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
-            } else {
-                startForeground(1001, createNotification())
-            }
-        } catch (e: Exception) {}
+        instance = this
+        startForegroundSafe()
 
         // 2. High-Priority Setup
         Thread.currentThread().priority = Thread.MAX_PRIORITY
         
-        val powerManager = getSystemService(Context.POWER_SERVICE) as android.os.PowerManager
-        wakeLock = powerManager.newWakeLock(android.os.PowerManager.PARTIAL_WAKE_LOCK, "GeoVault:DetectionLock")
-        wakeLock?.acquire(10 * 60 * 1000L)
-
         prefs = com.geovault.security.SecureManager.getInstance(this).prefs
         prefs.registerOnSharedPreferenceChangeListener(preferenceListener)
         
@@ -133,6 +139,29 @@ class AppLockerService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedSt
         scheduleWatchdog()
     }
 
+    private fun startForegroundSafe() {
+        try {
+            val notification = createNotification()
+            if (Build.VERSION.SDK_INT >= 34) {
+                // Android 14/15 requires explicit foreground service type
+                startForeground(
+                    1001, 
+                    notification, 
+                    android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+                )
+            } else {
+                startForeground(1001, notification)
+            }
+            android.util.Log.d("AppLockerService", "Foreground service started successfully")
+        } catch (e: Exception) {
+            android.util.Log.e("AppLockerService", "Foreground start failed: ${e.message}")
+            // Fallback: If it's a background restriction, we might need to wait for a valid transition
+            if (Build.VERSION.SDK_INT >= 31 && e is android.app.ForegroundServiceStartNotAllowedException) {
+                android.util.Log.e("AppLockerService", "FGS start not allowed from background")
+            }
+        }
+    }
+
     private fun prepareNativeOverlay() {
         // High-speed native black view for 0ms blocking
         nativeOverlayView = android.view.View(this).apply {
@@ -156,25 +185,25 @@ class AppLockerService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedSt
     }
 
     private fun createNotification(): android.app.Notification {
-        val channelId = "app_locker_channel"
+        val channelId = "security_monitoring_channel"
+        val channelName = getString(com.geovault.R.string.app_name)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = android.app.NotificationChannel(channelId, "Security Monitoring", android.app.NotificationManager.IMPORTANCE_HIGH).apply {
+            val channel = android.app.NotificationChannel(channelId, channelName, android.app.NotificationManager.IMPORTANCE_DEFAULT).apply {
                 description = "Keeps the app lock active in the background"
+                setShowBadge(false)
                 enableLights(false)
                 enableVibration(false)
-                setShowBadge(false)
             }
             getSystemService(android.app.NotificationManager::class.java).createNotificationChannel(channel)
         }
 
         return androidx.core.app.NotificationCompat.Builder(this, channelId)
-            .setContentTitle("GeoVault Security Active")
-            .setContentText("Your apps are protected")
-            .setSmallIcon(com.geovault.R.drawable.ic_calculator)
-            .setPriority(androidx.core.app.NotificationCompat.PRIORITY_MAX)
+            .setContentTitle(channelName)
+            .setContentText(getString(com.geovault.R.string.bg_active_desc))
+            .setSmallIcon(com.geovault.R.mipmap.ic_launcher)
+            .setPriority(androidx.core.app.NotificationCompat.PRIORITY_DEFAULT)
             .setCategory(androidx.core.app.NotificationCompat.CATEGORY_SERVICE)
             .setOngoing(true)
-            .setSilent(true)
             .build()
     }
 
@@ -212,7 +241,7 @@ class AppLockerService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedSt
 
     private fun getForegroundPackageInfo(): ForegroundInfo? {
         val time = System.currentTimeMillis()
-        val usageEvents = usageStatsManager?.queryEvents(time - 2000, time)
+        val usageEvents = usageStatsManager?.queryEvents(time - 5000, time)
         if (usageEvents != null) {
             val event = UsageEvents.Event()
             var lastPkg: String? = null
@@ -232,7 +261,7 @@ class AppLockerService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedSt
             }
         }
         
-        val stats = usageStatsManager?.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, time - 5000, time)
+        val stats = usageStatsManager?.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, time - 10000, time)
         if (!stats.isNullOrEmpty()) {
             val latest = stats.maxByOrNull { it.lastTimeUsed }
             if (latest != null && latest.packageName != lastForegroundPackage) {
@@ -247,19 +276,22 @@ class AppLockerService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedSt
     private fun startPolling() {
         pollingJob?.cancel()
         pollingJob = serviceScope.launch(Dispatchers.Default) {
+            // Wait a bit to let Accessibility Service take lead
+            delay(1000L)
             while (isActive) {
                 try {
                     if (screenStateFlow.value) {
                         val info = getForegroundPackageInfo()
                         if (info != null) {
+                            // Only handle if it's a new launch or we missed an event
                             handlePackageChange(info.packageName, info.isNewEvent)
                         }
-                        delay(30L) // Faster polling
+                        delay(500L) // Slower polling fallback to save battery
                     } else {
                         withTimeoutOrNull(2000L) { screenStateFlow.filter { it }.first() }
                     }
                 } catch (e: Exception) {
-                    delay(1000L)
+                    delay(2000L)
                 }
             }
         }
@@ -274,42 +306,72 @@ class AppLockerService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedSt
     }
 
     private suspend fun handlePackageChange(currentPackage: String, isEventDriven: Boolean) {
-        val myPackage = this.packageName
-        val isLauncher = isLauncherApp(currentPackage)
+        detectionMutex.withLock {
+            val myPackage = this.packageName
+            val sessionManager = UnlockSessionManager.getInstance(this)
 
-        if (currentPackage == myPackage || isLauncher) {
-            if (prefs.contains("bypass_package")) {
-                prefs.edit().remove("bypass_package").commit()
-            }
-            if (isLauncher) lastForegroundPackage = ""
-            hideOverlayImmediate()
-            return
-        }
-
-        val bypassPackage = prefs.getString("bypass_package", null)
-        if (bypassPackage != null && currentPackage != bypassPackage) {
-            prefs.edit().remove("bypass_package").commit()
-        }
-
-        val isNewLaunch = currentPackage != lastForegroundPackage || isEventDriven
-        
-        if (isNewLaunch) {
-            lastForegroundPackage = currentPackage
-            
-            val isSystemTarget = currentPackage == "com.android.packageinstaller" || currentPackage == "com.google.android.packageinstaller"
-            val isRestrictedSystemApp = currentPackage == "com.android.settings" || currentPackage == "com.android.vending" || currentPackage == "com.google.android.vending"
-
-            val shouldLock = !isRestrictedSystemApp && (lockedPackages.contains(currentPackage) || (isMasterStealthEnabled && isSystemTarget))
-
-            if (shouldLock && currentPackage != prefs.getString("bypass_package", null)) {
-                showOverlayImmediate(currentPackage)
-            } else {
+            if (currentPackage == myPackage) {
                 hideOverlayImmediate()
+                return@withLock
+            }
+
+            val isLauncher = isLauncherApp(currentPackage)
+            if (isLauncher) {
+                // Proactively clear sessions for dead apps
+                serviceScope.launch(Dispatchers.IO) {
+                    sessionManager.pruneSessions(this@AppLockerService)
+                }
+                
+                // For "Strict" behavior: Clear the current bypass when leaving to Launcher.
+                // The grace period in UnlockSessionManager handles the transition loop.
+                val currentBypass = prefs.getString("bypass_package", null)
+                if (currentBypass != null) {
+                    sessionManager.clear(currentBypass)
+                }
+
+                lastForegroundPackage = ""
+                hideOverlayImmediate()
+                return@withLock
+            }
+
+            val isNewLaunch = currentPackage != lastForegroundPackage || isEventDriven
+            
+            if (isNewLaunch) {
+                lastForegroundPackage = currentPackage
+                
+                val isSystemTarget = currentPackage == "com.android.packageinstaller" || currentPackage == "com.google.android.packageinstaller"
+                val isRestrictedSystemApp = currentPackage == "com.android.settings" || currentPackage == "com.android.vending" || currentPackage == "com.google.android.vending"
+
+                val shouldLock = !isRestrictedSystemApp && (lockedPackages.contains(currentPackage) || (isMasterStealthEnabled && isSystemTarget))
+
+                if (shouldLock) {
+                    // Double check with Recents list to be absolutely strict
+                    sessionManager.pruneSessions(this)
+                    
+                    if (!sessionManager.isUnlocked(currentPackage)) {
+                        withContext(Dispatchers.Main) {
+                            showOverlayImmediate(currentPackage)
+                        }
+                    } else {
+                        withContext(Dispatchers.Main) {
+                            hideOverlayImmediate()
+                        }
+                    }
+                } else {
+                    withContext(Dispatchers.Main) {
+                        hideOverlayImmediate()
+                    }
+                }
             }
         }
     }
 
+    private var lastLockedPackage: String? = null
+
     private fun showOverlayImmediate(targetPackage: String) {
+        if (isOverlayAttached && lastLockedPackage == targetPackage) return
+        
+        lastLockedPackage = targetPackage
         if (!isOverlayAttached) {
             val params = WindowManager.LayoutParams(
                 WindowManager.LayoutParams.MATCH_PARENT,
@@ -345,13 +407,14 @@ class AppLockerService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedSt
                 windowManager?.removeView(nativeOverlayView)
             } catch (e: Exception) {}
             isOverlayAttached = false
+            lastLockedPackage = null
             IntruderManager.getInstance(this).stopSession()
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        if (wakeLock?.isHeld == true) wakeLock?.release()
+        instance = null
         prefs.unregisterOnSharedPreferenceChangeListener(preferenceListener)
         try { unregisterReceiver(screenReceiver) } catch (e: Exception) {}
         if (isOverlayAttached) { try { windowManager?.removeView(nativeOverlayView) } catch (e: Exception) {} }
