@@ -11,15 +11,15 @@
 
     <!-- Permission Screen -->
     <string name="notification_perm_title">تفعيل التنبيهات</string>
-    <string name="notification_perm_desc">يستخدم GeoVault التنبيهات للحفاظ على تشغيل خدمة الحماية بشكل موثوق.</string>
+    <string name="notification_perm_desc">يستخدم Mapplock التنبيهات للحفاظ على تشغيل خدمة الحماية بشكل موثوق.</string>
     <string name="usage_perm_title">الوصول إلى إحصائيات الاستخدام</string>
-    <string name="usage_perm_desc">يحتاج GeoVault لمعرفة وقت تشغيل التطبيق لعرض شاشة القفل.</string>
+    <string name="usage_perm_desc">يحتاج Mapplock لمعرفة وقت تشغيل التطبيق لعرض شاشة القفل.</string>
     <string name="overlay_perm_title">العرض فوق التطبيقات الأخرى</string>
-    <string name="overlay_perm_desc">يحتاج GeoVault لرسم شاشة القفل فوق التطبيقات المحمية.</string>
+    <string name="overlay_perm_desc">يحتاج Mapplock لرسم شاشة القفل فوق التطبيقات المحمية.</string>
     <string name="background_popups_perm_title">النوافذ المنبثقة في الخلفية</string>
-    <string name="background_popups_perm_desc">يسمح لـ GeoVault بتشغيل شاشة الأمان فوراً من الخلفية.</string>
+    <string name="background_popups_perm_desc">يسمح لـ Mapplock بتشغيل شاشة الأمان فوراً من الخلفية.</string>
     <string name="battery_perm_title">تعطيل تحسين البطارية</string>
-    <string name="battery_perm_desc">يمنع النظام من إغلاق خدمة حماية GeoVault.</string>
+    <string name="battery_perm_desc">يمنع النظام من إغلاق خدمة حماية Mapplock.</string>
     <string name="grant_permission">منح الإذن</string>
     <string name="security_monitoring_note">يتطلب الأمان مراقبة نشطة للنظام.</string>
 </resources>

@@ -1,14 +1,47 @@
 # Add project specific ProGuard rules here.
 # By default, the flags in this file are appended to flags specified
 # in C:\Users\anilp\AppData\Local\Android\Sdk/tools/proguard/proguard-android.txt
-# You can edit the include path and order by changing the proguardFiles
-# directive in build.gradle.
 
-# MapLibre Specific Rules
+# --- MapLibre GL Specific Rules ---
 -keep class org.maplibre.** { *; }
 -dontwarn org.maplibre.**
+-keep class com.mapbox.** { *; }
+-dontwarn com.mapbox.**
 
-# Keep generic security related classes
--keep class com.geovault.security.** { *; }
+# --- Security & Crypto Rules ---
+# Keep EncryptedSharedPreferences and KeyStore related classes
+-keep class androidx.security.crypto.** { *; }
+-keep class androidx.biometric.** { *; }
+-dontwarn androidx.security.crypto.**
+-dontwarn androidx.biometric.**
 
-# Kotlin Serialization or other libraries might need rules if added later.
+# Keep our security logic intact
+-keep class com.aitoyz.mapplock.security.** { *; }
+
+# --- Jetpack Compose Rules ---
+-keep class androidx.compose.ui.platform.** { *; }
+-keep class androidx.compose.runtime.** { *; }
+-keepattributes *Annotation*
+
+# --- Coroutines & Kotlin ---
+-keepnames class kotlinx.coroutines.internal.MainDispatcherFactory {}
+-keepnames class kotlinx.coroutines.CoroutineExceptionHandler {}
+-keepnames class kotlinx.coroutines.android.AndroidExceptionPreHandler {}
+-keepnames class kotlinx.coroutines.android.AndroidDispatcherFactory {}
+
+# --- Coil & Media3 ---
+-dontwarn coil.**
+-dontwarn androidx.media3.**
+
+# --- PostHog Analytics ---
+-keep class com.posthog.** { *; }
+-dontwarn com.posthog.**
+
+# --- Strip Debug Logs ---
+# This rule removes all Log.d and Log.v calls from the release build.
+# This improves performance and prevents leaking internal state.
+-assumenosideeffects class android.util.Log {
+    public static *** d(...);
+    public static *** v(...);
+    public static *** i(...);
+}

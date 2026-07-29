@@ -32,7 +32,6 @@
     <!--  📍 Location - Required for Coordinate-Based Locking  -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
 
     <!--  🔑 Biometric - Required for Secure Unlock  -->
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
@@ -54,7 +53,6 @@
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
     <!--  📦 App Management - Required to Detect Launched Apps  -->
-    <uses-permission android:name="android.permission.GET_TASKS" />
     <uses-permission
         android:name="android.permission.QUERY_ALL_PACKAGES"
         tools:ignore="QueryAllPackagesPermission" />
@@ -63,16 +61,17 @@
         tools:ignore="ProtectedPermissions" />
 
     <application
-        android:name=".GeoVaultApp"
-        android:allowBackup="true"
+        android:name=".MapplockApp"
+        android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
         android:hasFragileUserData="true"
         tools:targetApi="29"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:requestLegacyExternalStorage="true"
-        android:theme="@style/Theme.GeoVault">
+        android:theme="@style/Theme.Mapplock">
 
         <activity
             android:name=".MainActivity"
@@ -83,6 +82,16 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!-- App Links Configuration for maps.aitoyz.in -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+                <data android:host="maps.aitoyz.in" />
             </intent-filter>
         </activity>
 
@@ -101,29 +110,18 @@
         <activity
             android:name=".LockActivity"
             android:exported="false"
-            android:theme="@style/Theme.GeoVault"
+            android:theme="@style/Theme.Mapplock"
             android:screenOrientation="portrait"
             android:excludeFromRecents="true"
             android:noHistory="true"
-            android:taskAffinity="com.geovault.lockstack"
+            android:taskAffinity="com.aitoyz.mapplock.lockstack"
             android:launchMode="singleTask"
             android:configChanges="locale|layoutDirection|orientation|screenSize|keyboardHidden"> </activity>
 
         <service
-            android:name=".service.WindowChangeDetector"
-            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="android.accessibilityservice.AccessibilityService" />
-            </intent-filter>
-            <meta-data
-                android:name="android.accessibilityservice"
-                android:resource="@xml/accessibility_service_config" />
-        </service>
-
-        <service
             android:name=".service.AppLockerService"
             android:exported="false"
+            android:stopWithTask="false"
             android:foregroundServiceType="specialUse">
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
@@ -170,20 +168,20 @@
         <activity
             android:name=".core.ProxyActivity"
             android:exported="false"
-            android:theme="@style/Theme.GeoVault"
+            android:theme="@style/Theme.Mapplock"
             android:configChanges="orientation|screenSize|keyboardHidden"> </activity>
 
         <activity
             android:name=".core.ProxyActivity$Stub1"
-            android:theme="@style/Theme.GeoVault"
+            android:theme="@style/Theme.Mapplock"
             android:exported="false" />
         <activity
             android:name=".core.ProxyActivity$Stub2"
-            android:theme="@style/Theme.GeoVault"
+            android:theme="@style/Theme.Mapplock"
             android:exported="false" />
         <activity
             android:name=".core.ProxyActivity$Stub3"
-            android:theme="@style/Theme.GeoVault"
+            android:theme="@style/Theme.Mapplock"
             android:exported="false" />
 
         <provider

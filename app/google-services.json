@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "172074023288",
+    "project_id": "geosafe-o7mti",
+    "storage_bucket": "geosafe-o7mti.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:172074023288:android:bd37bda437831ee659b08d",
+        "android_client_info": {
+          "package_name": "com.aitoyz.mapplock"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB8Ijq_yda8MA_kzmdA6ZyMYy6l9GjioVY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

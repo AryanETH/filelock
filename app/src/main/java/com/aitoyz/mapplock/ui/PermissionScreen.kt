@@ -1,0 +1,388 @@
+package com.aitoyz.mapplock.ui
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import com.aitoyz.mapplock.ui.theme.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.aitoyz.mapplock.R
+import com.aitoyz.mapplock.model.VaultState
+import com.aitoyz.mapplock.ui.theme.CyberBlack
+import com.aitoyz.mapplock.ui.theme.CyberBlue
+import com.aitoyz.mapplock.ui.theme.CyberDarkBlue
+
+import androidx.compose.material.icons.filled.*
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
+
+@Composable
+fun PermissionScreen(
+    state: VaultState,
+    onGrantUsage: () -> Unit,
+    onGrantOverlay: () -> Unit,
+    onGrantLocation: () -> Unit,
+    onGrantBattery: () -> Unit,
+    onGrantFullStorage: () -> Unit,
+    onGrantNotifications: () -> Unit
+){
+    val allGranted = state.hasUsageStatsPermission &&
+            state.hasOverlayPermission &&
+            state.hasLocationPermission &&
+            state.hasBatteryOptimizationPermission &&
+            state.hasNotificationPermission &&
+            (android.os.Build.VERSION.SDK_INT < 30 || state.hasFullStoragePermission)
+
+    Scaffold(
+        containerColor = Color.White,
+        bottomBar = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Button(
+                    onClick = { 
+                        if (!allGranted) {
+                            if (android.os.Build.VERSION.SDK_INT >= 30 && !state.hasFullStoragePermission) onGrantFullStorage()
+                            else if (!state.hasUsageStatsPermission) onGrantUsage()
+                            else if (!state.hasOverlayPermission) onGrantOverlay()
+                            else if (!state.hasBatteryOptimizationPermission) onGrantBattery()
+                            else if (android.os.Build.VERSION.SDK_INT >= 33 && !state.hasNotificationPermission) onGrantNotifications()
+                            else if (!state.hasLocationPermission) onGrantLocation()
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = CyberBlue),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(stringResource(R.string.next), color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                }
+
+                
+                Text(
+                    text = stringResource(R.string.ads_note),
+                    modifier = Modifier.padding(top = 12.dp),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Gray
+                )
+            }
+        }
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(horizontal = 24.dp)
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(modifier = Modifier.height(32.dp))
+            
+            // System Health Diagnostic Header
+            SystemHealthHeader(state)
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Text(
+                text = stringResource(R.string.security_clearance),
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black
+            )
+
+            Text(
+                text = stringResource(R.string.security_clearance_desc),
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.Gray,
+                modifier = Modifier.padding(top = 4.dp)
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // 1. Manage All Files
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+                PermissionGuideRow(
+                    title = stringResource(R.string.full_storage_access),
+                    desc = stringResource(R.string.full_storage_access_desc),
+                    icon = Icons.Default.Folder,
+                    iconBgColor = Color(0xFFE1F5FE),
+                    iconColor = Color(0xFF03A9F4),
+                    granted = state.hasFullStoragePermission,
+                    onClick = onGrantFullStorage
+                )
+            }
+
+            // 2. Usage Access
+            PermissionGuideRow(
+                title = stringResource(R.string.usage_access),
+                desc = stringResource(R.string.usage_access_desc),
+                icon = Icons.Default.BarChart,
+                iconBgColor = Color(0xFFE0F2F1),
+                iconColor = Color(0xFF009688),
+                granted = state.hasUsageStatsPermission,
+                onClick = onGrantUsage
+            )
+
+            // 3. Display Over Other Apps
+            PermissionGuideRow(
+                title = stringResource(R.string.overlay_access),
+                desc = stringResource(R.string.overlay_access_desc),
+                icon = Icons.Default.Layers,
+                iconBgColor = Color(0xFFF3E5F5),
+                iconColor = Color(0xFF9C27B0),
+                granted = state.hasOverlayPermission,
+                onClick = onGrantOverlay
+            )
+
+            // 4. Background Protection (Recommended)
+            PermissionGuideRow(
+                title = stringResource(R.string.bg_protection),
+                desc = stringResource(R.string.bg_protection_desc),
+                icon = Icons.Default.Shield,
+                iconBgColor = Color(0xFFFFF8E1),
+                iconColor = Color(0xFFFFC107),
+                granted = state.hasBatteryOptimizationPermission,
+                onClick = onGrantBattery,
+                isCritical = true,
+                showGuide = !state.hasBatteryOptimizationPermission
+            )
+
+            // 5. Notifications
+            PermissionGuideRow(
+                title = stringResource(R.string.notification_perm_title),
+                desc = stringResource(R.string.notification_perm_desc),
+                icon = Icons.Default.Notifications,
+                iconBgColor = Color(0xFFE8EAF6),
+                iconColor = Color(0xFF3F51B5),
+                granted = state.hasNotificationPermission,
+                onClick = onGrantNotifications
+            )
+
+            // 6. Location
+            PermissionGuideRow(
+                title = stringResource(R.string.location_access),
+                desc = stringResource(R.string.location_access_desc),
+                icon = Icons.Default.LocationOn,
+                iconBgColor = Color(0xFFFFEBEE),
+                iconColor = Color(0xFFF44336),
+                granted = state.hasLocationPermission,
+                onClick = onGrantLocation
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Information Box
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                color = Color(0xFFFFFDE7),
+                shape = RoundedCornerShape(12.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFFF9C4))
+            ) {
+                Row(
+                    modifier = Modifier.padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = null,
+                        tint = Color(0xFFFBC02D),
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = stringResource(R.string.privacy_note),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFF827717),
+                        lineHeight = 16.sp
+                    )
+                }
+            }
+
+            
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+    }
+}
+
+@Composable
+fun SystemHealthHeader(state: VaultState) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = Color(0xFFF8F9FA),
+        shape = RoundedCornerShape(16.dp),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE9ECEF))
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                stringResource(R.string.system_status),
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Black,
+                color = Color.Gray,
+                letterSpacing = 1.sp
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            DiagnosticRow(
+                label = stringResource(R.string.usage_stats),
+                isActive = state.isUsageAccessActive
+            )
+            DiagnosticRow(
+                label = stringResource(R.string.locker_service),
+                isActive = state.isLockerServiceRunning
+            )
+            DiagnosticRow(
+                label = stringResource(R.string.overlay_permission),
+                isActive = state.hasOverlayPermission
+            )
+        }
+    }
+}
+
+@Composable
+fun DiagnosticRow(label: String, isActive: Boolean) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(label, style = MaterialTheme.typography.bodySmall, color = Color.DarkGray)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                modifier = Modifier.size(8.dp).background(if (isActive) Color(0xFF4CAF50) else Color(0xFFF44336), CircleShape)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = if (isActive) stringResource(R.string.status_active) else stringResource(R.string.status_inactive),
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold,
+                color = if (isActive) Color(0xFF4CAF50) else Color(0xFFF44336)
+            )
+        }
+    }
+}
+
+@Composable
+fun PermissionGuideRow(
+    title: String,
+    desc: String,
+    icon: ImageVector,
+    iconBgColor: Color,
+    iconColor: Color,
+    granted: Boolean,
+    onClick: () -> Unit,
+    isCritical: Boolean = false,
+    showGuide: Boolean = false
+) {
+    var showGuideDialog by remember { mutableStateOf(false) }
+
+    if (showGuideDialog) {
+        AlertDialog(
+            onDismissRequest = { showGuideDialog = false },
+            title = { Text(stringResource(R.string.bg_protection)) },
+            text = { Text(stringResource(R.string.lock_in_recents_guide)) },
+            confirmButton = {
+                TextButton(onClick = { showGuideDialog = false }) {
+                    Text(stringResource(R.string.close))
+                }
+            }
+        )
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(if (isCritical && !granted) Color(0xFFFFF9C4).copy(alpha = 0.3f) else Color.Transparent)
+            .clickable { onClick() }
+            .padding(vertical = 12.dp, horizontal = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(44.dp)
+                .background(iconBgColor, CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(24.dp),
+                tint = iconColor
+            )
+        }
+
+        Spacer(modifier = Modifier.width(16.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black
+                )
+                if (isCritical && !granted) {
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Surface(
+                        color = Color(0xFFFF5252),
+                        shape = RoundedCornerShape(4.dp)
+                    ) {
+                        Text(
+                            "CRITICAL",
+                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
+                            color = Color.White,
+                            fontSize = 8.sp,
+                            fontWeight = FontWeight.Black
+                        )
+                    }
+                }
+            }
+            Text(
+                text = desc,
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.Gray
+            )
+        }
+
+        if (granted) {
+            Icon(
+                imageVector = Icons.Default.CheckCircle,
+                contentDescription = "Granted",
+                tint = Color(0xFF4CAF50),
+                modifier = Modifier.size(24.dp)
+            )
+        } else if (showGuide) {
+            IconButton(onClick = { showGuideDialog = true }) {
+                Icon(
+                    imageVector = Icons.Default.Info,
+                    contentDescription = "Guide",
+                    tint = CyberBlue
+                )
+            }
+        }
+    }
+}

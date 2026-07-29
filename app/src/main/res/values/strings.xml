@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 <string name="app_name">Mapplock</string>
-<string name="accessibility_description">Used to protect your locked apps.</string>
+<string name="accessibility_description">Mapplock uses this service to detect when a locked application is launched, allowing it to display a secure lock screen overlay and protect your privacy.</string>
 
 <!--  Simplified Jargon  -->
 <string name="vault">Safe Zone</string>
@@ -42,16 +42,16 @@
 <string name="permission_background_activity_desc">To keep the app working 24/7 for your safety.</string>
 <string name="system_ready">All Set!</string>
 <string name="authorize">Allow</string>
-<string name="usage_access">App Monitoring</string>
-<string name="usage_access_desc">To see when you open a locked app</string>
-<string name="overlay_access">Display Over Apps</string>
-<string name="overlay_access_desc">Required to show the lock screen interface</string>
+<string name="usage_access">Usage Access</string>
+<string name="usage_access_desc">Allows Mapplock to detect when protected apps are opened.</string>
+<string name="overlay_access">Display Over Other Apps</string>
+<string name="overlay_access_desc">Allows the lock screen to appear over protected apps.</string>
 <string name="location_access">Location</string>
-<string name="location_access_desc">Needed for GPS, nearby places, and navigation</string>
+<string name="location_access_desc">Required for map-based lock zones and location-dependent features (only if using map features).</string>
 <string name="background_activity">Ignore Battery Optimization</string>
 <string name="background_activity_desc">Allows the lock service to run reliably without being killed by the system.</string>
-<string name="full_storage_access">Storage Access</string>
-<string name="full_storage_access_desc">Required to encrypt and hide your files</string>
+<string name="full_storage_access">Manage All Files</string>
+<string name="full_storage_access_desc">Required to protect and manage files in the vault.</string>
 <string name="background_popups">Background Pop-ups</string>
 <string name="background_popups_desc">Tap here → Special app access → Display pop-ups while in background → Allow</string>
 
@@ -68,6 +68,7 @@
 <string name="onboarding_4_step2">Set your PIN or pattern</string>
 <string name="onboarding_4_step3">Lock your apps or hide files</string>
 <string name="onboarding_4_step4">Double tap on the same location to revisit dashboard</string>
+<string name="onboarding_4_step5">NOTE: Choose a random location for your lock spots so others can\'t easily guess them.</string>
 <string name="onboarding_disclaimer_title">Map Data Disclaimer</string>
 <string name="onboarding_disclaimer_desc">Map data and borders are provided as-is by map providers. We do not control or modify geographic representations. Your privacy is our priority.</string>
 <string name="onboarding_accept_prefix">I understand and accept the </string>
@@ -136,6 +137,12 @@
 <string name="global_lock_desc">Lock all your selected apps at once.</string>
 <string name="dark_mode">Dark Mode</string>
 <string name="dark_mode_desc">Switch light and dark theme.</string>
+<string name="monitoring_mode">Monitoring Backend</string>
+<string name="monitoring_mode_desc">Detection method for app locking</string>
+<string name="monitoring_mode_auto">Automatic (Recommended)</string>
+<string name="monitoring_mode_usage">Usage Stats (Standard)</string>
+<string name="monitoring_mode_shizuku">Shizuku (High Performance)</string>
+<string name="monitoring_mode_accessibility">Accessibility (Fallback)</string>
 
 <!--  Tour  -->
 <string name="tour_skip">Skip</string>
@@ -156,7 +163,7 @@
 <string name="tap_map_to_unlock">Tap below to open the map.</string>
 <string name="open_map_interface">Open Map</string>
 <string name="screenshot_restriction">No Screenshots</string>
-<string name="screenshot_restriction_desc">Stop others from taking screenshots of your vault.</string>
+<string name="screenshot_restriction_desc">Stop others from taking screenshots</string>
 <string name="fingerprint_unlock">Fingerprint</string>
 <string name="fingerprint_unlock_desc">Use fingerprint for quick access.</string>
 <string name="support_links">HELP &amp; LEGAL</string>
@@ -246,16 +253,16 @@
     <string name="bg_active_desc">Image Active • Tap to manage</string>
     <string name="change">CHANGE</string>
     <string name="remove_btn">REMOVE</string>
-    <string name="notification_perm_title">Enable Notifications</string>
-    <string name="notification_perm_desc">GeoVault uses notifications to keep the protection service running reliably.</string>
-    <string name="usage_perm_title">Usage Stats Access</string>
-    <string name="usage_perm_desc">GeoVault needs to know when an app is launched to show the lock screen.</string>
-    <string name="overlay_perm_title">Display Over Other Apps</string>
-    <string name="overlay_perm_desc">GeoVault needs to draw the lock screen over protected applications.</string>
+    <string name="notification_perm_title">Notifications</string>
+    <string name="notification_perm_desc">Used for foreground service notifications and important security alerts.</string>
+    <string name="usage_perm_title">Usage Access</string>
+    <string name="usage_perm_desc">Mapplock needs to know when an app is launched to show the lock screen.</string>
+    <string name="overlay_perm_title">Overlay Permission</string>
+    <string name="overlay_perm_desc">Mapplock needs to draw the lock screen over protected applications.</string>
     <string name="background_popups_perm_title">Background Pop-ups</string>
-    <string name="background_popups_perm_desc">Allows GeoVault to instantly launch the security screen from the background.</string>
+    <string name="background_popups_perm_desc">Allows Mapplock to instantly launch the security screen from the background.</string>
     <string name="battery_perm_title">Disable Battery Optimization</string>
-    <string name="battery_perm_desc">Prevents the system from killing GeoVault\'s protection service.</string>
+    <string name="battery_perm_desc">Prevents the system from killing Mapplock\'s protection service.</string>
     <string name="grant_permission">GRANT PERMISSION</string>
     <string name="security_monitoring_note">Security requires active system monitoring.</string>
     <string name="search_apps">Search apps...</string>
@@ -271,7 +278,45 @@
     <string name="delete_all">DELETE ALL</string>
     <string name="delete_folder_confirm">Delete folder and all its files?</string>
     <string name="recover_folder">Recover all files before deleting</string>
-    <string name="delete_permanently">Delete permanently</string>
+    <string name="delete_permanently">Delete Permanently</string>
+    <string name="connect_dots_to_verify">CONNECT DOTS TO VERIFY</string>
+    <string name="aqi_label">AQI</string>
+    <string name="temp_label">Temp</string>
+    <string name="humidity_label">Humidity</string>
+    <string name="importing_files">Importing Files</string>
+    <string name="deleting_files">Deleting Files</string>
+    <string name="restoring_files">Restoring Files</string>
+    <string name="hold_on_message">Hold on, your phone is trying hard to get this done</string>
+    <string name="completed_percent">%1$d%% Completed</string>
+
+    <!-- Diagnostics -->
+    <string name="system_status">SYSTEM HEALTH</string>
+    <string name="protection_guide_title">Stay Active 24/7</string>
+    <string name="protection_guide_desc">To keep your apps locked reliably, Mapplock needs to stay active in the background. Follow these steps to make it indestructible.</string>
+    <string name="step_battery_title">Unrestricted Battery</string>
+    <string name="step_battery_desc">Prevents Android from killing Mapplock to save battery. Set to \'Unrestricted\'.</string>
+    <string name="step_autostart_title">Auto-Start</string>
+    <string name="step_autostart_desc">Allows Mapplock to start automatically when your phone boots up.</string>
+    <string name="step_recents_title">Lock in Recents</string>
+    <string name="step_recents_desc">Manually lock Mapplock in your \'Recent Apps\' list to prevent accidental closing.</string>
+    <string name="oem_guide_xiaomi">Tap here → Battery &amp; performance → App battery saver → Mapplock → No restrictions. Also enable \'Autostart\'.</string>
+    <string name="oem_guide_oppo">Tap here → App Management → Mapplock → Allow Auto Start &amp; Allow Background Activity.</string>
+    <string name="oem_guide_vivo">Tap here → Battery → High Background Power Consumption → Enable Mapplock.</string>
+    <string name="oem_guide_samsung">Tap here → Battery → Background usage limits → Never sleeping apps → Add Mapplock.</string>
+    <string name="oem_guide_generic">Tap here → Battery → Unrestricted / No Optimization.</string>
+    <string name="lock_recents_instruction">1. Swipe up to see Recent Apps\n2. Long press or swipe down on Mapplock\n3. Tap the \'Lock\' icon</string>
+    <string name="indestructible_mode_active">INDESTRUCTIBLE MODE ACTIVE</string>
+    <string name="indestructible_mode_inactive">SYSTEM HEALTH WARNING</string>
+    <string name="fix_now">FIX NOW</string>
+    <string name="status_active">ACTIVE</string>
+    <string name="status_inactive">INACTIVE</string>
+    <string name="accessibility_service">Accessibility Service</string>
+    <string name="overlay_permission">Overlay Permission</string>
+    <string name="usage_stats">Usage Stats</string>
+    <string name="locker_service">Locker Engine</string>
+    <string name="bg_protection">Background Protection (Recommended)</string>
+    <string name="bg_protection_desc">Prevents Mapplock from being stopped by the system and keeps app locking active. This may show a manufacturer-specific screen asking you to allow the app to run in the background. You can change this later in Settings.</string>
+    <string name="lock_in_recents_guide">How to keep Mapplock always active:\n1. Open Recent Apps\n2. Long press Mapplock or swipe down\n3. Tap the \'Lock\' icon</string>
 
     <string-array name="faq_questions">
         <item>What is Mapplock and how is it different from other app lockers?</item>

@@ -9,10 +9,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="com.aitoyz.mapplock" />
+                  <option name="mobileSdkAppId" value="1:172074023288:android:bd37bda437831ee659b08d" />
+                  <option name="projectId" value="geosafe-o7mti" />
+                  <option name="projectNumber" value="172074023288" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />
