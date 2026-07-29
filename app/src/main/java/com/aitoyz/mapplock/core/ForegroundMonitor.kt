@@ -1,5 +1,6 @@
 package com.aitoyz.mapplock.core
 
+import com.aitoyz.mapplock.model.ForegroundEvent
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -25,5 +26,5 @@ interface ForegroundMonitor {
     /**
      * A flow of package names that are moved to the foreground.
      */
-    val events: Flow<String>
+    val events: Flow<ForegroundEvent>
 }

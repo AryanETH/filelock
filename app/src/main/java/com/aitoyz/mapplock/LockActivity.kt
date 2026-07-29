@@ -32,6 +32,7 @@ import com.aitoyz.mapplock.ui.theme.MapplockTheme
 import com.aitoyz.mapplock.ui.theme.CyberBlack
 import com.aitoyz.mapplock.security.*
 import com.aitoyz.mapplock.ui.AuthUI
+import com.aitoyz.mapplock.core.UnlockSessionManager
 import android.content.Context
 import android.content.Intent
 import androidx.lifecycle.lifecycleScope
@@ -78,27 +79,33 @@ class LockActivity : AppCompatActivity() {
             
             LockerLogger.d(LockerLogger.Event.LOCK_ACTIVITY_STARTED, "LockActivity Created")
             
-            // 1. CRITICAL: Set solid black window background to prevent ANY transparency flicker
+            // 1. Immersive Full Screen Setup
+            WindowCompat.setDecorFitsSystemWindows(window, false)
             window.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(android.graphics.Color.BLACK))
+            window.statusBarColor = android.graphics.Color.TRANSPARENT
+            window.navigationBarColor = android.graphics.Color.TRANSPARENT
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                window.attributes.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+            }
+
+            val controller = WindowCompat.getInsetsController(window, window.decorView)
+            controller.hide(WindowInsetsCompat.Type.systemBars())
+            controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
 
             // Professional Security: Prevent screenshots and recent app previews
             window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
-
+            
             // Root Detection
             if (SecurityUtils.isDeviceRooted()) {
                 Toast.makeText(this, "Security Alert: Rooted device detected.", Toast.LENGTH_SHORT).show()
             }
-            
+
             val initialTargetPackage = intent.getStringExtra("target_package") ?: ""
             targetPackageState.value = initialTargetPackage
             val requestBiometric = intent.getBooleanExtra("request_biometric", false)
 
             val prefs = SecureManager.getInstance(this).prefs
-            
-            // Fullscreen Immersive
-            val controller = WindowCompat.getInsetsController(window, window.decorView)
-            controller.show(WindowInsetsCompat.Type.systemBars())
-            controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_DEFAULT
             
             val isIntruderEnabled = prefs.getBoolean("intruder_capture_enabled", false)
             if (isIntruderEnabled) {
@@ -119,10 +126,9 @@ class LockActivity : AppCompatActivity() {
                 val isDark = remember { prefs.getBoolean("is_dark_mode", false) }
                 val currentTargetPackage by targetPackageState
                 
-                // CRITICAL: Notify repository that UI is drawn so overlay can be removed
+                // No-op - deterministic model handles this via events
                 LaunchedEffect(currentTargetPackage) {
-                    // Increased delay to ensure Compose UI is fully rendered before revealing
-                    delay(500)
+                    delay(300)
                     repository.updateState(LockerRepository.LockerState.LOCK_ACTIVITY_VISIBLE, currentTargetPackage)
                 }
 
@@ -154,20 +160,20 @@ class LockActivity : AppCompatActivity() {
     private fun handleAuthenticationSuccess(packageName: String) {
         lifecycleScope.launch {
             isUnlocked = true
-            LockerLogger.i(LockerLogger.Event.AUTH_SUCCESS, "Authenticated for $packageName")
-            repository.startSession(packageName)
+            LockerLogger.i(LockerLogger.Event.AUTH_SUCCESS, "[AUTH_SUCCESS] $packageName")
+            
+            // 1. Mark as authenticated
+            UnlockSessionManager.markAuthenticated(packageName)
+            
+            // 2. Update repository state (UI)
             repository.updateState(LockerRepository.LockerState.AUTHENTICATED, packageName)
             
-            // Small delay to allow state to propagate before finishing
-            delay(50)
-            repository.updateState(LockerRepository.LockerState.UNLOCKED_SESSION, packageName)
+            // 3. Finish this activity to reveal the underlying app
             finish()
+            
+            // Ensure no transition animation flickers
+            overridePendingTransition(0, 0)
         }
-    }
-
-    override fun onUserLeaveHint() {
-        super.onUserLeaveHint()
-        finish()
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -182,6 +188,7 @@ class LockActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         IntruderManager.getInstance(this).stopSession()
+        com.aitoyz.mapplock.service.AppLockerService.getInstance()?.notifyLockDismissed()
     }
 
     private fun showBiometricPrompt(targetPackage: String) {

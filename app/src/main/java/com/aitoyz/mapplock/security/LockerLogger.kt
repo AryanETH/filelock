@@ -22,6 +22,10 @@ object LockerLogger {
         AUTH_FAILED,
         SERVICE_RESTARTED,
         STATE_TRANSITION,
+        STATE_LOCKED,
+        STATE_AUTHENTICATED,
+        STATE_FOREGROUND,
+        STATE_BACKGROUND,
         ERROR
     }
 
@@ -29,8 +33,16 @@ object LockerLogger {
         Log.d(TAG, "[${event.name}] $message")
     }
 
+    fun v(event: Event, message: String) {
+        Log.v(TAG, "[${event.name}] $message")
+    }
+
     fun i(event: Event, message: String) {
         Log.i(TAG, "[${event.name}] $message")
+    }
+
+    fun w(event: Event, message: String) {
+        Log.w(TAG, "[${event.name}] $message")
     }
 
     fun e(event: Event, message: String, throwable: Throwable? = null) {

@@ -29,6 +29,13 @@ class AppLockerService : Service() {
         @Volatile
         private var instance: AppLockerService? = null
         fun isRunning(): Boolean = instance != null
+        fun getInstance(): AppLockerService? = instance
+    }
+    
+    fun notifyLockDismissed() {
+        if (::engine.isInitialized) {
+            engine.onLockDismissed()
+        }
     }
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
@@ -36,7 +43,7 @@ class AppLockerService : Service() {
     private lateinit var engine: AppLockEngine
     private lateinit var overlayService: OverlayService
     private lateinit var lockedAppsRepository: LockedAppsRepository
-    private lateinit var sessionManager: LockSessionManager
+    private lateinit var sessionManager: UnlockSessionManager
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -44,7 +51,7 @@ class AppLockerService : Service() {
         override fun onReceive(context: Context?, intent: Intent?) {
             when (intent?.action) {
                 Intent.ACTION_SCREEN_OFF -> {
-                    LockSessionManager.clearAll()
+                    UnlockSessionManager.onScreenOff()
                     LockerLogger.i(LockerLogger.Event.ACCESSIBILITY_EVENT, "Screen off, clearing sessions")
                 }
                 Intent.ACTION_SCREEN_ON -> {
@@ -64,27 +71,22 @@ class AppLockerService : Service() {
         
         lockedAppsRepository = LockedAppsRepository(this)
         val settingsRepository = SettingsRepository(this)
-        sessionManager = LockSessionManager
+        sessionManager = UnlockSessionManager
         
-        val monitor = BackendSelector.select(this)
+        val monitor = BackendSelector.select(this, serviceScope)
+        val decisionEngine = LockDecisionEngine(lockedAppsRepository, sessionManager)
+        val systemAppFilter = SystemAppFilter(this)
         
         overlayService = OverlayService(this, settingsRepository, serviceScope)
         
         engine = AppLockEngine(
             scope = serviceScope,
             monitor = monitor,
-            lockedApps = lockedAppsRepository,
-            sessions = sessionManager,
+            decisionEngine = decisionEngine,
+            systemAppFilter = systemAppFilter,
             onTriggerOverlay = { packageName ->
-                overlayService.show(
-                    packageName = packageName,
-                    onAuthenticated = {
-                        sessionManager.onAppUnlocked(packageName)
-                    },
-                    onBiometricRequested = {
-                        triggerLockActivity(packageName, requestBiometric = true)
-                    }
-                )
+                // Phase 5: Instant Relock - Trigger LockActivity immediately
+                triggerLockActivity(packageName)
             }
         )
 
@@ -123,7 +125,8 @@ class AppLockerService : Service() {
                 putExtra("target_package", targetPackage)
                 putExtra("request_biometric", requestBiometric)
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or 
-                         Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or 
+                         Intent.FLAG_ACTIVITY_SINGLE_TOP or
+                         Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS or
                          Intent.FLAG_ACTIVITY_NO_ANIMATION)
             }
             

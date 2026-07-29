@@ -4,6 +4,7 @@ import android.app.usage.UsageEvents
 import android.app.usage.UsageStatsManager
 import android.content.Context
 import com.aitoyz.mapplock.core.ForegroundMonitor
+import com.aitoyz.mapplock.model.ForegroundEvent
 import com.aitoyz.mapplock.security.LockerLogger
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -15,8 +16,8 @@ import kotlinx.coroutines.flow.asSharedFlow
  */
 class UsageStatsMonitor(private val context: Context) : ForegroundMonitor {
     private val usageStatsManager = context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
-    private val _events = MutableSharedFlow<String>(extraBufferCapacity = 10)
-    override val events: SharedFlow<String> = _events.asSharedFlow()
+    private val _events = MutableSharedFlow<ForegroundEvent>(extraBufferCapacity = 10)
+    override val events: SharedFlow<ForegroundEvent> = _events.asSharedFlow()
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private var pollingJob: Job? = null
@@ -32,12 +33,16 @@ class UsageStatsMonitor(private val context: Context) : ForegroundMonitor {
                     if (currentPkg != null && currentPkg != lastPackageName) {
                         LockerLogger.d(LockerLogger.Event.STATE_TRANSITION, "UsageStats detected package change: $currentPkg")
                         lastPackageName = currentPkg
-                        _events.emit(currentPkg)
+                        val event = ForegroundEvent(
+                            packageName = currentPkg,
+                            source = ForegroundEvent.Source.USAGE_STATS
+                        )
+                        _events.emit(event)
                     }
                 } catch (e: Exception) {
                     LockerLogger.e(LockerLogger.Event.ERROR, "Error in UsageStats polling loop", e)
                 }
-                delay(200) // Polling interval
+                delay(100) // Faster polling interval (100ms)
             }
         }
     }

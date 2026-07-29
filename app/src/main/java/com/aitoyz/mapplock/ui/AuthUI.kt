@@ -66,6 +66,7 @@ fun AuthUI(
     targetPackage: String,
     titleOverride: String? = null,
     autoRequestBiometric: Boolean = false,
+    isOverlay: Boolean = false,
     onAuthenticated: () -> Unit,
     onBiometricRequested: () -> Unit
 ) {
@@ -104,7 +105,7 @@ fun AuthUI(
         if (isIntruderEnabled) {
             if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
                 IntruderManager.getInstance(context).startSession(lifecycleOwner)
-            } else {
+            } else if (!isOverlay) {
                 cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
             }
         }
@@ -188,7 +189,7 @@ fun AuthUI(
                 } catch (e: Exception) {
                     isWithinRadius = false
                 }
-            } else {
+            } else if (!isOverlay) {
                 locationPermissionLauncher.launch(arrayOf(
                     Manifest.permission.ACCESS_FINE_LOCATION,
                     Manifest.permission.ACCESS_COARSE_LOCATION
@@ -259,9 +260,8 @@ fun AuthUI(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .statusBarsPadding()
-                .navigationBarsPadding()
-                .verticalScroll(rememberScrollState()),
+                // Immersive: Draw behind system bars
+                .padding(bottom = 0.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.weight(if (isSmallScreen) 0.05f else 0.1f))
@@ -399,7 +399,9 @@ fun AuthUI(
                             HapticHelper.vibrate(context, 1)
                             
                             if (radius > 0 && ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                                locationPermissionLauncher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
+                                if (!isOverlay) {
+                                    locationPermissionLauncher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
+                                }
                                 biometricStatusMessage = "Location permission required"
                                 return@clickable
                             }

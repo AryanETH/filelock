@@ -10,12 +10,18 @@ class BootReceiver : BroadcastReceiver() {
             Intent.ACTION_BOOT_COMPLETED,
             Intent.ACTION_MY_PACKAGE_REPLACED,
             Intent.ACTION_REBOOT,
+            Intent.ACTION_PACKAGE_ADDED,
+            Intent.ACTION_PACKAGE_REMOVED,
             "com.aitoyz.mapplock.WATCHDOG"
         )
         if (intent.action in actions) {
             android.util.Log.d("BootReceiver", "[STABILITY] onReceive: ${intent.action}")
             
             val serviceIntent = Intent(context, AppLockerService::class.java)
+            if (intent.action == Intent.ACTION_PACKAGE_ADDED || intent.action == Intent.ACTION_PACKAGE_REMOVED) {
+                serviceIntent.putExtra("refresh_locked_apps", true)
+            }
+            
             try {
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                     context.startForegroundService(serviceIntent)

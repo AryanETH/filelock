@@ -4,9 +4,15 @@ import android.content.Context
 import android.graphics.PixelFormat
 import android.os.Build
 import android.view.WindowManager
+import androidx.activity.compose.LocalActivityResultRegistryOwner
+import androidx.activity.result.ActivityResultRegistry
+import androidx.activity.result.ActivityResultRegistryOwner
+import androidx.activity.result.contract.ActivityResultContract
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.core.app.ActivityOptionsCompat
 import androidx.lifecycle.*
 import androidx.savedstate.SavedStateRegistry
 import androidx.savedstate.SavedStateRegistryController
@@ -28,7 +34,7 @@ class OverlayService(
     private val context: Context,
     private val settingsRepository: SettingsRepository,
     private val scope: CoroutineScope
-) : LifecycleOwner, ViewModelStoreOwner, SavedStateRegistryOwner {
+) : LifecycleOwner, ViewModelStoreOwner, SavedStateRegistryOwner, ActivityResultRegistryOwner {
 
     private val lifecycleRegistry = LifecycleRegistry(this)
     private val store = ViewModelStore()
@@ -37,6 +43,20 @@ class OverlayService(
     override val lifecycle: Lifecycle get() = lifecycleRegistry
     override val viewModelStore: ViewModelStore get() = store
     override val savedStateRegistry: SavedStateRegistry get() = savedStateRegistryController.savedStateRegistry
+
+    // Dummy ActivityResultRegistry for the Service environment
+    private val registry = object : ActivityResultRegistry() {
+        override fun <I, O> onLaunch(
+            requestCode: Int,
+            contract: ActivityResultContract<I, O>,
+            input: I,
+            options: ActivityOptionsCompat?
+        ) {
+            LockerLogger.w(LockerLogger.Event.ERROR, "ActivityResultRegistry.onLaunch called in Service overlay. This is not supported.")
+        }
+    }
+
+    override val activityResultRegistry: ActivityResultRegistry get() = registry
 
     private val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
     private var overlayComposeView: ComposeView? = null
@@ -102,19 +122,22 @@ class OverlayService(
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
 
             setContent {
-                val isDarkMode = settingsRepository.isDarkMode().collectAsState(initial = false).value
-                MapplockTheme(darkTheme = isDarkMode) {
-                    AuthUI(
-                        context = context,
-                        targetPackage = packageName,
-                        onAuthenticated = {
-                            onAuthenticated()
-                            hide()
-                        },
-                        onBiometricRequested = {
-                            onBiometricRequested()
-                        }
-                    )
+                CompositionLocalProvider(LocalActivityResultRegistryOwner provides this@OverlayService) {
+                    val isDarkMode = settingsRepository.isDarkMode().collectAsState(initial = false).value
+                    MapplockTheme(darkTheme = isDarkMode) {
+                        AuthUI(
+                            context = context,
+                            targetPackage = packageName,
+                            isOverlay = true,
+                            onAuthenticated = {
+                                onAuthenticated()
+                                hide()
+                            },
+                            onBiometricRequested = {
+                                onBiometricRequested()
+                            }
+                        )
+                    }
                 }
             }
         }
