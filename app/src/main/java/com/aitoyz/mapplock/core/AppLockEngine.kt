@@ -8,124 +8,101 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
 /**
- * The central coordinator for app locking logic.
- * Deterministic event-driven engine.
+ * Deterministic engine for coordinating package transitions and locking events.
+ * Listens to all foreground events and manages session updates + locking decisions.
  */
 class AppLockEngine(
     private val scope: CoroutineScope,
-    private val monitor: ForegroundMonitor,
+    private val detector: ForegroundDetector,
     private val decisionEngine: LockDecisionEngine,
-    private val systemAppFilter: SystemAppFilter,
-    private val onTriggerOverlay: (String) -> Unit
+    private val launcher: LockLauncher,
+    private val systemAppFilter: SystemAppFilter
 ) {
+    fun getLauncher() = launcher
+
     private var monitoringJob: Job? = null
-    
-    // Transition tracking
-    private var lastPackage: String? = null
+    private var previousPackage: String? = null
 
     /**
-     * Starts the locking engine.
+     * Starts monitoring foreground events.
      */
     fun start() {
-        LockerLogger.i(LockerLogger.Event.STATE_TRANSITION, "Engine starting monitoring")
+        LockerLogger.i(LockerLogger.Event.STATE_TRANSITION, "MAP_TEST: Engine starting")
+        LockerLogger.i(LockerLogger.Event.STATE_TRANSITION, "AppLockEngine starting")
         
-        // Listen to global events
-        monitoringJob = ForegroundEventBus.events
+        detector.start()
+        
+        monitoringJob = detector.events
             .onEach { event ->
-                handleForegroundEvent(event)
+                handleEvent(event)
             }
             .launchIn(scope)
 
-        monitor.start()
-        
-        // Connect monitor to the global bus
-        scope.launchInMonitor(monitor)
-    }
-
-    private fun CoroutineScope.launchInMonitor(monitor: ForegroundMonitor) {
-        monitor.events
-            .onEach { event ->
-                ForegroundEventBus.tryEmit(event)
-            }
-            .launchIn(this)
+        // INITIAL CHECK: Capture the current app immediately on start
+        detector.currentForeground()?.let { pkg ->
+            handleEvent(ForegroundEvent(packageName = pkg, source = ForegroundEvent.Source.SYSTEM))
+        }
     }
 
     /**
-     * Stops the locking engine.
+     * Stops monitoring.
      */
     fun stop() {
-        LockerLogger.i(LockerLogger.Event.STATE_TRANSITION, "Engine stopping monitoring")
         monitoringJob?.cancel()
-        monitor.stop()
+        detector.stop()
     }
 
-    /**
-     * Manually triggers a check for the current foreground application.
-     */
-    fun recheck() {
-        monitor.currentForeground()?.let { packageName ->
-            LockerLogger.d(LockerLogger.Event.STATE_TRANSITION, "Engine manual recheck: $packageName")
-            ForegroundEventBus.tryEmit(ForegroundEvent(
-                packageName = packageName,
-                source = ForegroundEvent.Source.SYSTEM
-            ))
-        }
-    }
-
-    /**
-     * Called when a lock screen is dismissed.
-     */
-    fun onLockDismissed() {
-        // No-op in new deterministic model as state is managed by sessions
-    }
-
-    private fun handleForegroundEvent(event: ForegroundEvent) {
-        val packageName = event.packageName
+    private fun handleEvent(event: ForegroundEvent) {
+        val currentPackage = event.packageName
         
-        // 1. Identify our own LockActivity - Never lock it
-        val isOurLock = packageName == "com.aitoyz.mapplock" && event.activityName?.contains("LockActivity") == true
-        if (isOurLock) return
-
-        // 2. Ignore system packages
-        val isLauncher = systemAppFilter.isLauncher(packageName)
-        val isKeyboard = systemAppFilter.isKeyboard(packageName)
-        val isTransient = systemAppFilter.isTransientSystemOverlay(packageName)
-        val isRecents = systemAppFilter.isRecents(packageName)
-        val isSystemUI = systemAppFilter.isSystemUI(packageName)
-        val isOurApp = packageName == "com.aitoyz.mapplock"
-
-        val isIgnored = isLauncher || isKeyboard || isTransient || isRecents || isSystemUI || isOurApp
-
-        if (isIgnored) {
-            LockerLogger.v(LockerLogger.Event.LOCK_SKIPPED, "Ignoring system event for $packageName")
-            return
-        }
-
-        // 3. Transition Logic
-        val oldPkg = lastPackage
-        if (packageName != oldPkg) {
-            LockerLogger.i(LockerLogger.Event.STATE_TRANSITION, "[TRANSITION] ${oldPkg ?: "None"} -> $packageName")
+        try {
+            LockerLogger.v(LockerLogger.Event.STATE_TRANSITION, "[EVENT] Processing: $currentPackage from ${event.source}")
             
-            // Mark the previous app as backgrounded
-            oldPkg?.let { UnlockSessionManager.onBackground(it) }
-            
-            // Mark the new app as foreground
-            UnlockSessionManager.onForeground(packageName)
-            
-            lastPackage = packageName
-        }
+            // 1. Identify and filter system states
+            val isLauncher = systemAppFilter.isLauncher(currentPackage)
+            val isKeyboard = systemAppFilter.isKeyboard(currentPackage)
+            val isTransient = systemAppFilter.isTransientSystemOverlay(currentPackage)
+            val isRecents = systemAppFilter.isRecents(currentPackage)
+            val isSystemUI = systemAppFilter.isSystemUI(currentPackage)
 
-        // 4. Enrich the event with flags
-        val enrichedEvent = event.copy(
-            isLauncher = isLauncher,
-            isKeyboard = isKeyboard,
-            isSystem = isTransient || isRecents || isSystemUI
-        )
+            val enrichedEvent = event.copy(
+                isLauncher = isLauncher,
+                isKeyboard = isKeyboard,
+                isSystem = isTransient || isRecents || isSystemUI
+            )
 
-        // 5. Lock Decision
-        if (decisionEngine.shouldLock(enrichedEvent)) {
-            LockerLogger.i(LockerLogger.Event.LOCK_DETECTED, "[AUTH_REQUIRED] $packageName")
-            onTriggerOverlay(packageName)
+            // 2. Transition Detection: Track EVERY package change to catch Recents -> App moves
+            if (currentPackage != previousPackage) {
+                LockerLogger.i(LockerLogger.Event.STATE_TRANSITION, "[TRANSITION] ${previousPackage ?: "None"} -> $currentPackage")
+                
+                // Only real apps affect the SessionManager's state logic
+                val isCurrentIgnored = enrichedEvent.isSystem || enrichedEvent.isLauncher || enrichedEvent.isKeyboard
+                val wasPreviousIgnored = previousPackage?.let { 
+                    systemAppFilter.isLauncher(it) || systemAppFilter.isKeyboard(it) || systemAppFilter.isTransientSystemOverlay(it) || systemAppFilter.isRecents(it) || systemAppFilter.isSystemUI(it)
+                } ?: true
+
+                if (!isCurrentIgnored) {
+                    SessionManager.onForeground(currentPackage)
+                }
+                if (!wasPreviousIgnored) {
+                    SessionManager.onBackground(previousPackage!!)
+                }
+                
+                previousPackage = currentPackage
+            } else {
+                // If it's the same package, only update foreground timestamp if it's a real app
+                if (!enrichedEvent.isSystem && !enrichedEvent.isLauncher && !enrichedEvent.isKeyboard) {
+                    SessionManager.onForeground(currentPackage)
+                }
+            }
+
+            // 3. Locking Decision
+            if (decisionEngine.shouldLock(enrichedEvent)) {
+                LockerLogger.i(LockerLogger.Event.LOCK_DETECTED, "[LOCK] Launching lock activity for $currentPackage")
+                launcher.launch(currentPackage)
+            }
+        } catch (e: Throwable) {
+            LockerLogger.e(LockerLogger.Event.ERROR, "[CRASH] Engine handleEvent failed", e)
         }
     }
 }

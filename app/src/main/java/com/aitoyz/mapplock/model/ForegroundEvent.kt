@@ -1,12 +1,14 @@
 package com.aitoyz.mapplock.model
 
+import android.os.SystemClock
+
 /**
  * Represents a foreground application event.
  */
 data class ForegroundEvent(
     val packageName: String,
     val activityName: String? = null,
-    val timestamp: Long = System.currentTimeMillis(),
+    val timestamp: Long = SystemClock.elapsedRealtime(),
     val source: Source,
     val isScreenOff: Boolean = false,
     val isLauncher: Boolean = false,

@@ -26,6 +26,7 @@ class LockedAppsRepository(private val context: Context) {
         }
         lockedPackagesCache.clear()
         lockedPackagesCache.addAll(apps)
+        com.aitoyz.mapplock.security.LockerLogger.i(com.aitoyz.mapplock.security.LockerLogger.Event.SERVICE_RESTARTED, "[REWRITE] Repository loaded ${apps.size} locked apps")
     }
 
     /**

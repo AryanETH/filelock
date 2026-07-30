@@ -3,25 +3,21 @@ package com.aitoyz.mapplock.service
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import com.aitoyz.mapplock.R
 import com.aitoyz.mapplock.core.*
 import com.aitoyz.mapplock.repository.LockedAppsRepository
-import com.aitoyz.mapplock.repository.SettingsRepository
 import com.aitoyz.mapplock.security.LockerLogger
-import com.aitoyz.mapplock.security.LockerRepository
-import com.aitoyz.mapplock.LockActivity
 import kotlinx.coroutines.*
 
 /**
- * The high-level service that manages the app locking lifecycle.
- * Now refactored to use the Clean Backend Architecture.
+ * Foreground service that owns the AppLockEngine and manages the lifecycle.
  */
 class AppLockerService : Service() {
 
@@ -34,151 +30,96 @@ class AppLockerService : Service() {
     
     fun notifyLockDismissed() {
         if (::engine.isInitialized) {
-            engine.onLockDismissed()
+            engine.getLauncher().notifyFinished()
         }
     }
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
-    
     private lateinit var engine: AppLockEngine
-    private lateinit var overlayService: OverlayService
-    private lateinit var lockedAppsRepository: LockedAppsRepository
-    private lateinit var sessionManager: UnlockSessionManager
 
     override fun onBind(intent: Intent?): IBinder? = null
 
     private val screenReceiver = object : android.content.BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            when (intent?.action) {
-                Intent.ACTION_SCREEN_OFF -> {
-                    UnlockSessionManager.onScreenOff()
-                    LockerLogger.i(LockerLogger.Event.ACCESSIBILITY_EVENT, "Screen off, clearing sessions")
-                }
-                Intent.ACTION_SCREEN_ON -> {
-                    LockerLogger.i(LockerLogger.Event.STATE_TRANSITION, "Screen on, triggering engine recheck")
-                    engine.recheck()
-                }
+            if (intent?.action == Intent.ACTION_SCREEN_OFF) {
+                SessionManager.clearAll()
             }
         }
     }
 
     override fun onCreate() {
-        startForegroundSafe()
+        startForegroundSafe() // FIRST LINE
         super.onCreate()
         instance = this
         
-        LockerLogger.i(LockerLogger.Event.SERVICE_RESTARTED, "Monitor Service Starting")
-        
-        lockedAppsRepository = LockedAppsRepository(this)
-        val settingsRepository = SettingsRepository(this)
-        sessionManager = UnlockSessionManager
-        
-        val monitor = BackendSelector.select(this, serviceScope)
-        val decisionEngine = LockDecisionEngine(lockedAppsRepository, sessionManager)
-        val systemAppFilter = SystemAppFilter(this)
-        
-        overlayService = OverlayService(this, settingsRepository, serviceScope)
-        
-        engine = AppLockEngine(
-            scope = serviceScope,
-            monitor = monitor,
-            decisionEngine = decisionEngine,
-            systemAppFilter = systemAppFilter,
-            onTriggerOverlay = { packageName ->
-                // Phase 5: Instant Relock - Trigger LockActivity immediately
-                triggerLockActivity(packageName)
+        LockerLogger.i(LockerLogger.Event.STATE_TRANSITION, "[REWRITE] Service started and foregrounded")
+
+        serviceScope.launch(Dispatchers.Default) {
+            try {
+                LockerLogger.i(LockerLogger.Event.STATE_TRANSITION, "[REWRITE] Async init starting")
+                
+                val lockedApps = LockedAppsRepository(this@AppLockerService)
+                val detector = BackendSelector.select(this@AppLockerService, serviceScope)
+                val decisionEngine = LockDecisionEngine(packageName, lockedApps)
+                val launcher = LockLauncher(this@AppLockerService)
+                val systemFilter = SystemAppFilter(this@AppLockerService)
+                
+                // Periodic cache refresh for system apps
+                serviceScope.launch(Dispatchers.Default) {
+                    while (isActive) {
+                        delay(60_000) // Every 60 seconds
+                        systemFilter.refreshCaches()
+                    }
+                }
+                
+                engine = AppLockEngine(
+                    scope = serviceScope,
+                    detector = detector,
+                    decisionEngine = decisionEngine,
+                    launcher = launcher,
+                    systemAppFilter = systemFilter
+                )
+
+                withContext(Dispatchers.Main) {
+                    registerReceiver(screenReceiver, IntentFilter(Intent.ACTION_SCREEN_OFF))
+                    engine.start()
+                    LockerLogger.i(LockerLogger.Event.STATE_TRANSITION, "[REWRITE] Engine active")
+                }
+            } catch (e: Exception) {
+                LockerLogger.e(LockerLogger.Event.ERROR, "[REWRITE] Init failed", e)
             }
-        )
-
-        val filter = android.content.IntentFilter().apply {
-            addAction(Intent.ACTION_SCREEN_OFF)
-            addAction(Intent.ACTION_SCREEN_ON)
         }
-        
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(screenReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
-        } else {
-            registerReceiver(screenReceiver, filter)
-        }
-
-        engine.start()
-        
-        LockerLogger.i(LockerLogger.Event.SERVICE_RESTARTED, "Monitor Service Ready")
     }
 
     private fun startForegroundSafe() {
-        try {
-            val notification = createNotification()
-            if (Build.VERSION.SDK_INT >= 34) {
-                startForeground(1001, notification, android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
-            } else {
-                startForeground(1001, notification)
-            }
-        } catch (e: Exception) {
-            LockerLogger.e(LockerLogger.Event.ERROR, "Foreground start failed", e)
-        }
-    }
-
-    private fun triggerLockActivity(targetPackage: String, requestBiometric: Boolean = false) {
-        try {
-            val lockIntent = Intent(this, LockActivity::class.java).apply {
-                putExtra("target_package", targetPackage)
-                putExtra("request_biometric", requestBiometric)
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or 
-                         Intent.FLAG_ACTIVITY_SINGLE_TOP or
-                         Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS or
-                         Intent.FLAG_ACTIVITY_NO_ANIMATION)
-            }
-            
-            try {
-                startActivity(lockIntent)
-                LockerLogger.d(LockerLogger.Event.LOCK_ACTIVITY_STARTED, "startActivity for $targetPackage")
-            } catch (e: Exception) {
-                val pendingIntent = PendingIntent.getActivity(this, 0, lockIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-                pendingIntent.send()
-                LockerLogger.d(LockerLogger.Event.LOCK_ACTIVITY_STARTED, "PendingIntent for $targetPackage")
-            }
-        } catch (e: Exception) {
-            LockerLogger.e(LockerLogger.Event.ERROR, "Failed to trigger LockActivity", e)
-        }
-    }
-
-    private fun createNotification(): Notification {
-        val channelId = "security_monitoring_channel"
-        val channelName = getString(R.string.app_name)
+        LockerLogger.i(LockerLogger.Event.STATE_TRANSITION, "[REWRITE] Setting up notification")
+        val channelId = "security_monitoring"
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_LOW).apply {
-                description = "Keeps the app lock active in the background"
-                setShowBadge(false)
-            }
+            val channel = NotificationChannel(channelId, "Security Monitor", NotificationManager.IMPORTANCE_LOW)
             getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
         }
 
-        return NotificationCompat.Builder(this, channelId)
-            .setContentTitle(channelName)
-            .setContentText(getString(R.string.bg_active_desc))
+        val notification = NotificationCompat.Builder(this, channelId)
+            .setContentTitle(getString(R.string.app_name))
+            .setContentText("Security monitoring is active")
             .setSmallIcon(R.mipmap.ic_launcher)
             .setPriority(NotificationCompat.PRIORITY_LOW)
-            .setOngoing(true)
             .build()
+
+        if (Build.VERSION.SDK_INT >= 34) {
+            startForeground(1001, notification, android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
+        } else {
+            startForeground(1001, notification)
+        }
     }
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        if (intent?.getBooleanExtra("refresh_locked_apps", false) == true) {
-            lockedAppsRepository.refreshCache()
-        }
-        startForegroundSafe()
-        return START_STICKY
-    }
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int = START_STICKY
 
     override fun onDestroy() {
-        try {
-            engine.stop()
-            overlayService.onDestroy()
-            unregisterReceiver(screenReceiver)
-            serviceScope.cancel()
-            instance = null
-        } catch (e: Exception) {}
+        engine.stop()
+        unregisterReceiver(screenReceiver)
+        serviceScope.cancel()
+        instance = null
         super.onDestroy()
     }
 }

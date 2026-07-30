@@ -32,7 +32,7 @@ import com.aitoyz.mapplock.ui.theme.MapplockTheme
 import com.aitoyz.mapplock.ui.theme.CyberBlack
 import com.aitoyz.mapplock.security.*
 import com.aitoyz.mapplock.ui.AuthUI
-import com.aitoyz.mapplock.core.UnlockSessionManager
+import com.aitoyz.mapplock.core.SessionManager
 import android.content.Context
 import android.content.Intent
 import androidx.lifecycle.lifecycleScope
@@ -73,12 +73,14 @@ class LockActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         try {
+            LockerLogger.i(LockerLogger.Event.LOCK_ACTIVITY_STARTED, "[LOCK_UI] onCreate entered")
             enableEdgeToEdge()
             super.onCreate(savedInstanceState)
+            
+            LockerLogger.d(LockerLogger.Event.LOCK_ACTIVITY_STARTED, "[LOCK_UI] Initializing Repository")
             repository = LockerRepository.getInstance(this)
             
-            LockerLogger.d(LockerLogger.Event.LOCK_ACTIVITY_STARTED, "LockActivity Created")
-            
+            LockerLogger.d(LockerLogger.Event.LOCK_ACTIVITY_STARTED, "[LOCK_UI] Setting up Window")
             // 1. Immersive Full Screen Setup
             WindowCompat.setDecorFitsSystemWindows(window, false)
             window.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(android.graphics.Color.BLACK))
@@ -107,9 +109,15 @@ class LockActivity : AppCompatActivity() {
 
             val prefs = SecureManager.getInstance(this).prefs
             
-            val isIntruderEnabled = prefs.getBoolean("intruder_capture_enabled", false)
+            LockerLogger.d(LockerLogger.Event.LOCK_ACTIVITY_STARTED, "[LOCK_UI] Checking Intruder Settings")
+            val isIntruderEnabled = try { prefs.getBoolean("intruder_capture_enabled", false) } catch (e: Exception) { false }
             if (isIntruderEnabled) {
-                IntruderManager.getInstance(this).startSession(this)
+                LockerLogger.i(LockerLogger.Event.LOCK_ACTIVITY_STARTED, "[LOCK_UI] Starting Intruder Session")
+                try {
+                    IntruderManager.getInstance(this).startSession(this)
+                } catch (e: Throwable) {
+                    LockerLogger.e(LockerLogger.Event.ERROR, "[LOCK_UI] Intruder start FAILED", e)
+                }
             }
 
             onBackPressedDispatcher.addCallback(this) {
@@ -122,13 +130,13 @@ class LockActivity : AppCompatActivity() {
                 finish()
             }
 
+            LockerLogger.d(LockerLogger.Event.LOCK_ACTIVITY_STARTED, "[LOCK_UI] Setting Content")
             setContent {
                 val isDark = remember { prefs.getBoolean("is_dark_mode", false) }
                 val currentTargetPackage by targetPackageState
                 
-                // No-op - deterministic model handles this via events
+                // No additional state required for deterministic engine
                 LaunchedEffect(currentTargetPackage) {
-                    delay(300)
                     repository.updateState(LockerRepository.LockerState.LOCK_ACTIVITY_VISIBLE, currentTargetPackage)
                 }
 
@@ -162,16 +170,14 @@ class LockActivity : AppCompatActivity() {
             isUnlocked = true
             LockerLogger.i(LockerLogger.Event.AUTH_SUCCESS, "[AUTH_SUCCESS] $packageName")
             
-            // 1. Mark as authenticated
-            UnlockSessionManager.markAuthenticated(packageName)
+            // 1. Mark session as authenticated
+            SessionManager.unlock(packageName)
             
-            // 2. Update repository state (UI)
+            // 2. Clear UI state
             repository.updateState(LockerRepository.LockerState.AUTHENTICATED, packageName)
             
-            // 3. Finish this activity to reveal the underlying app
+            // 3. Return to the protected app
             finish()
-            
-            // Ensure no transition animation flickers
             overridePendingTransition(0, 0)
         }
     }

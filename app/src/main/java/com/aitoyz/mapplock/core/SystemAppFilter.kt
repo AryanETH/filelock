@@ -10,29 +10,46 @@ import android.view.inputmethod.InputMethodManager
  */
 class SystemAppFilter(private val context: Context) {
     private val packageManager: PackageManager = context.packageManager
+    
+    // CACHE: Speed up detection by avoiding redundant IPC calls
+    private var cachedLaunchers = setOf<String>()
+    private var cachedKeyboards = setOf<String>()
+    
+    init {
+        // Initial sync refresh to ensure we have data immediately
+        refreshCaches()
+    }
+
+    /**
+     * Refreshes caches. Should ideally be called from a background thread.
+     */
+    fun refreshCaches() {
+        try {
+            // 1. Refresh Launchers
+            val intent = Intent(Intent.ACTION_MAIN).apply { addCategory(Intent.CATEGORY_HOME) }
+            val launchers = packageManager.queryIntentActivities(intent, PackageManager.MATCH_ALL)
+            cachedLaunchers = launchers.map { it.activityInfo.packageName }.toSet()
+
+            // 2. Refresh Keyboards
+            val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            cachedKeyboards = imm.inputMethodList.map { it.packageName }.toSet()
+        } catch (e: Throwable) {
+            // Fallback to empty if IPC fails
+        }
+    }
 
     /**
      * Checks if the package is a launcher.
      */
     fun isLauncher(packageName: String): Boolean {
-        val intent = Intent(Intent.ACTION_MAIN).apply {
-            addCategory(Intent.CATEGORY_HOME)
-        }
-        val resolveInfo = packageManager.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY)
-        if (resolveInfo?.activityInfo?.packageName == packageName) return true
-        
-        // Check for all launchers in case the default is not set or multiple exist
-        val launchers = packageManager.queryIntentActivities(intent, PackageManager.MATCH_ALL)
-        return launchers.any { it.activityInfo.packageName == packageName }
+        return cachedLaunchers.contains(packageName)
     }
 
     /**
      * Checks if the package is a keyboard (Input Method).
      */
     fun isKeyboard(packageName: String): Boolean {
-        val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-        val list = imm.inputMethodList
-        return list.any { it.packageName == packageName }
+        return cachedKeyboards.contains(packageName)
     }
 
     /**
@@ -45,6 +62,9 @@ class SystemAppFilter(private val context: Context) {
                packageName == "com.google.android.packageinstaller" ||
                packageName == "com.android.packageinstaller" ||
                packageName == "com.google.android.permissioncontroller" ||
+               packageName == "com.google.android.gms" || // GMS Overlays
+               packageName == "com.google.android.photopicker" || // Android Photo Picker
+               packageName == "com.android.providers.media.module" || // Media provider system task
                packageName == "android" // System process
     }
 
@@ -52,7 +72,8 @@ class SystemAppFilter(private val context: Context) {
      * Checks if the package is the System UI (notification shade, status bar).
      */
     fun isSystemUI(packageName: String): Boolean {
-        return packageName == "com.android.systemui"
+        return packageName == "com.android.systemui" || 
+               packageName == "com.android.settings.intelligence"
     }
 
     /**
@@ -60,13 +81,16 @@ class SystemAppFilter(private val context: Context) {
      */
     fun isSystemUtility(packageName: String): Boolean {
         return packageName == "com.android.settings" ||
-               packageName == "com.android.vending" // Play Store
+               packageName == "com.android.vending" ||
+               packageName == "com.google.android.gms"
     }
     
     /**
      * Checks if the package is likely the "Recents" or "Overview" screen.
      */
     fun isRecents(packageName: String): Boolean {
-        return packageName.contains("quickstep") || packageName.contains("recents")
+        return packageName.contains("quickstep") || 
+               packageName.contains("recents") || 
+               packageName == "com.android.systemui" // Often handles recents
     }
 }

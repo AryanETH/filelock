@@ -1,7 +1,7 @@
 package com.aitoyz.mapplock.security
 
 import android.content.Context
-import com.aitoyz.mapplock.core.UnlockSessionManager
+import com.aitoyz.mapplock.core.SessionManager
 import com.aitoyz.mapplock.core.SystemAppFilter
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,7 +13,7 @@ import kotlinx.coroutines.sync.withLock
 
 /**
  * Single source of truth for the App Locker state.
- * Refactored to use UnlockSessionManager for sessions and SystemAppFilter for package checks.
+ * Refactored to use SessionManager for sessions and SystemAppFilter for package checks.
  */
 class LockerRepository private constructor(private val context: Context) {
 
@@ -115,26 +115,23 @@ class LockerRepository private constructor(private val context: Context) {
     }
 
     fun isSessionActive(packageName: String): Boolean {
-        if (_state.value == LockerState.UNLOCKED_SESSION && _currentTarget.value == packageName) {
-            return true
-        }
-        return UnlockSessionManager.isUnlocked(packageName)
+        return SessionManager.isUnlocked(packageName)
     }
 
     fun startSession(packageName: String) {
-        UnlockSessionManager.markAuthenticated(packageName)
+        SessionManager.unlock(packageName)
     }
 
     fun endSession(packageName: String) {
-        UnlockSessionManager.lockApp(packageName)
+        SessionManager.lock(packageName)
     }
 
     fun clearAllSessions() {
-        UnlockSessionManager.clearAll()
+        SessionManager.clearAll()
     }
 
     fun loadSessions() {
-        // UnlockSessionManager doesn't currently support loading sessions from disk,
+        // SessionManager doesn't currently support loading sessions from disk,
         // but we could add it if needed.
     }
 

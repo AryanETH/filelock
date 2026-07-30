@@ -193,6 +193,7 @@ class MainActivity : AppCompatActivity() {
 
                 LaunchedEffect(Unit) {
                     viewModel.checkPermissions()
+                    com.aitoyz.mapplock.security.LockerLogger.i(com.aitoyz.mapplock.security.LockerLogger.Event.STATE_TRANSITION, "[REWRITE] MainActivity requesting service")
                     val serviceIntent = Intent(context, com.aitoyz.mapplock.service.AppLockerService::class.java)
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         context.startForegroundService(serviceIntent)

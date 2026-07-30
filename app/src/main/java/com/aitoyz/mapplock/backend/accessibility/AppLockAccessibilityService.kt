@@ -11,25 +11,32 @@ import com.aitoyz.mapplock.security.LockerLogger
  */
 class AppLockAccessibilityService : AccessibilityService() {
 
+    private var lastPackage: String? = null
+
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         if (event == null) return
 
-        when (event.eventType) {
-            AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED,
-            AccessibilityEvent.TYPE_WINDOWS_CHANGED,
-            AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED -> {
-                val packageName = event.packageName?.toString() ?: return
-                
-                // We emit everything to the bus; the Engine or DecisionEngine will filter it.
-                val foregroundEvent = ForegroundEvent(
-                    packageName = packageName,
-                    activityName = event.className?.toString(),
-                    source = ForegroundEvent.Source.ACCESSIBILITY
-                )
-                
-                ForegroundEventBus.tryEmit(foregroundEvent)
-                LockerLogger.v(LockerLogger.Event.ACCESSIBILITY_EVENT, "Accessibility event: $packageName")
+        try {
+            when (event.eventType) {
+                AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED -> {
+                    val packageName = event.packageName?.toString() ?: return
+                    
+                    if (packageName != lastPackage) {
+                        LockerLogger.i(LockerLogger.Event.STATE_TRANSITION, "[REWRITE] DETECTED (Accessibility): $packageName")
+                        
+                        val foregroundEvent = ForegroundEvent(
+                            packageName = packageName,
+                            activityName = event.className?.toString(),
+                            source = ForegroundEvent.Source.ACCESSIBILITY
+                        )
+                        
+                        ForegroundEventBus.tryEmit(foregroundEvent)
+                        lastPackage = packageName
+                    }
+                }
             }
+        } catch (e: Throwable) {
+            LockerLogger.e(LockerLogger.Event.ERROR, "[REWRITE] Accessibility Processing FAILED", e)
         }
     }
 

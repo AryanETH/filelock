@@ -1,8 +1,6 @@
 package com.aitoyz.mapplock.core
 
 import android.content.Context
-import android.app.AppOpsManager
-import android.os.Process
 import com.aitoyz.mapplock.backend.usage.UsageStatsMonitor
 import com.aitoyz.mapplock.backend.shizuku.ShizukuMonitor
 import com.aitoyz.mapplock.backend.accessibility.AccessibilityMonitor
@@ -19,16 +17,16 @@ object BackendSelector {
         AUTO
     }
 
-    fun select(context: Context, scope: kotlinx.coroutines.CoroutineScope): ForegroundMonitor {
+    fun select(context: Context, scope: kotlinx.coroutines.CoroutineScope): ForegroundDetector {
         val prefs = com.aitoyz.mapplock.security.SecureManager.getInstance(context).prefs
         val modeName = prefs.getString("monitoring_mode", Mode.AUTO.name) ?: Mode.AUTO.name
         val mode = try { Mode.valueOf(modeName) } catch (e: Exception) { Mode.AUTO }
 
         return when (mode) {
-            Mode.USAGE_STATS -> UsageStatsMonitor(context)
+            Mode.USAGE_STATS -> UsageStatsMonitor(context, scope)
             Mode.SHIZUKU -> ShizukuMonitor()
             Mode.ACCESSIBILITY -> AccessibilityMonitor()
-            Mode.AUTO -> SmartMonitor(context, scope)
+            Mode.AUTO -> BackendManager(context, scope)
         }
     }
 }

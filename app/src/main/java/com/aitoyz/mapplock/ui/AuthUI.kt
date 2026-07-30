@@ -211,7 +211,13 @@ fun AuthUI(
         try { pm.getApplicationIcon(targetPackage) } catch (e: Exception) { null }
     }
     val appLabel = remember(targetPackage) {
-        try { pm.getApplicationLabel(pm.getApplicationInfo(targetPackage, 0)).toString() } catch (e: Exception) { "" }
+        try { 
+            pm.getApplicationLabel(pm.getApplicationInfo(targetPackage, 0)).toString() 
+        } catch (e: PackageManager.NameNotFoundException) {
+            "App"
+        } catch (e: Exception) {
+            ""
+        }
     }
 
     if (relevantVaultId == null) {

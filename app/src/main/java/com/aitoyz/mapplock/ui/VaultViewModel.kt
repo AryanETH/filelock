@@ -498,7 +498,16 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun ensureMainActivityEnabled() {
         val context = getApplication<Application>()
-        context.packageManager.setComponentEnabledSetting(ComponentName(context, "com.aitoyz.mapplock.MainActivity"), PackageManager.COMPONENT_ENABLED_STATE_ENABLED, PackageManager.DONT_KILL_APP)
+        val componentName = ComponentName(context, com.aitoyz.mapplock.MainActivity::class.java)
+        try {
+            context.packageManager.setComponentEnabledSetting(
+                componentName,
+                PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                PackageManager.DONT_KILL_APP
+            )
+        } catch (e: Exception) {
+            android.util.Log.e("VaultViewModel", "Failed to enable MainActivity", e)
+        }
     }
 
     private fun hasBatteryOptimizationPermission(context: Context): Boolean {

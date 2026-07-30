@@ -2680,7 +2680,13 @@ fun BackupManagementDialog(
                                         AppMiniIcon(pkg)
                                         Spacer(Modifier.width(16.dp))
                                         Text(
-                                            appInfo?.appName ?: try { context.packageManager.getApplicationLabel(context.packageManager.getApplicationInfo(pkg, 0)).toString() } catch (_: Exception) { "App" },
+                                            appInfo?.appName ?: try { 
+                                                context.packageManager.getApplicationLabel(context.packageManager.getApplicationInfo(pkg, 0)).toString() 
+                                            } catch (_: android.content.pm.PackageManager.NameNotFoundException) {
+                                                "App"
+                                            } catch (_: Exception) { 
+                                                "App" 
+                                            },
                                             color = if (state.isDarkMode) Color.White else Color.Black,
                                             fontWeight = FontWeight.Medium,
                                             fontSize = 15.sp,
@@ -2747,7 +2753,13 @@ fun BackupManagementDialog(
 fun AppMiniIcon(packageName: String) {
     val context = LocalContext.current
     val icon = remember(packageName) {
-        try { context.packageManager.getApplicationIcon(packageName).toBitmap() } catch (e: Exception) { null }
+        try { 
+            context.packageManager.getApplicationIcon(packageName).toBitmap() 
+        } catch (e: android.content.pm.PackageManager.NameNotFoundException) {
+            null
+        } catch (e: Exception) { 
+            null 
+        }
     }
     if (icon != null) {
         Image(
