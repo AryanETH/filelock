@@ -3,6 +3,7 @@ package com.aitoyz.mapplock.repository
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.UserManager
+import androidx.core.content.edit
 import com.aitoyz.mapplock.security.SecureManager
 import java.util.concurrent.ConcurrentHashMap
 
@@ -41,7 +42,7 @@ class LockedAppsRepository(private val context: Context) {
 
             // 2. Sync to Device Protected Storage for Boot persistence
             val protectedPrefs = SecureManager.getDeviceProtectedPrefs(context)
-            protectedPrefs.edit().putStringSet("locked_packages_boot_cache", apps).apply()
+            protectedPrefs.edit { putStringSet("locked_packages_boot_cache", apps) }
             
             com.aitoyz.mapplock.security.LockerLogger.d(com.aitoyz.mapplock.security.LockerLogger.Event.SERVICE_RESTARTED, "[REWRITE] Repository synced ${apps.size} apps to boot cache")
         } else {
@@ -61,12 +62,5 @@ class LockedAppsRepository(private val context: Context) {
      */
     fun isLocked(packageName: String): Boolean {
         return lockedPackagesCache.contains(packageName)
-    }
-
-    /**
-     * Returns the set of all locked package names.
-     */
-    fun getLockedPackages(): Set<String> {
-        return lockedPackagesCache.toSet()
     }
 }

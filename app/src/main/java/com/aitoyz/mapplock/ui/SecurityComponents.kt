@@ -150,7 +150,7 @@ fun CompactPinPad(
 
         val surfaceColor = if (isGlassMode) Color.Transparent else (if (isLightTheme) Color.White else CyberDarkBlue)
         val textColor = if (isGlassMode) Color.White else (if (isLightTheme) LightTextPrimary else Color.White)
-        val borderColor = if (isGlassMode) Color.Transparent else (if (isLightTheme) LightOutline.copy(alpha = 0.2f) else Color.White.copy(alpha = 0.1f))
+        val borderColor = if (isGlassMode) Color.Transparent else (if (isLightTheme) LightOutline.copy(alpha = 0.2f) else Color.White.copy(alpha = 0.4f))
 
         Column(
             modifier = Modifier.fillMaxWidth(),
@@ -340,7 +340,7 @@ fun CompactPatternGrid(
         val dotRadius = (gridSize.value / 22).dp
         val lineWidth = (gridSize.value / 45).dp
 
-        val inactiveDotColor = if (isGlassMode) Color.White.copy(alpha = 0.35f) else (if (isLightTheme) LightOutline.copy(alpha = 0.3f) else Color.White.copy(alpha = 0.1f))
+        val inactiveDotColor = if (isGlassMode) Color.White.copy(alpha = 0.35f) else (if (isLightTheme) LightOutline.copy(alpha = 0.3f) else Color.White.copy(alpha = 0.4f))
         val activeDotColor = CyberBlue
 
         Column(horizontalAlignment = Alignment.CenterHorizontally) {

@@ -1,8 +1,6 @@
 package com.aitoyz.mapplock.security
 
 import android.content.Context
-import com.aitoyz.mapplock.core.SessionManager
-import com.aitoyz.mapplock.core.SystemAppFilter
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -11,30 +9,26 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
+import kotlin.time.Duration.Companion.seconds
+
 /**
  * Single source of truth for the App Locker state.
  * Refactored to use SessionManager for sessions and SystemAppFilter for package checks.
  */
-class LockerRepository private constructor(private val context: Context) {
+class LockerRepository private constructor(context: Context) {
+
+    private val applicationContext = context.applicationContext
 
     enum class LockerState {
         IDLE,                   // No locked app in foreground
-        DETECTED,               // Locked app detected, preparing overlay
-        OVERLAY_SHOWING,        // Black overlay is visible to user
         LOCK_ACTIVITY_VISIBLE,  // PIN/Pattern activity has confirmed it is drawn
-        AUTHENTICATED,          // User has provided correct credentials
-        RETURNING,              // Closing lock activity and returning to app
-        UNLOCKED_SESSION        // User is currently using the app happily
+        AUTHENTICATED           // User has provided correct credentials
     }
 
     private val _state = MutableStateFlow(LockerState.IDLE)
     val state: StateFlow<LockerState> = _state.asStateFlow()
 
-    private val _currentTarget = MutableStateFlow<String?>(null)
-    val currentTarget: StateFlow<String?> = _currentTarget.asStateFlow()
-
     private val stateMutex = Mutex()
-    private val systemAppFilter = SystemAppFilter(context)
     private val repositoryScope = CoroutineScope(Dispatchers.Main.immediate + SupervisorJob())
     
     // Caches to minimize system calls
@@ -42,10 +36,10 @@ class LockerRepository private constructor(private val context: Context) {
     private var isMasterStealthEnabled = false
 
     fun isDarkMode() = flow {
-        val prefs = SecureManager.getInstance(context).prefs
+        val prefs = SecureManager.getInstance(applicationContext).prefs
         while (true) {
             emit(prefs.getBoolean("is_dark_mode", false))
-            delay(2000)
+            delay(2.seconds)
         }
     }
 
@@ -69,28 +63,17 @@ class LockerRepository private constructor(private val context: Context) {
             
             // ALLOW sideways transitions for different packages, or if resetting to IDLE
             if (currentState.ordinal > newState.ordinal && newState != LockerState.IDLE) {
-                // EXCEPTION: If the package has changed, we MUST allow the transition to re-lock
-                if (packageName != null && packageName != _currentTarget.value) {
-                    LockerLogger.d(LockerLogger.Event.STATE_TRANSITION, 
-                        "Package changed, forcing transition: $currentState -> $newState")
-                } else {
-                    LockerLogger.d(LockerLogger.Event.STATE_TRANSITION, 
-                        "Transition Ignored (Backward): $currentState -> $newState")
-                    return@withLock
-                }
+                LockerLogger.d(LockerLogger.Event.STATE_TRANSITION, 
+                    "Transition Ignored (Backward): $currentState -> $newState")
+                return@withLock
             }
 
-            if (currentState == newState && (packageName == null || _currentTarget.value == packageName)) return@withLock
+            if (currentState == newState) return@withLock
             
             LockerLogger.d(LockerLogger.Event.STATE_TRANSITION, 
-                "Transition: $currentState -> $newState for package: ${packageName ?: _currentTarget.value}")
+                "Transition: $currentState -> $newState for package: ${packageName ?: "unknown"}")
             
             _state.value = newState
-            packageName?.let { _currentTarget.value = it }
-            
-            if (newState == LockerState.IDLE) {
-                _currentTarget.value = null
-            }
         }
     }
 
@@ -99,14 +82,13 @@ class LockerRepository private constructor(private val context: Context) {
             stateMutex.withLock {
                 LockerLogger.d(LockerLogger.Event.STATE_TRANSITION, "Forcing state reset to IDLE")
                 _state.value = LockerState.IDLE
-                _currentTarget.value = null
             }
         }
     }
 
     fun refreshLockedPackages() {
         try {
-            val prefs = SecureManager.getInstance(context).prefs
+            val prefs = SecureManager.getInstance(applicationContext).prefs
             val allVaultIds = prefs.getStringSet("vault_ids", emptySet()) ?: emptySet()
             val apps = mutableSetOf<String>()
             allVaultIds.forEach { id ->
@@ -118,42 +100,5 @@ class LockerRepository private constructor(private val context: Context) {
         } catch (e: Exception) {
             LockerLogger.e(LockerLogger.Event.ERROR, "Failed to refresh locked packages", e)
         }
-    }
-
-    fun isAppLocked(packageName: String): Boolean {
-        if (lockedPackagesCache.contains(packageName)) return true
-        
-        if (isMasterStealthEnabled) {
-            if (packageName == "com.android.packageinstaller" || packageName == "com.google.android.packageinstaller") {
-                return true
-            }
-        }
-        
-        return false
-    }
-
-    fun isSessionActive(packageName: String): Boolean {
-        return SessionManager.isUnlocked(packageName)
-    }
-
-    fun startSession(packageName: String) {
-        SessionManager.unlock(packageName)
-    }
-
-    fun endSession(packageName: String) {
-        SessionManager.lock(packageName)
-    }
-
-    fun clearAllSessions() {
-        SessionManager.clearAll()
-    }
-
-    fun loadSessions() {
-        // SessionManager doesn't currently support loading sessions from disk,
-        // but we could add it if needed.
-    }
-
-    fun isLauncher(packageName: String): Boolean {
-        return systemAppFilter.isLauncher(packageName) || systemAppFilter.isSystemUI(packageName)
     }
 }

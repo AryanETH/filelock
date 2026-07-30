@@ -35,7 +35,6 @@
 
     <!--  🔑 Biometric - Required for Secure Unlock  -->
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
-    <uses-permission android:name="android.permission.USE_FINGERPRINT" />
 
     <!--  🔔 Notifications & Feedback  -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
@@ -218,5 +217,15 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+
+        <!-- WorkManager Foreground Service for Android 14+ support -->
+        <service
+            android:name="androidx.work.impl.foreground.SystemForegroundService"
+            android:foregroundServiceType="specialUse"
+            tools:node="merge">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Watchdog mechanism to ensure app security services remain active" />
+        </service>
     </application>
 </manifest>

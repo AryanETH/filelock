@@ -4,6 +4,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.work.ForegroundInfo
@@ -27,7 +28,12 @@ class LockerWatchdogWorker(context: Context, params: WorkerParameters) : Worker(
             // On Android 12+, we can use setForeground to gain FGS launch exemption
             try {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    setForegroundAsync(createForegroundInfo()).get()
+                    val foregroundInfo = createForegroundInfo()
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                        setForegroundAsync(ForegroundInfo(NOTIFICATION_ID, foregroundInfo.notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)).get()
+                    } else {
+                        setForegroundAsync(foregroundInfo).get()
+                    }
                 }
             } catch (e: Exception) {
                 LockerLogger.e(LockerLogger.Event.ERROR, "Watchdog: Could not elevate to foreground", e)

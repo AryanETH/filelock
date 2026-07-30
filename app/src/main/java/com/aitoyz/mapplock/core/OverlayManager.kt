@@ -21,12 +21,13 @@ object OverlayManager {
     fun show(context: Context) {
         if (isShowing) return
         
+        val appContext = context.applicationContext
         try {
             if (windowManager == null) {
-                windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+                windowManager = appContext.getSystemService(Context.WINDOW_SERVICE) as WindowManager
             }
 
-            overlayView = View(context).apply {
+            overlayView = View(appContext).apply {
                 setBackgroundColor(Color.BLACK)
             }
 
@@ -41,9 +42,12 @@ object OverlayManager {
                 flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
                         WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
                         WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
-                        WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS or
-                        WindowManager.LayoutParams.FLAG_FULLSCREEN
+                        WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
                 
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                    layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+                }
+
                 width = WindowManager.LayoutParams.MATCH_PARENT
                 height = WindowManager.LayoutParams.MATCH_PARENT
                 gravity = Gravity.CENTER

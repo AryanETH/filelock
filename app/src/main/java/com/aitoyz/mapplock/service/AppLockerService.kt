@@ -1,11 +1,8 @@
 package com.aitoyz.mapplock.service
 
-import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
-import android.app.admin.DevicePolicyManager
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
@@ -18,8 +15,8 @@ import com.aitoyz.mapplock.backend.usage.UsageStatsMonitor
 import com.aitoyz.mapplock.core.*
 import com.aitoyz.mapplock.repository.LockedAppsRepository
 import com.aitoyz.mapplock.security.LockerLogger
-import com.aitoyz.mapplock.security.UninstallShieldReceiver
 import kotlinx.coroutines.*
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Foreground service that owns the AppLockEngine and manages the lifecycle.
@@ -71,7 +68,7 @@ class AppLockerService : Service() {
                 // Periodic cache refresh for system apps
                 serviceScope.launch(Dispatchers.Default) {
                     while (isActive) {
-                        delay(60_000)
+                        delay(60.seconds)
                         systemFilter.refreshCaches()
                     }
                 }

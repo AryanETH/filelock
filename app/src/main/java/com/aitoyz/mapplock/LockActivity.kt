@@ -1,63 +1,38 @@
 package com.aitoyz.mapplock
 
-import androidx.activity.enableEdgeToEdge
-import androidx.activity.OnBackPressedCallback
-import androidx.activity.addCallback
-import android.os.Bundle
-import androidx.activity.compose.setContent
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import com.aitoyz.mapplock.ui.theme.CyberDarkBlue
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.material.icons.automirrored.filled.Backspace
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.aitoyz.mapplock.ui.theme.MapplockTheme
-import com.aitoyz.mapplock.ui.theme.CyberBlack
-import com.aitoyz.mapplock.security.*
-import com.aitoyz.mapplock.ui.AuthUI
-import com.aitoyz.mapplock.core.SessionManager
 import android.content.Context
 import android.content.Intent
-import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.delay
-
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Fingerprint
-import androidx.compose.material3.*
+import android.graphics.Color as AndroidColor
+import android.os.Build
+import android.os.Bundle
+import android.view.WindowManager
+import android.widget.Toast
+import androidx.activity.addCallback
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AppCompatActivity
 import androidx.biometric.BiometricPrompt
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Surface
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.core.content.ContextCompat
-import androidx.fragment.app.FragmentActivity
-
+import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import android.view.WindowManager
-import android.graphics.Color as AndroidColor
-import androidx.appcompat.app.AppCompatActivity
-import android.os.Build
-
-import com.aitoyz.mapplock.security.LocaleManager
-import com.aitoyz.mapplock.security.SecurityUtils
-import android.widget.Toast
-import android.util.Log
+import androidx.lifecycle.lifecycleScope
+import com.aitoyz.mapplock.core.SessionManager
+import com.aitoyz.mapplock.security.*
+import com.aitoyz.mapplock.ui.AuthUI
+import com.aitoyz.mapplock.ui.theme.CyberBlack
+import com.aitoyz.mapplock.ui.theme.MapplockTheme
+import kotlinx.coroutines.launch
 
 class LockActivity : AppCompatActivity() {
 
@@ -95,14 +70,11 @@ class LockActivity : AppCompatActivity() {
             LockerLogger.d(LockerLogger.Event.LOCK_ACTIVITY_STARTED, "[LOCK_UI] Setting up Window")
             // 1. Immersive Full Screen Setup
             WindowCompat.setDecorFitsSystemWindows(window, false)
-            window.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(AndroidColor.BLACK))
-            window.statusBarColor = AndroidColor.TRANSPARENT
-            window.navigationBarColor = AndroidColor.TRANSPARENT
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                window.attributes.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
-            }
-
+            
+            // Match CyberBlack for perfect transition
+            val cyberBlackInt = AndroidColor.parseColor("#0A0E14")
+            window.setBackgroundDrawable(cyberBlackInt.toDrawable())
+            
             val controller = WindowCompat.getInsetsController(window, window.decorView)
             controller.hide(WindowInsetsCompat.Type.systemBars())
             controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
@@ -123,8 +95,8 @@ class LockActivity : AppCompatActivity() {
                 LockerLogger.i(LockerLogger.Event.LOCK_ACTIVITY_STARTED, "[LOCK_UI] Starting Intruder Session")
                 try {
                     IntruderManager.getInstance(this).startSession(this)
-                } catch (e: Throwable) {
-                    LockerLogger.e(LockerLogger.Event.ERROR, "[LOCK_UI] Intruder start FAILED", e)
+                } catch (_: Throwable) {
+                    LockerLogger.e(LockerLogger.Event.ERROR, "[LOCK_UI] Intruder start FAILED")
                 }
             }
 
@@ -180,12 +152,20 @@ class LockActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        // Safety check to hide overlay if it somehow persisted
+        com.aitoyz.mapplock.core.OverlayManager.hide()
+
         if (snapshotMode) {
             val currentPkg = targetPackageState.value
             if (SessionManager.isUnlocked(currentPkg)) {
                 LockerLogger.d(LockerLogger.Event.SESSION_ACTIVE, "[SNAPSHOT] App resumed within grace period, finishing cover")
                 finish()
-                overridePendingTransition(0, 0)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                    overrideActivityTransition(OVERRIDE_TRANSITION_CLOSE, 0, 0)
+                } else {
+                    @Suppress("DEPRECATION")
+                    overridePendingTransition(0, 0)
+                }
             } else {
                 LockerLogger.d(LockerLogger.Event.STATE_LOCKED, "[SNAPSHOT] Session expired, switching to Auth UI")
                 snapshotMode = false
@@ -206,7 +186,12 @@ class LockActivity : AppCompatActivity() {
             
             // 3. Return to the protected app
             finish()
-            overridePendingTransition(0, 0)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                overrideActivityTransition(OVERRIDE_TRANSITION_CLOSE, 0, 0)
+            } else {
+                @Suppress("DEPRECATION")
+                overridePendingTransition(0, 0)
+            }
         }
     }
 

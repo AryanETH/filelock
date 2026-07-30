@@ -2,14 +2,14 @@ package com.aitoyz.mapplock.security
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.os.Build
+import androidx.core.content.edit
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
-
 import com.aitoyz.mapplock.model.FileCategory
+import java.io.File
 
 class SecureManager(context: Context) {
-    private val masterKey = MasterKey.Builder(context)
+    private val masterKey = MasterKey.Builder(context, MasterKey.DEFAULT_MASTER_KEY_ALIAS)
         .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
         .build()
 
@@ -21,7 +21,7 @@ class SecureManager(context: Context) {
             EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
             EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
         )
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         // Recovery: If encrypted prefs are corrupted, clear and re-create
         context.getSharedPreferences("secure_vault_prefs", Context.MODE_PRIVATE).edit().clear().apply()
         EncryptedSharedPreferences.create(
@@ -36,7 +36,7 @@ class SecureManager(context: Context) {
     fun saveFileInfo(id: String, name: String, path: String, category: FileCategory, size: Long, thumbPath: String? = null, folderName: String? = null, vaultId: String? = null) {
         val fileIds = (prefs.getStringSet("vault_file_ids", emptySet()) ?: emptySet()).toMutableSet()
         fileIds.add(id)
-        prefs.edit().apply {
+        prefs.edit {
             putStringSet("vault_file_ids", fileIds)
             putString("file_${id}_name", name)
             putString("file_${id}_path", path)
@@ -46,27 +46,12 @@ class SecureManager(context: Context) {
             thumbPath?.let { putString("file_${id}_thumb", it) }
             folderName?.let { putString("file_${id}_folder", it) }
             vaultId?.let { putString("file_${id}_vault_id", it) }
-            apply()
         }
     }
 
-    fun saveSessions(sessions: Map<String, Long>) {
-        val sessionStrings = sessions.map { "${it.key}|${it.value}" }.toSet()
-        prefs.edit().putStringSet("active_sessions", sessionStrings).apply()
-    }
-
-    fun getSessions(): Map<String, Long> {
-        val sessionStrings = prefs.getStringSet("active_sessions", emptySet()) ?: emptySet()
-        return sessionStrings.mapNotNull {
-            val parts = it.split("|")
-            if (parts.size == 2) parts[0] to (parts[1].toLongOrNull() ?: 0L) else null
-        }.toMap()
-    }
-
     fun updateFileCategory(id: String, category: FileCategory) {
-        prefs.edit().apply {
+        prefs.edit {
             putString("file_${id}_category", category.name)
-            apply()
         }
     }
 
@@ -76,14 +61,14 @@ class SecureManager(context: Context) {
             val path = prefs.getString("file_${id}_path", null)
             if (path != null) {
                 try {
-                    val file = java.io.File(path)
+                    val file = File(path)
                     if (file.exists()) file.delete()
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
             }
 
-            prefs.edit().apply {
+            prefs.edit {
                 putStringSet("vault_file_ids", fileIds)
                 remove("file_${id}_name")
                 remove("file_${id}_path")
@@ -92,7 +77,6 @@ class SecureManager(context: Context) {
                 remove("file_${id}_timestamp")
                 remove("file_${id}_thumb")
                 remove("file_${id}_folder")
-                apply()
             }
         }
     }
@@ -112,11 +96,7 @@ class SecureManager(context: Context) {
          * Used for metadata that must be accessible before the user unlocks the phone (Direct Boot).
          */
         fun getDeviceProtectedPrefs(context: Context): SharedPreferences {
-            val deviceContext = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                context.createDeviceProtectedStorageContext()
-            } else {
-                context
-            }
+            val deviceContext = context.createDeviceProtectedStorageContext()
             return deviceContext.getSharedPreferences("device_protected_prefs", Context.MODE_PRIVATE)
         }
     }

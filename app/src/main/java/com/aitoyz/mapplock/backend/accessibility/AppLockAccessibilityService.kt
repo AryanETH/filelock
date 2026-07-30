@@ -75,6 +75,7 @@ class AppLockAccessibilityService : AccessibilityService() {
                     // Route to engine via direct detector
                     directDetector.onPackageChanged(packageName, ForegroundEvent.Source.ACCESSIBILITY)
                 }
+                else -> { /* Ignore other event types */ }
             }
         } catch (e: Throwable) {
             LockerLogger.e(LockerLogger.Event.ERROR, "[REWRITE] Accessibility Processing FAILED", e)
