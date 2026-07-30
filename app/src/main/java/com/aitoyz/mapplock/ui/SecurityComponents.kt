@@ -112,31 +112,6 @@ fun CompactPinPad(
         val keyPadding = (availableWidth / 40).coerceIn(4.dp, 12.dp)
         val fontSize = (keySize.value * 0.35f).sp
 
-        LaunchedEffect(pin) {
-            if (pin.length == 4) {
-                if (correctPin != null) {
-                    delay(300)
-                    if (pin == correctPin) {
-                        HapticHelper.vibrate(context, 1) // Medium on Success
-                        onPinComplete(pin)
-                        pin = ""
-                    } else {
-                        isError = true
-                        HapticHelper.vibrate(context, 2) // Strong on Error
-                        delay(100)
-                        onError?.invoke()
-                        delay(1000)
-                        isError = false
-                        pin = ""
-                    }
-                } else if (autoConfirm) {
-                    delay(300)
-                    HapticHelper.vibrate(context, 1)
-                    onPinComplete(pin)
-                    pin = ""
-                }
-            }
-        }
 
         // Apple-style Material Tinting
         val surfaceBrush = if (isGlassMode) Brush.verticalGradient(
