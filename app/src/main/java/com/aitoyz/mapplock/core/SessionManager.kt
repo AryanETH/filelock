@@ -37,6 +37,13 @@ object SessionManager {
         LockerLogger.i(LockerLogger.Event.STATE_LOCKED, "[SESSION] $packageName locked")
     }
 
+    fun lockImmediately(packageName: String) {
+        val session = sessions[packageName] ?: return
+        session.isUnlocked = false
+        session.backgroundTimestamp = 0 // Clear background time to force relock
+        LockerLogger.i(LockerLogger.Event.STATE_LOCKED, "[SESSION] $packageName locked immediately (Home/Back/Switch)")
+    }
+
     fun isUnlocked(packageName: String): Boolean {
         return sessions[packageName]?.isUnlocked ?: false
     }

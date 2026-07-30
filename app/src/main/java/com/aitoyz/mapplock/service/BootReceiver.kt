@@ -8,6 +8,8 @@ class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val actions = listOf(
             Intent.ACTION_BOOT_COMPLETED,
+            Intent.ACTION_LOCKED_BOOT_COMPLETED,
+            Intent.ACTION_USER_PRESENT,
             Intent.ACTION_MY_PACKAGE_REPLACED,
             Intent.ACTION_REBOOT,
             Intent.ACTION_PACKAGE_ADDED,

@@ -17,17 +17,25 @@ class LockLauncher(private val context: Context) {
     /**
      * Launches the LockActivity for the specified package.
      */
-    fun launch(packageName: String) {
+    fun launch(packageName: String, isSnapshot: Boolean = false) {
         try {
             // Guard: Prevent launching while another launch is in progress
             if (isLaunching) return
 
+            // Reset state to ensure deterministic transition
+            com.aitoyz.mapplock.security.LockerRepository.getInstance(context).resetState()
+
+            // CRITICAL: Show black overlay IMMEDIATELY to achieve "Zero Gap"
+            // This covers the screen before LockActivity even starts.
+            if (!isSnapshot) {
+                OverlayManager.show(context.applicationContext)
+            }
+
             // Guard: If already showing the lock for THIS package, just bring it to front
-            // If showing for a DIFFERENT package, we need to launch the new one
             if (isShowing && currentLockedPackage == packageName) {
                 LockerLogger.v(LockerLogger.Event.LOCK_ACTIVITY_STARTED, "[LOCK] Lock already showing for $packageName, reordering to front")
             } else {
-                LockerLogger.i(LockerLogger.Event.LOCK_ACTIVITY_STARTED, "[LOCK] Launching lock activity for $packageName")
+                LockerLogger.i(LockerLogger.Event.LOCK_ACTIVITY_STARTED, "[LOCK] Launching lock activity for $packageName (snapshot=$isSnapshot)")
             }
 
             isLaunching = true
@@ -35,6 +43,7 @@ class LockLauncher(private val context: Context) {
             
             val intent = Intent(context, LockActivity::class.java).apply {
                 putExtra("target_package", packageName)
+                putExtra("is_snapshot", isSnapshot)
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or 
                          Intent.FLAG_ACTIVITY_CLEAR_TOP or 
                          Intent.FLAG_ACTIVITY_SINGLE_TOP or 

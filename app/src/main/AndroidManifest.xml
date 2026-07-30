@@ -72,7 +72,8 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Mapplock">
+        android:theme="@style/Theme.Mapplock"
+        android:directBootAware="true">
 
         <activity
             android:name=".MainActivity"
@@ -111,7 +112,7 @@
         <activity
             android:name=".LockActivity"
             android:exported="false"
-            android:theme="@style/Theme.Mapplock"
+            android:theme="@style/Theme.Mapplock.Lock"
             android:screenOrientation="portrait"
             android:excludeFromRecents="true"
             android:taskAffinity="com.aitoyz.mapplock.lockstack"
@@ -122,7 +123,8 @@
             android:name=".service.AppLockerService"
             android:exported="false"
             android:stopWithTask="false"
-            android:foregroundServiceType="specialUse">
+            android:foregroundServiceType="specialUse"
+            android:directBootAware="true">
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="App usage monitoring for security and privacy protection" />
@@ -133,9 +135,12 @@
 
         <receiver
             android:name=".service.BootReceiver"
-            android:exported="true">
+            android:exported="true"
+            android:directBootAware="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
+                <action android:name="android.intent.action.USER_PRESENT" />
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
                 <action android:name="android.intent.action.QUICKBOOT_POWERON" />
                 <action android:name="com.htc.intent.action.QUICKBOOT_POWERON" />
@@ -152,7 +157,8 @@
             android:label="@string/uninstall_protection"
             android:description="@string/uninstall_protection_desc"
             android:permission="android.permission.BIND_DEVICE_ADMIN"
-            android:exported="true">
+            android:exported="true"
+            android:directBootAware="true">
             <meta-data
                 android:name="android.app.device_admin"
                 android:resource="@xml/device_admin" />
@@ -174,7 +180,8 @@
             android:name=".backend.accessibility.AppLockAccessibilityService"
             android:exported="true"
             android:label="@string/app_name"
-            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
+            android:directBootAware="true">
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService" />
             </intent-filter>

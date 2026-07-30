@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -35,6 +35,7 @@ class LockerRepository private constructor(private val context: Context) {
 
     private val stateMutex = Mutex()
     private val systemAppFilter = SystemAppFilter(context)
+    private val repositoryScope = CoroutineScope(Dispatchers.Main.immediate + SupervisorJob())
     
     // Caches to minimize system calls
     private val lockedPackagesCache = java.util.concurrent.ConcurrentHashMap.newKeySet<String>()
@@ -66,10 +67,17 @@ class LockerRepository private constructor(private val context: Context) {
         stateMutex.withLock {
             val currentState = _state.value
             
+            // ALLOW sideways transitions for different packages, or if resetting to IDLE
             if (currentState.ordinal > newState.ordinal && newState != LockerState.IDLE) {
-                LockerLogger.d(LockerLogger.Event.STATE_TRANSITION, 
-                    "Transition Ignored (Backward): $currentState -> $newState")
-                return@withLock
+                // EXCEPTION: If the package has changed, we MUST allow the transition to re-lock
+                if (packageName != null && packageName != _currentTarget.value) {
+                    LockerLogger.d(LockerLogger.Event.STATE_TRANSITION, 
+                        "Package changed, forcing transition: $currentState -> $newState")
+                } else {
+                    LockerLogger.d(LockerLogger.Event.STATE_TRANSITION, 
+                        "Transition Ignored (Backward): $currentState -> $newState")
+                    return@withLock
+                }
             }
 
             if (currentState == newState && (packageName == null || _currentTarget.value == packageName)) return@withLock
@@ -81,6 +89,16 @@ class LockerRepository private constructor(private val context: Context) {
             packageName?.let { _currentTarget.value = it }
             
             if (newState == LockerState.IDLE) {
+                _currentTarget.value = null
+            }
+        }
+    }
+
+    fun resetState() {
+        repositoryScope.launch {
+            stateMutex.withLock {
+                LockerLogger.d(LockerLogger.Event.STATE_TRANSITION, "Forcing state reset to IDLE")
+                _state.value = LockerState.IDLE
                 _currentTarget.value = null
             }
         }

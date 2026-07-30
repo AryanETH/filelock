@@ -68,14 +68,26 @@ class LockActivity : AppCompatActivity() {
         super.attachBaseContext(LocaleManager.getLocaleContext(newBase, lang))
     }
 
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        // Final fallback: Hide overlay as soon as activity window is attached
+        com.aitoyz.mapplock.core.OverlayManager.hide()
+    }
+
     private var isUnlocked = false
     private val targetPackageState = mutableStateOf("")
+    private var snapshotMode by mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         try {
             LockerLogger.i(LockerLogger.Event.LOCK_ACTIVITY_STARTED, "[LOCK_UI] onCreate entered")
             enableEdgeToEdge()
             super.onCreate(savedInstanceState)
+
+            val initialTargetPackage = intent.getStringExtra("target_package") ?: ""
+            targetPackageState.value = initialTargetPackage
+            val requestBiometric = intent.getBooleanExtra("request_biometric", false)
+            snapshotMode = intent.getBooleanExtra("is_snapshot", false)
             
             LockerLogger.d(LockerLogger.Event.LOCK_ACTIVITY_STARTED, "[LOCK_UI] Initializing Repository")
             repository = LockerRepository.getInstance(this)
@@ -83,9 +95,9 @@ class LockActivity : AppCompatActivity() {
             LockerLogger.d(LockerLogger.Event.LOCK_ACTIVITY_STARTED, "[LOCK_UI] Setting up Window")
             // 1. Immersive Full Screen Setup
             WindowCompat.setDecorFitsSystemWindows(window, false)
-            window.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(android.graphics.Color.BLACK))
-            window.statusBarColor = android.graphics.Color.TRANSPARENT
-            window.navigationBarColor = android.graphics.Color.TRANSPARENT
+            window.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(AndroidColor.BLACK))
+            window.statusBarColor = AndroidColor.TRANSPARENT
+            window.navigationBarColor = AndroidColor.TRANSPARENT
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 window.attributes.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
@@ -102,10 +114,6 @@ class LockActivity : AppCompatActivity() {
             if (SecurityUtils.isDeviceRooted()) {
                 Toast.makeText(this, "Security Alert: Rooted device detected.", Toast.LENGTH_SHORT).show()
             }
-
-            val initialTargetPackage = intent.getStringExtra("target_package") ?: ""
-            targetPackageState.value = initialTargetPackage
-            val requestBiometric = intent.getBooleanExtra("request_biometric", false)
 
             val prefs = SecureManager.getInstance(this).prefs
             
@@ -134,27 +142,32 @@ class LockActivity : AppCompatActivity() {
             setContent {
                 val isDark = remember { prefs.getBoolean("is_dark_mode", false) }
                 val currentTargetPackage by targetPackageState
+                val isSnapshot = snapshotMode
                 
                 // No additional state required for deterministic engine
                 LaunchedEffect(currentTargetPackage) {
                     repository.updateState(LockerRepository.LockerState.LOCK_ACTIVITY_VISIBLE, currentTargetPackage)
+                    // HIDE OVERLAY when UI is ready to show
+                    com.aitoyz.mapplock.core.OverlayManager.hide()
                 }
 
                 MapplockTheme(darkTheme = isDark) {
                     Surface(
                         modifier = Modifier.fillMaxSize(),
                         // CRITICAL: Never use Transparent here as it exposes the app beneath during image loading.
-                        color = if (isDark) CyberBlack else Color.White,
+                        color = if (isDark || isSnapshot) CyberBlack else Color.White,
                     ) {
-                        AuthUI(
-                            context = this@LockActivity,
-                            targetPackage = currentTargetPackage,
-                            autoRequestBiometric = requestBiometric,
-                            onAuthenticated = {
-                                handleAuthenticationSuccess(currentTargetPackage)
-                            },
-                        ) {
-                            showBiometricPrompt(currentTargetPackage)
+                        if (!isSnapshot) {
+                            AuthUI(
+                                context = this@LockActivity,
+                                targetPackage = currentTargetPackage,
+                                autoRequestBiometric = requestBiometric,
+                                onAuthenticated = {
+                                    handleAuthenticationSuccess(currentTargetPackage)
+                                },
+                            ) {
+                                showBiometricPrompt(currentTargetPackage)
+                            }
                         }
                     }
                 }
@@ -162,6 +175,21 @@ class LockActivity : AppCompatActivity() {
         } catch (e: Exception) {
             LockerLogger.e(LockerLogger.Event.ERROR, "Crash in LockActivity onCreate", e)
             finish()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (snapshotMode) {
+            val currentPkg = targetPackageState.value
+            if (SessionManager.isUnlocked(currentPkg)) {
+                LockerLogger.d(LockerLogger.Event.SESSION_ACTIVE, "[SNAPSHOT] App resumed within grace period, finishing cover")
+                finish()
+                overridePendingTransition(0, 0)
+            } else {
+                LockerLogger.d(LockerLogger.Event.STATE_LOCKED, "[SNAPSHOT] Session expired, switching to Auth UI")
+                snapshotMode = false
+            }
         }
     }
 
@@ -189,6 +217,11 @@ class LockActivity : AppCompatActivity() {
         if (newTarget.isNotEmpty()) {
             targetPackageState.value = newTarget
         }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        com.aitoyz.mapplock.core.OverlayManager.hide()
     }
 
     override fun onDestroy() {

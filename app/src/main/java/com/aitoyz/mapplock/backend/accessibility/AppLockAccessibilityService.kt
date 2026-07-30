@@ -25,6 +25,7 @@ class AppLockAccessibilityService : AccessibilityService() {
 
     private val serviceScope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.Main.immediate)
     private var engine: AppLockEngine? = null
+    private var lockedApps: LockedAppsRepository? = null
     private val directDetector = DirectDetector()
 
     override fun onServiceConnected() {
@@ -37,8 +38,9 @@ class AppLockAccessibilityService : AccessibilityService() {
         BackendCoordinator.setActiveBackend(BackendCoordinator.BackendType.ACCESSIBILITY)
         BackendCoordinator.resetRestartAttempts("AccessibilityRecovery")
         
-        val lockedApps = LockedAppsRepository(this)
-        val decisionEngine = LockDecisionEngine(packageName, lockedApps)
+        val repository = LockedAppsRepository(this)
+        lockedApps = repository
+        val decisionEngine = LockDecisionEngine(packageName, repository)
         val launcher = LockLauncher(this)
         val systemAppFilter = SystemAppFilter(this)
         
@@ -51,6 +53,14 @@ class AppLockAccessibilityService : AccessibilityService() {
         )
         
         engine?.start()
+    }
+
+    override fun onStartCommand(intent: android.content.Intent?, flags: Int, startId: Int): Int {
+        if (intent?.getBooleanExtra("refresh_locked_apps", false) == true) {
+            LockerLogger.i(LockerLogger.Event.STATE_TRANSITION, "[SYNC] Refresh intent received (Accessibility)")
+            lockedApps?.refreshCache()
+        }
+        return super.onStartCommand(intent, flags, startId)
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {

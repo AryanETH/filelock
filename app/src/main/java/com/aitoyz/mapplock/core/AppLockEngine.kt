@@ -81,14 +81,34 @@ class AppLockEngine(
                     systemAppFilter.isLauncher(it) || systemAppFilter.isKeyboard(it) || systemAppFilter.isTransientSystemOverlay(it) || systemAppFilter.isRecents(it) || systemAppFilter.isSystemUI(it)
                 } ?: true
 
-                if (!isCurrentIgnored) {
-                    SessionManager.onForeground(currentPackage)
-                }
-                if (!wasPreviousIgnored) {
+                // GRANULAR RELOCK LOGIC:
+                if (!wasPreviousIgnored && previousPackage != null) {
+                    // EXEMPT: Never relock our own locker app to avoid noise
+                    if (previousPackage != "com.aitoyz.mapplock") {
+                        if (isLauncher) {
+                            // 1. Home Button / Launcher: Immediate Lock
+                            LockerLogger.d(LockerLogger.Event.STATE_LOCKED, "[RELOCK] Home detected, locking $previousPackage")
+                            SessionManager.lockImmediately(previousPackage!!)
+                        } else if (isRecents) {
+                            // 2. Recents Button: Snapshot Blocker
+                            LockerLogger.d(LockerLogger.Event.LOCK_DETECTED, "[RELOCK] Recents detected, covering $previousPackage")
+                            launcher.launch(previousPackage!!, isSnapshot = true)
+                        } else if (!isCurrentIgnored && currentPackage != previousPackage) {
+                            // 3. Switching to another app: Immediate Lock previous
+                            LockerLogger.d(LockerLogger.Event.STATE_LOCKED, "[RELOCK] Switch detected, locking $previousPackage")
+                            SessionManager.lockImmediately(previousPackage!!)
+                        }
+                    }
+                    
                     SessionManager.onBackground(previousPackage!!)
                 }
-                
-                previousPackage = currentPackage
+
+                if (!isCurrentIgnored) {
+                    SessionManager.onForeground(currentPackage)
+                    // TRANSIENT TRANSPARENCY: Only update previousPackage for real apps or launcher
+                    // This prevents system dialogs from disrupting the "underlying" app context
+                    previousPackage = currentPackage
+                }
             } else {
                 // If it's the same package, only update foreground timestamp if it's a real app
                 if (!enrichedEvent.isSystem && !enrichedEvent.isLauncher && !enrichedEvent.isKeyboard) {

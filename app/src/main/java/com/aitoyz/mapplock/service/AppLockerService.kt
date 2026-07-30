@@ -36,6 +36,7 @@ class AppLockerService : Service() {
     
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var engine: AppLockEngine? = null
+    private var lockedApps: LockedAppsRepository? = null
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -48,11 +49,10 @@ class AppLockerService : Service() {
     }
 
     override fun onCreate() {
-        startForegroundSafe()
         super.onCreate()
         instance = this
         
-        LockerLogger.i(LockerLogger.Event.SERVICE_RESTARTED, "AppLockerService Starting")
+        LockerLogger.i(LockerLogger.Event.SERVICE_RESTARTED, "AppLockerService Created")
         BackendCoordinator.setActiveBackend(BackendCoordinator.BackendType.USAGE_STATS)
         BackendCoordinator.resetRestartAttempts(this::class.java.simpleName)
 
@@ -60,10 +60,11 @@ class AppLockerService : Service() {
             try {
                 LockerLogger.i(LockerLogger.Event.STATE_TRANSITION, "[REWRITE] Async init starting")
                 
-                val lockedApps = LockedAppsRepository(this@AppLockerService)
+                val repository = LockedAppsRepository(this@AppLockerService)
+                lockedApps = repository
                 // Use UsageStatsMonitor directly as this is the fallback service
                 val detector = UsageStatsMonitor(this@AppLockerService, serviceScope)
-                val decisionEngine = LockDecisionEngine(packageName, lockedApps)
+                val decisionEngine = LockDecisionEngine(packageName, repository)
                 val launcher = LockLauncher(this@AppLockerService)
                 val systemFilter = SystemAppFilter(this@AppLockerService)
                 
@@ -95,42 +96,56 @@ class AppLockerService : Service() {
     }
 
     private fun startForegroundSafe() {
-        LockerLogger.i(LockerLogger.Event.STATE_TRANSITION, "[REWRITE] Setting up notification")
-        val channelId = "security_monitoring"
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(channelId, "Security Monitor", NotificationManager.IMPORTANCE_LOW)
-            getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
-        }
+        try {
+            LockerLogger.i(LockerLogger.Event.STATE_TRANSITION, "[SERVICE] Attempting foreground promotion")
+            val channelId = "security_monitoring"
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val channel = NotificationChannel(channelId, "Security Monitor", NotificationManager.IMPORTANCE_LOW)
+                getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
+            }
 
-        val notification = NotificationCompat.Builder(this, channelId)
-            .setContentTitle(getString(R.string.app_name))
-            .setContentText("Security monitoring is active")
-            .setSmallIcon(R.mipmap.ic_launcher)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
-            .build()
+            val notification = NotificationCompat.Builder(this, channelId)
+                .setContentTitle(getString(R.string.app_name))
+                .setContentText("Security monitoring is active")
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setPriority(NotificationCompat.PRIORITY_LOW)
+                .build()
 
-        val type = determineForegroundServiceType()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            startForeground(1001, notification, type)
-        } else {
-            startForeground(1001, notification)
+            val type = determineForegroundServiceType()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                startForeground(1001, notification, type)
+            } else {
+                startForeground(1001, notification)
+            }
+            LockerLogger.i(LockerLogger.Event.STATE_TRANSITION, "[SERVICE] Successfully promoted to foreground")
+        } catch (e: Exception) {
+            // Android 12+ specific exception for background start restrictions
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && e is android.app.ForegroundServiceStartNotAllowedException) {
+                LockerLogger.e(LockerLogger.Event.ERROR, "[SERVICE] Foreground start DENIED by OS (Background restriction). Continuing in background.")
+            } else {
+                LockerLogger.e(LockerLogger.Event.ERROR, "[SERVICE] Foreground promotion failed: ${e.message}")
+            }
+            // CRITICAL: We do NOT finish/crash. We stay alive in background (degraded mode)
+            // This prevents the OS from seeing a crash loop.
         }
     }
 
     private fun determineForegroundServiceType(): Int {
-        val dpm = getSystemService(DevicePolicyManager::class.java)
-        val component = ComponentName(this, UninstallShieldReceiver::class.java)
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            if (dpm?.isAdminActive(component) == true)
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_SYSTEM_EXEMPTED
-            else
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+            ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             0 // Default
         } else 0
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        // Promote to foreground on every start request to ensure persistence
+        startForegroundSafe()
+        
+        if (intent?.getBooleanExtra("refresh_locked_apps", false) == true) {
+            LockerLogger.i(LockerLogger.Event.STATE_TRANSITION, "[SYNC] Refresh intent received")
+            lockedApps?.refreshCache()
+        }
         return START_STICKY
     }
 
@@ -139,23 +154,11 @@ class AppLockerService : Service() {
     }
 
     override fun onDestroy() {
+        LockerLogger.w(LockerLogger.Event.SERVICE_RESTARTED, "AppLockerService Destroyed - Relying on Watchdog for recovery")
         engine?.stop()
         unregisterReceiver(screenReceiver)
         serviceScope.cancel()
         instance = null
-        
-        // Immediate self-healing attempt
-        val serviceName = this::class.java.simpleName
-        if (BackendCoordinator.shouldAttemptRestart(serviceName)) {
-            BackendCoordinator.recordRestartAttempt(serviceName)
-            val intent = Intent(this, AppLockerService::class.java)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                startForegroundService(intent)
-            } else {
-                startService(intent)
-            }
-        }
-        
         super.onDestroy()
     }
 }
