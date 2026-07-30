@@ -39,13 +39,32 @@ object LockerLogger {
 
     fun i(event: Event, message: String) {
         Log.i(TAG, "[${event.name}] $message")
+        logToFile(event, message)
     }
 
     fun w(event: Event, message: String) {
         Log.w(TAG, "[${event.name}] $message")
+        logToFile(event, message)
     }
 
     fun e(event: Event, message: String, throwable: Throwable? = null) {
         Log.e(TAG, "[${event.name}] $message", throwable)
+        logToFile(event, "$message ${throwable?.message ?: ""}")
+    }
+
+    private fun logToFile(event: Event, message: String) {
+        val importantEvents = setOf(
+            Event.LOCK_DETECTED,
+            Event.LOCK_SKIPPED,
+            Event.SERVICE_RESTARTED,
+            Event.STATE_TRANSITION,
+            Event.ERROR
+        )
+        if (event in importantEvents) {
+            val context = com.aitoyz.mapplock.MapplockApp.instance
+            if (context != null) {
+                FileLogger.log(context, event.name, message)
+            }
+        }
     }
 }

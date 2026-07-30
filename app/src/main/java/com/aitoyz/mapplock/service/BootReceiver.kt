@@ -23,6 +23,9 @@ class BootReceiver : BroadcastReceiver() {
             }
             
             try {
+                // Determine if we should start the fallback service
+                // AccessibilityService starts itself via OS if enabled.
+                // We always try to start AppLockerService as a fallback/guard.
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                     context.startForegroundService(serviceIntent)
                 } else {

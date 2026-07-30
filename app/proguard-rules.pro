@@ -38,10 +38,9 @@
 -dontwarn com.posthog.**
 
 # --- Strip Debug Logs ---
-# This rule removes all Log.d and Log.v calls from the release build.
-# This improves performance and prevents leaking internal state.
+# This rule removes Log.d and Log.v calls from the release build.
+# We keep Log.i/w/e for production audit and troubleshooting.
 -assumenosideeffects class android.util.Log {
     public static *** d(...);
     public static *** v(...);
-    public static *** i(...);
 }

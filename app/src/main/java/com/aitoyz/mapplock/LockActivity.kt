@@ -194,7 +194,10 @@ class LockActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         IntruderManager.getInstance(this).stopSession()
+        
+        // Notify the active backend that the lock was dismissed
         com.aitoyz.mapplock.service.AppLockerService.getInstance()?.notifyLockDismissed()
+        com.aitoyz.mapplock.backend.accessibility.AppLockAccessibilityService.getInstance()?.notifyLockDismissed()
     }
 
     private fun showBiometricPrompt(targetPackage: String) {

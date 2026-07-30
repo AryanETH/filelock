@@ -22,5 +22,5 @@ class AccessibilityMonitor : ForegroundDetector {
         // We don't stop the system service, just stop listening to events in the engine.
     }
 
-    override fun currentForeground(): String? = null
+    override fun currentForeground(): String? = AppLockAccessibilityService.lastForegroundPackage
 }
