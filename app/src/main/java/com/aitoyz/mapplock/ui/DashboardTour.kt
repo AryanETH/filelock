@@ -137,11 +137,10 @@ fun DashboardTourOverlay(
             label = "TourTooltip"
         ) { idx ->
             val step = steps[idx]
-            val config = LocalConfiguration.current
-            val density = androidx.compose.ui.platform.LocalDensity.current
+            val windowInfo = androidx.compose.ui.platform.LocalWindowInfo.current
             
-            // Fix: Correctly detect if the target is in the bottom half of the screen
-            val screenHeightPx = with(density) { config.screenHeightDp.dp.toPx() }
+            // Modern Window API for accurate orientation-aware bounds
+            val screenHeightPx = windowInfo.containerSize.height.toFloat()
             val inBottomHalf = step.targetRect?.let {
                 it.center.y > screenHeightPx / 2
             } ?: false

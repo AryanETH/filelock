@@ -1,0 +1,357 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+<string name="app_name">Mapplock</string>
+<string name="accessibility_description">Mapplock utilise ce service pour détecter le lancement d\'une application verrouillée, ce qui permet d\'afficher un écran de verrouillage sécurisé et de protéger votre vie privée.</string>
+
+<!-- Jargon simplifié -->
+<string name="vault">Zone de Sécurité</string>
+<string name="vault_plural">Zones de Sécurité</string>
+<string name="hidden_files">Fichiers Secrets</string>
+<string name="hide_app">Masquer l\'Application</string>
+<string name="wrong_unlock_alert">Alerte Intrus</string>
+<string name="wrong_unlock">Déverrouillage Erroné</string>
+<string name="global_lock">Tout Verrouiller</string>
+<string name="stealth_entry">Entrée Secrète</string>
+
+<!-- Écran de langue -->
+<string name="select_language">Choisir la Langue</string>
+<string name="english">Anglais</string>
+<string name="hindi">Hindi</string>
+<string name="close_btn">Fermer</string>
+<string name="selected_text">Sélectionné</string>
+<string name="language">Langue</string>
+<string name="search_languages">Rechercher des langues&#8230;</string>
+
+<!-- Écran de permissions -->
+<string name="security_clearance">Guide des Autorisations</string>
+<string name="security_clearance_desc">Les autorisations ne sont demandées qu\'en cas de besoin</string>
+<string name="privacy_note">Nous ne collectons, ne stockons et ne partageons aucune de vos informations personnelles</string>
+<string name="ads_note">Cette action peut contenir des publicités</string>
+
+<string name="permission_usage_access">Surveillance des Applications</string>
+<string name="permission_usage_access_desc">Pour voir quand vous ouvrez une application verrouillée.</string>
+<string name="permission_overlay_access">Afficher sur d\'autres applications</string>
+<string name="permission_overlay_access_desc">Pour afficher l\'écran de verrouillage sur d\'autres applications.</string>
+<string name="permission_camera_access">Caméra</string>
+<string name="permission_camera_access_desc">Pour prendre une photo de toute personne tentant de forcer l\'accès.</string>
+<string name="permission_location_access">Localisation</string>
+<string name="permission_location_access_desc">Pour verrouiller/déverrouiller les applications à proximité de votre zone de sécurité.</string>
+<string name="permission_storage_access">Stockage</string>
+<string name="permission_storage_access_desc">Pour masquer et sauvegarder vos photos et vidéos.</string>
+<string name="permission_background_activity">Exécuter en arrière-plan</string>
+<string name="permission_background_activity_desc">Pour maintenir l\'application active 24h/24 et 7j/7 pour votre sécurité.</string>
+<string name="system_ready">Tout est prêt !</string>
+<string name="authorize">Autoriser</string>
+<string name="usage_access">Accès à l\'utilisation</string>
+<string name="usage_access_desc">Permet à Mapplock de détecter l\'ouverture des applications protégées.</string>
+<string name="overlay_access">Afficher sur d\'autres applications</string>
+<string name="overlay_access_desc">Permet à l\'écran de verrouillage d\'apparaître sur les applications protégées.</string>
+<string name="location_access">Localisation</string>
+<string name="location_access_desc">Requis pour les zones de verrouillage basées sur la carte et les fonctions de localisation.</string>
+<string name="background_activity">Ignorer l\'optimisation de la batterie</string>
+<string name="background_activity_desc">Permet au service de verrouillage de fonctionner de manière fiable sans être arrêté par le système.</string>
+<string name="full_storage_access">Gérer tous les fichiers</string>
+<string name="full_storage_access_desc">Requis pour protéger et gérer les fichiers dans le coffre-fort.</string>
+<string name="background_popups">Fenêtres surgissantes en arrière-plan</string>
+<string name="background_popups_desc">Appuyez ici → Accès spécifique aux applications → Afficher des fenêtres surgissantes en arrière-plan → Autoriser</string>
+
+<!-- Intégration -->
+<string name="onboarding_1_title">Se Déguiser en Verrou</string>
+<string name="onboarding_1_desc">La carte agira comme une couche de verrouillage, tous vos fichiers seront cachés sous l\'emplacement</string>
+<string name="onboarding_2_title">Entièrement Hors Ligne</string>
+<string name="onboarding_2_desc">Aucune de vos données n\'est stockée sur des serveurs, mapplock est entièrement hors ligne et local</string>
+<string name="onboarding_3_title">Fabriqué en Inde</string>
+<string name="onboarding_3_desc">Toute notre application est fièrement indienne et construite à Bhopal 🌊</string>
+<string name="onboarding_4_title">Comment utiliser</string>
+<string name="onboarding_4_desc">Suivez ces étapes simples pour sécuriser votre appareil.</string>
+<string name="onboarding_4_step1">Appuyez longuement sur la carte</string>
+<string name="onboarding_4_step2">Définissez votre code PIN ou schéma</string>
+<string name="onboarding_4_step3">Verrouillez vos applications ou cachez vos fichiers</string>
+<string name="onboarding_4_step4">Appuyez deux fois sur le même emplacement pour revenir au tableau de bord</string>
+<string name="onboarding_4_step5">REMARQUE : Choisissez un emplacement aléatoire pour vos points de verrouillage afin que les autres ne puissent pas les deviner facilement.</string>
+<string name="onboarding_disclaimer_title">Avis de non-responsabilité concernant les données cartographiques</string>
+<string name="onboarding_disclaimer_desc">Les données cartographiques et les frontières sont fournies en l\'état. Nous ne contrôlons pas les représentations géographiques.</string>
+<string name="onboarding_accept_prefix">Je comprends et j\'accepte les </string>
+<string name="onboarding_terms">Conditions de Service</string>
+<string name="onboarding_and"> et la </string>
+<string name="onboarding_privacy">Politique de Confidentialité</string>
+<string name="initialize_system">Commencer</string>
+<string name="next">Continuer</string>
+
+<!-- Écran de Carte -->
+<string name="verify_pin">ENTRER LE CODE PIN</string>
+<string name="verify_pattern">DESSINER LE SCHÉMA</string>
+<string name="cancel">ANNULER</string>
+<string name="setup_lock">CONFIGURER LE VERROUILLAGE</string>
+<string name="select_apps">CHOISIR DES APPS</string>
+<string name="save_lock">ENREGISTRER</string>
+<string name="back">RETOUR</string>
+<string name="search_places">Rechercher un lieu&#8230;</string>
+
+<!-- Tableau de bord -->
+<string name="app_lock_title">Verrouiller des Apps</string>
+<string name="app_lock_subtitle">Verrouillez vos applications</string>
+<string name="history_title">Applications Verrouillées</string>
+<string name="history_subtitle">Gérez toutes vos applications verrouillées</string>
+<string name="categories">CATÉGORIES</string>
+<string name="photos">Photos</string>
+<string name="videos">Vidéos</string>
+<string name="audio">Audio</string>
+<string name="documents">Documents</string>
+<string name="wrong_unlocks">Intrus</string>
+<string name="recycle_bin">Corbeille</string>
+    <plurals name="items_count">
+        <item quantity="one">%1$d élément</item>
+        <item quantity="many">%1$d d\'éléments</item>
+        <item quantity="other">%1$d éléments</item>
+    </plurals>
+
+<!-- Écran de visualisation multimédia -->
+<string name="save_to_gallery">Enregistrer dans la Galerie</string>
+<string name="open_in">Ouvrir dans</string>
+<string name="restore">Restaurer</string>
+<string name="delete">Supprimer</string>
+<string name="restore_file_title">Restaurer le fichier ?</string>
+<string name="restore_file_message">Remettre ce fichier dans la galerie de votre téléphone.</string>
+<string name="delete_file_title">Supprimer le fichier ?</string>
+<string name="delete_file_message">Cela supprimera définitivement le fichier.</string>
+<string name="preview_unavailable">Aperçu indisponible :</string>
+<string name="use_open_in_hint">Utilisez \'Ouvrir dans\' pour visualiser.</string>
+<string name="open_with">Ouvrir avec&#8230;</string>
+<string name="restore_confirm">RESTAURER</string>
+<string name="delete_confirm">SUPPRIMER</string>
+<string name="no_preview">Pas d\'aperçu pour %1$s</string>
+<string name="open_in_hint">Utilisez \'Ouvrir dans\' pour voir avec une autre application.</string>
+
+<!-- Paramètres -->
+<string name="system_permissions">AUTORISATIONS</string>
+<string name="permission_app_detection">Détection d\'Applications</string>
+<string name="permission_app_detection_desc">Pour voir quand vous ouvrez des applications verrouillées.</string>
+<string name="permission_lock_window">Fenêtre de Verrouillage</string>
+<string name="permission_lock_window_desc">Pour afficher l\'écran de verrouillage.</string>
+<string name="permission_camera">Caméra</string>
+<string name="permission_camera_desc">Pour capturer quelqu\'un tentant d\'ouvrir vos applications.</string>
+<string name="permission_storage">Stockage</string>
+<string name="permission_storage_desc">Pour sauvegarder vos fichiers cachés.</string>
+<string name="advanced_security">SÉCURITÉ</string>
+<string name="uninstall_protection">Protection contre la Désinstallation</string>
+<string name="uninstall_protection_desc">Empêcher les autres de supprimer cette application.</string>
+<string name="lock_options">PARAMÈTRES DE VERROUILLAGE</string>
+<string name="global_lock_title">Tout Verrouiller</string>
+<string name="global_lock_desc">Verrouillez toutes vos applications sélectionnées d\'un coup.</string>
+<string name="dark_mode">Mode Sombre</string>
+<string name="dark_mode_desc">Passer du thème clair au thème sombre.</string>
+<string name="monitoring_mode">Niveau de Sécurité</string>
+<string name="monitoring_mode_desc">Force de détection du verrouillage</string>
+<string name="monitoring_mode_moderate">Modéré (Standard)</string>
+<string name="monitoring_mode_hard">Difficile (Protection Élevée)</string>
+<string name="monitoring_mode_auto">Automatique (Recommandé)</string>
+<string name="monitoring_mode_usage">Stats d\'utilisation (Standard)</string>
+<string name="monitoring_mode_shizuku">Shizuku (Haute Performance)</string>
+<string name="monitoring_mode_accessibility">Accessibilité (Secours)</string>
+
+<!-- Visite guidée -->
+<string name="tour_skip">Passer</string>
+<string name="tour_next">Suivant</string>
+<string name="tour_welcome">Bienvenue ! Votre vie privée est désormais cachée sur la carte.</string>
+<string name="tour_step1">Appuyez longuement sur la carte pour définir votre point d\'entrée secret.</string>
+<string name="tour_step2">Appuyez deux fois sur votre point secret pour voir vos fichiers cachés.</string>
+<string name="tour_step3">Utilisez ces boutons pour vous localiser ou changer le style de la carte.</string>
+<string name="tour_step4">Souvenez-vous de votre point secret ! C\'est votre clé.</string>
+<string name="zoom_in_hint">Zoomez davantage pour définir une zone de sécurité.</string>
+<string name="access_granted_desc">Bon retour ! Accès autorisé.</string>
+<string name="zone_restricted_desc">Accès Refusé. Vous êtes en dehors de la zone de sécurité.</string>
+<string name="system_initialization_desc">Appuyez longuement sur la carte pour créer une zone de sécurité.</string>
+<string name="lock_type_bio">Empreinte Digitale</string>
+<string name="biometric_required">Veuillez utiliser votre empreinte digitale.</string>
+<string name="map_location_hint">Utilisez le point sur la carte pour déverrouiller.</string>
+<string name="package_visibility">Choisir les applications à verrouiller</string>
+<string name="tap_map_to_unlock">Appuyez ci-dessous pour ouvrir la carte.</string>
+<string name="open_map_interface">Ouvrir la Carte</string>
+<string name="screenshot_restriction">Pas de Captures d\'Écran</string>
+<string name="screenshot_restriction_desc">Empêcher les autres de prendre des captures d\'écran</string>
+<string name="fingerprint_unlock">Empreinte Digitale</string>
+<string name="fingerprint_unlock_desc">Utiliser l\'empreinte digitale pour un accès rapide.</string>
+<string name="offline_title">Vous êtes hors ligne</string>
+<string name="offline_message">activez les données</string>
+<string name="support_links">AIDE &amp; LÉGAL</string>
+<string name="tutorial">Tutoriel (Voir Vidéo)</string>
+<string name="feedback">Envoyer des Commentaires</string>
+<string name="terms_of_use">Conditions d\'Utilisation</string>
+<string name="faq">FAQ / Aide</string>
+<string name="privacy_policy">Politique de Confidentialité</string>
+<string name="share_mapplock">Partager Mapplock</string>
+
+<!-- VaultContentScreen -->
+<string name="settings">Paramètres</string>
+<string name="lock">Verrouiller</string>
+<string name="add">Ajouter</string>
+<string name="sort">Trier</string>
+<string name="hide">Masquer</string>
+<string name="vault_empty">Aucune application ici pour le moment.</string>
+<string name="vault_empty_hint">Appuyez sur + pour ajouter des fichiers.</string>
+<string name="app_lock_desc">Les applications masquées ne s\'ouvriront que lorsque vous serez dans votre zone de sécurité.</string>
+<string name="hide_app_dialog_title">Masquer l\'Application</string>
+<string name="cloning_in_progress">Transfert de l\'application vers la zone de sécurité&#8230;</string>
+<string name="hide_app_dialog_body">Ceci masquera l\'application et elle ne s\'ouvrira que depuis ici. Continuer ?</string>
+<string name="proceed">Continuer</string>
+<string name="clone_success">Application masquée avec succès !</string>
+<string name="clone_failed">Échec. Veuillez réessayer.</string>
+<string name="clear_all_hidden_apps">Réafficher toutes les apps</string>
+<string name="active_vaults">Zones Actives</string>
+    <plurals name="apps_locked">
+        <item quantity="one">%1$d application verrouillée</item>
+        <item quantity="many">%1$d d\'applications verrouillées</item>
+        <item quantity="other">%1$d applications verrouillées</item>
+    </plurals>
+    <string name="vault_established">Zone de Sécurité Créée</string>
+    <plurals name="apps_hidden">
+        <item quantity="one">%1$d application masquée :</item>
+        <item quantity="many">%1$d d\'applications masquées :</item>
+        <item quantity="other">%1$d applications masquées :</item>
+    </plurals>
+<string name="close">Fermer</string>
+<string name="fix">Réparer</string>
+<string name="get_started">Commencer</string>
+<string name="grant">Autoriser</string>
+<string name="vault_id_label">Zone %1$s</string>
+
+<!-- MapSelectionScreen -->
+<string name="access_granted">Accès Autorisé</string>
+<string name="zone_restricted">Accès Refusé</string>
+<string name="system_initialization">Configuration&#8230;</string>
+<string name="vault_encryption">Chiffrement&#8230;</string>
+<string name="lock_type_pin">Code PIN</string>
+<string name="lock_type_pattern">Schéma</string>
+<string name="lock_type_map">Carte</string>
+<string name="abort">Arrêter</string>
+<string name="initialize">Démarrer</string>
+<string name="bypass_security">Passer</string>
+<string name="use_fingerprint">Utiliser l\'Empreinte</string>
+<string name="location_locked">Localisation Verrouillée</string>
+<string name="enter_pin">Entrer le PIN</string>
+<string name="draw_pattern">Dessiner le Schéma</string>
+<string name="tap_coordinates">Appuyer sur la Carte</string>
+<string name="verify_identity">Vérifier Votre Identité</string>
+<string name="outside_radius">Vous êtes trop loin de la zone de sécurité</string>
+<string name="biometric_unavailable">Empreinte digitale indisponible</string>
+<string name="fingerprint">Empreinte Digitale</string>
+<string name="tap_target_coordinates">Appuyez sur votre point de carte secret</string>
+<string name="location_required_title">Autorisation de Localisation Requise</string>
+<string name="location_required_message">Pour activer la Sécurité par Carte, nous avons besoin de votre autorisation de localisation.</string>
+<string name="location_allow_btn">AUTORISER</string>
+<string name="location_access_title">ACCÈS À LA LOCALISATION</string>
+<string name="location_access_message">Nous avons besoin de votre localisation pour activer la sécurité basée sur la zone.</string>
+<string name="grant_location_access">ACCORDER L\'ACCÈS À LA LOCALISATION</string>
+
+<!-- Visite du Tableau de bord -->
+<string name="tour_dash_welcome_title">Bienvenue sur Mapplock</string>
+<string name="tour_dash_welcome_desc">Votre vie privée est en sécurité avec nous.</string>
+<string name="tour_dash_hide_apps_title">Verrouiller des Apps</string>
+<string name="tour_dash_hide_apps_desc">Appuyez ici pour verrouiller n\'importe quelle application.</string>
+<string name="tour_dash_history_title">Historique des Verrous</string>
+<string name="tour_dash_history_desc">Gérez tous vos emplacements sécurisés.</string>
+<string name="tour_dash_categories_title">Votre Coffre Secret</string>
+<string name="tour_dash_categories_desc">Les photos, vidéos et fichiers que vous cachez seront enregistrés ici en toute sécurité.</string>
+<string name="tour_dash_fab_title">Créer un Nouveau Dossier</string>
+<string name="tour_dash_fab_desc">Appuyez sur le bouton + pour créer des dossiers personnalisés</string>
+<string name="tour_dash_settings_title">Paramètres</string>
+<string name="tour_dash_settings_desc">Changez votre verrouillage, votre langue et plus encore d\'ici.</string>
+<string name="custom_lock_background">Fond de Verrouillage Personnalisé</string>
+<string name="custom_lock_background_desc">Définissez votre fond d\'écran personnel</string>
+<string name="intruder_capture">Capture d\'Intrus</string>
+<string name="intruder_capture_desc">Prend un selfie de toute personne tentant de forcer l\'accès</string>
+<string name="create_new_folder">Créer un Nouveau Dossier</string>
+<string name="create_new_folder_desc">Les dossiers peuvent contenir tout type de fichier.</string>
+<string name="folder_name">Nom du Dossier</string>
+<string name="appearance">Apparence</string>
+<string name="preview_and_hide">MASQUER (%1$d)</string>
+<string name="bg_active_desc">Image Active • Appuyez pour gérer</string>
+<string name="change">CHANGER</string>
+<string name="remove_btn">SUPPRIMER</string>
+<string name="notification_perm_title">Notifications</string>
+<string name="notification_perm_desc">Utilisé pour les notifications de service et les alertes de sécurité importantes.</string>
+<string name="usage_perm_title">Accès à l\'Utilisation</string>
+<string name="usage_perm_desc">Mapplock a besoin de savoir quand une application est lancée pour afficher l\'écran de verrouillage.</string>
+<string name="overlay_perm_title">Autorisation de Superposition</string>
+<string name="overlay_perm_desc">Mapplock doit dessiner l\'écran de verrouillage par-dessus les applications protégées.</string>
+<string name="background_popups_perm_title">Fenêtres surgissantes</string>
+<string name="background_popups_perm_desc">Permet à Mapplock de lancer instantanément l\'écran de sécurité depuis l\'arrière-plan.</string>
+<string name="battery_perm_title">Désactiver l\'Optimisation de la Batterie</string>
+<string name="battery_perm_desc">Empêche le système d\'arrêter le service de protection de Mapplock.</string>
+<string name="grant_permission">ACCORDER L\'AUTORISATION</string>
+<string name="security_monitoring_note">La sécurité nécessite une surveillance active du système.</string>
+<string name="search_apps">Rechercher des applications&#8230;</string>
+<string name="recommended">RECOMMANDÉ</string>
+<string name="all_apps">TOUTES LES APPLICATIONS</string>
+<string name="locked_apps_header">APPS VERROUILLÉES</string>
+<string name="no_apps_in_zone">Aucune application verrouillée pour le moment</string>
+<string name="unlock_all">TOUT DÉVERROUILLER</string>
+<string name="user_locked_stats">PLUS DE %1$d%% DES UTILISATEURS L\'ONT VERROUILLÉ</string>
+<string name="bulk_action_title">Actions de Catégorie</string>
+<string name="bulk_action_desc">Choisissez quoi faire avec tous les éléments de cette catégorie.</string>
+<string name="recover_all">TOUT RÉCUPÉRER</string>
+<string name="delete_all">TOUT SUPPRIMER</string>
+<string name="delete_folder_confirm">Supprimer le dossier et tous ses fichiers ?</string>
+<string name="recover_folder">Récupérer tous les fichiers avant la suppression</string>
+<string name="delete_permanently">Supprimer Définitivement</string>
+<string name="connect_dots_to_verify">RELIER LES POINTS POUR VÉRIFIER</string>
+<string name="aqi_label">IQA</string>
+<string name="temp_label">Temp</string>
+<string name="humidity_label">Humidité</string>
+<string name="importing_files">Importation des Fichiers</string>
+<string name="deleting_files">Suppression des Fichiers</string>
+<string name="restoring_files">Restauration des Fichiers</string>
+<string name="hold_on_message">Attendez, votre téléphone s\'efforce de terminer cette tâche</string>
+<string name="completed_percent">%1$d%% Terminé</string>
+
+<!-- Diagnostics -->
+<string name="system_status">SANTÉ DU SYSTÈME</string>
+<string name="protection_guide_title">Rester Actif 24/7</string>
+<string name="protection_guide_desc">Pour garder vos applications verrouillées de manière fiable, Mapplock doit rester actif en arrière-plan.</string>
+<string name="step_battery_title">Batterie Non Restreinte</string>
+<string name="step_battery_desc">Empêche Android d\'arrêter Mapplock pour économiser de la batterie. Réglez sur \'Non restreint\'.</string>
+<string name="step_autostart_title">Démarrage Automatique</string>
+<string name="step_autostart_desc">Permet à Mapplock de démarrer automatiquement au démarrage de votre téléphone.</string>
+<string name="step_recents_title">Verrouiller dans les Récents</string>
+<string name="step_recents_desc">Verrouillez manuellement Mapplock dans votre liste \'Applications Récentes\' pour éviter une fermeture accidentelle.</string>
+<string name="oem_guide_xiaomi">Appuyez ici → Batterie &amp; performance → Économiseur de batterie d\'application → Mapplock → Pas de restrictions. Activez également \'Démarrage automatique\'.</string>
+<string name="oem_guide_oppo">Appuyez ici → Gestion des applications → Mapplock → Autoriser le démarrage automatique et l\'activité en arrière-plan.</string>
+<string name="oem_guide_vivo">Appuyez ici → Batterie → Consommation d\'énergie élevée en arrière-plan → Activer Mapplock.</string>
+<string name="oem_guide_samsung">Appuyez ici → Batterie → Limites d\'utilisation en arrière-plan → Applications jamais en veille → Ajouter Mapplock.</string>
+<string name="oem_guide_generic">Appuyez ici → Batterie → Non restreint / Pas d\'optimisation.</string>
+<string name="lock_recents_instruction">1. Glissez vers le haut pour voir les Applications Récentes\n2. Appuyez longuement sur Mapplock\n3. Appuyez sur l\'icône \'Verrou\'</string>
+<string name="indestructible_mode_active">MODE INDESTRUCTIBLE ACTIF</string>
+<string name="indestructible_mode_inactive">AVERTISSEMENT DE SANTÉ DU SYSTÈME</string>
+<string name="fix_now">RÉPARER MAINTENANT</string>
+<string name="status_active">ACTIF</string>
+<string name="status_inactive">INACTIF</string>
+<string name="accessibility_service">Service d\'Accessibilité</string>
+<string name="overlay_permission">Autorisation de Superposition</string>
+<string name="usage_stats">Stats d\'Utilisation</string>
+<string name="locker_service">Moteur de Verrouillage</string>
+<string name="bg_protection">Protection en Arrière-plan (Recommandé)</string>
+<string name="bg_protection_desc">Empêche Mapplock d\'être arrêté par le système.</string>
+<string name="lock_in_recents_guide">Comment garder Mapplock toujours actif :\n1. Ouvrez les Applications Récentes\n2. Appuyez longuement sur Mapplock\n3. Appuyez sur l\'icône \'Verrou\'</string>
+
+<string-array name="faq_questions">
+<item>Qu\'est-ce que Mapplock et en quoi est-il différent des autres verrouilleurs ?</item>
+<item>Comment Mapplock protège-t-il mes données contre le \'Q-Day\' ?</item>
+<item>Comment fonctionne la fonction \"Map-Gate\" ?</item>
+<item>Mes photos et vidéos privées sont-elles stockées sur les serveurs de Mapplock ?</item>
+<item>Que se passe-t-il si j\'oublie mon code PIN ou mon Schéma ?</item>
+<item>Les fonctions de carte fonctionneront-elles si je suis hors ligne ?</item>
+<item>Qu\'est-ce que la \"Capture d\'Intrus\" et où puis-je voir les photos ?</item>
+<item>Qu\'est-ce que la \"Protection contre la Perte de Fichiers\" ?</item>
+</string-array>
+<string-array name="faq_answers">
+<item>Mapplock est une application de sécurité de nouvelle génération développée par Aitoyz qui utilise l\'intelligence basée sur la localisation pour protéger votre vie privée. Contrairement aux verrouilleurs standard, Mapplock introduit la technologie \"Map-Gate\", vous permettant de définir des zones géographiques sûres.</item>
+<item>Mapplock est construit avec une architecture résistante aux attaques quantiques. Il empêche les attaques en utilisant un chiffrement symétrique AES-256 local uniquement et une architecture sans connaissance (zero-knowledge). Vos données ne quittent jamais votre appareil.</item>
+<item>La fonction Map-Gate vous permet de définir des coordonnées GPS spécifiques comme \"Zones de Sécurité\". Lorsque vous quittez ce rayon, Mapplock déclenche automatiquement un verrouillage de haute sécurité.</item>
+<item>Non, Aitoyz fonctionne sur un modèle \"La vie privée d\'abord\", ce qui signifie que Mapplock ne stocke aucun de vos fichiers personnels sur nos serveurs. Tout est chiffré localement sur le stockage interne de votre appareil.</item>
+<item>Vous pouvez utiliser des méthodes de vérification secondaires comme la biométrie ou votre \"Point de Carte Secret\" comme méthode de récupération.</item>
+<item>Oui, Mapplock est conçu pour rester pleinement fonctionnel même sans connexion. L\'application télécharge et met en cache les données cartographiques pour votre région locale dès que vous accordez les autorisations.</item>
+<item>La Capture d\'Intrus est une fonction automatique qui prend un selfie secret de toute personne tentant de forcer votre coffre-fort. Si un code incorrect est saisi plusieurs fois, la caméra frontale se déclenche discrètement.</item>
+<item>La Protection contre la Perte de Fichiers utilise les droits d\'Administrateur de l\'Appareil pour empêcher la désinstallation accidentelle de Mapplock. Cela garantit que vos documents et souvenirs importants ne sont jamais supprimés par erreur.</item>
+</string-array>
+</resources>

@@ -1,0 +1,351 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+<string name="app_name">Mapplock</string>
+<string name="accessibility_description">Mapplock sử dụng dịch vụ này để phát hiện khi một ứng dụng bị khóa được khởi chạy, cho phép hiển thị màn hình khóa bảo mật và bảo vệ quyền riêng tư của bạn.</string>
+
+<!-- Thuật ngữ đơn giản -->
+<string name="vault">Vùng An toàn</string>
+<string name="vault_plural">Vùng An toàn</string>
+<string name="hidden_files">Tệp bí mật</string>
+<string name="hide_app">Ẩn ứng dụng</string>
+<string name="wrong_unlock_alert">Cảnh báo kẻ xâm nhập</string>
+<string name="wrong_unlock">Mở khóa sai</string>
+<string name="global_lock">Khóa tất cả</string>
+<string name="stealth_entry">Lối vào bí mật</string>
+
+<!-- Màn hình ngôn ngữ -->
+<string name="select_language">Chọn ngôn ngữ</string>
+<string name="english">Tiếng Anh</string>
+<string name="hindi">Tiếng Hindi</string>
+<string name="close_btn">Đóng</string>
+<string name="selected_text">Đã chọn</string>
+<string name="language">Ngôn ngữ</string>
+<string name="search_languages">Tìm ngôn ngữ&#8230;</string>
+
+<!-- Màn hình quyền -->
+<string name="security_clearance">Hướng dẫn quyền</string>
+<string name="security_clearance_desc">Quyền chỉ được yêu cầu khi cần thiết</string>
+<string name="privacy_note">Chúng tôi không thu thập, lưu trữ hoặc chia sẻ thông tin cá nhân của bạn</string>
+<string name="ads_note">Hành động này có thể chứa quảng cáo</string>
+
+<string name="permission_usage_access">Giám sát ứng dụng</string>
+<string name="permission_usage_access_desc">Để xem khi nào bạn mở ứng dụng bị khóa.</string>
+<string name="permission_overlay_access">Hiển thị trên ứng dụng khác</string>
+<string name="permission_overlay_access_desc">Để hiển thị màn hình khóa trên các ứng dụng khác.</string>
+<string name="permission_camera_access">Máy ảnh</string>
+<string name="permission_camera_access_desc">Để chụp ảnh bất kỳ ai cố gắng đột nhập.</string>
+<string name="permission_location_access">Vị trí</string>
+<string name="permission_location_access_desc">Để khóa/mở khóa ứng dụng khi bạn ở gần vùng an toàn.</string>
+<string name="permission_storage_access">Bộ nhớ</string>
+<string name="permission_storage_access_desc">Để ẩn và lưu ảnh cũng như video của bạn.</string>
+<string name="permission_background_activity">Chạy trong nền</string>
+<string name="permission_background_activity_desc">Để giữ cho ứng dụng hoạt động 24/7 vì sự an toàn của bạn.</string>
+<string name="system_ready">Tất cả đã sẵn sàng!</string>
+<string name="authorize">Cho phép</string>
+<string name="usage_access">Truy cập sử dụng</string>
+<string name="usage_access_desc">Cho phép Mapplock phát hiện khi các ứng dụng được bảo vệ được mở.</string>
+<string name="overlay_access">Hiển thị trên ứng dụng khác</string>
+<string name="overlay_access_desc">Cho phép màn hình khóa xuất hiện trên các ứng dụng được bảo vệ.</string>
+<string name="location_access">Vị trí</string>
+<string name="location_access_desc">Yêu cầu cho các vùng khóa dựa trên bản đồ và các tính năng vị trí.</string>
+<string name="background_activity">Bỏ qua tối ưu hóa pin</string>
+<string name="background_activity_desc">Cho phép dịch vụ khóa chạy ổn định mà không bị hệ thống dừng lại.</string>
+<string name="full_storage_access">Quản lý tất cả tệp</string>
+<string name="full_storage_access_desc">Yêu cầu để bảo vệ và quản lý tệp trong kho lưu trữ.</string>
+<string name="background_popups">Cửa sổ bật lên trong nền</string>
+<string name="background_popups_desc">Chạm vào đây → Quyền truy cập ứng dụng đặc biệt → Hiển thị cửa sổ bật lên khi đang chạy trong nền → Cho phép</string>
+
+<!-- Onboarding -->
+<string name="onboarding_1_title">Ngụy trang dưới dạng bản đồ</string>
+<string name="onboarding_1_desc">Bản đồ sẽ hoạt động như một lớp khóa, tất cả tệp của bạn sẽ được ẩn bên dưới vị trí</string>
+<string name="onboarding_2_title">Hoàn toàn ngoại tuyến</string>
+<string name="onboarding_2_desc">Không có dữ liệu nào của bạn được lưu trữ trên máy chủ, Mapplock hoàn toàn ngoại tuyến</string>
+<string name="onboarding_3_title">Sản xuất tại Ấn Độ</string>
+<string name="onboarding_3_desc">Toàn bộ ứng dụng của chúng tôi tự hào được sản xuất tại Ấn Độ 🌊</string>
+<string name="onboarding_4_title">Cách sử dụng</string>
+<string name="onboarding_4_desc">Làm theo các bước đơn giản sau để bảo mật thiết bị của bạn.</string>
+<string name="onboarding_4_step1">Nhấn lâu trên bản đồ</string>
+<string name="onboarding_4_step2">Thiết lập mã PIN hoặc hình vẽ</string>
+<string name="onboarding_4_step3">Khóa ứng dụng hoặc ẩn tệp</string>
+<string name="onboarding_4_step4">Chạm hai lần vào cùng một vị trí để quay lại trang chủ</string>
+<string name="onboarding_4_step5">LƯU Ý: Chọn một vị trí ngẫu nhiên cho các điểm khóa để người khác không dễ đoán được.</string>
+<string name="onboarding_disclaimer_title">Tuyên bố miễn trừ trách nhiệm dữ liệu bản đồ</string>
+<string name="onboarding_disclaimer_desc">Dữ liệu bản đồ và biên giới được cung cấp nguyên trạng. Chúng tôi không kiểm soát các đại diện địa lý.</string>
+<string name="onboarding_accept_prefix">Tôi hiểu và chấp nhận </string>
+<string name="onboarding_terms">Điều khoản Dịch vụ</string>
+<string name="onboarding_and"> và </string>
+<string name="onboarding_privacy">Chính sách Bảo mật</string>
+<string name="initialize_system">Bắt đầu</string>
+<string name="next">Tiếp tục</string>
+
+<!-- Map Screen -->
+<string name="verify_pin">NHẬP MÃ PIN</string>
+<string name="verify_pattern">VẼ HÌNH</string>
+<string name="cancel">HỦY</string>
+<string name="setup_lock">THIẾT LẬP KHÓA</string>
+<string name="select_apps">CHỌN ỨNG DỤNG</string>
+<string name="save_lock">LƯU</string>
+<string name="back">QUAY LẠI</string>
+<string name="search_places">Tìm địa điểm&#8230;</string>
+
+<!-- Dashboard -->
+<string name="app_lock_title">Khóa ứng dụng</string>
+<string name="app_lock_subtitle">Khóa các ứng dụng của bạn</string>
+<string name="history_title">Ứng dụng đã khóa</string>
+<string name="history_subtitle">Quản lý tất cả ứng dụng đã khóa của bạn</string>
+<string name="categories">DANH MỤC</string>
+<string name="photos">Ảnh</string>
+<string name="videos">Video</string>
+<string name="audio">Âm thanh</string>
+<string name="documents">Tài liệu</string>
+<string name="wrong_unlocks">Kẻ xâm nhập</string>
+<string name="recycle_bin">Thùng rác</string>
+    <plurals name="items_count">
+        <item quantity="other">%1$d mục</item>
+    </plurals>
+
+<!-- Media Viewer Screen -->
+<string name="save_to_gallery">Lưu vào bộ sưu tập</string>
+<string name="open_in">Mở bằng</string>
+<string name="restore">Khôi phục</string>
+<string name="delete">Xóa</string>
+<string name="restore_file_title">Khôi phục tệp?</string>
+<string name="restore_file_message">Di chuyển tệp này trở lại bộ sưu tập điện thoại.</string>
+<string name="delete_file_title">Xóa tệp?</string>
+<string name="delete_file_message">Hành động này sẽ xóa tệp vĩnh viễn.</string>
+<string name="preview_unavailable">Không thể xem trước:</string>
+<string name="use_open_in_hint">Sử dụng \'Mở bằng\' để xem.</string>
+<string name="open_with">Mở bằng&#8230;</string>
+<string name="restore_confirm">KHÔI PHỤC</string>
+<string name="delete_confirm">XÓA</string>
+<string name="no_preview">Không có bản xem trước cho %1$s</string>
+<string name="open_in_hint">Sử dụng \'Mở bằng\' để xem với ứng dụng khác.</string>
+
+<!-- Settings -->
+<string name="system_permissions">QUYỀN HẠN</string>
+<string name="permission_app_detection">Phát hiện ứng dụng</string>
+<string name="permission_app_detection_desc">Để xem khi nào bạn mở ứng dụng bị khóa.</string>
+<string name="permission_lock_window">Cửa sổ khóa</string>
+<string name="permission_lock_window_desc">Để hiển thị màn hình khóa.</string>
+<string name="permission_camera">Máy ảnh</string>
+<string name="permission_camera_desc">Để chụp bất kỳ ai cố gắng mở ứng dụng của bạn.</string>
+<string name="permission_storage">Bộ nhớ</string>
+<string name="permission_storage_desc">Để lưu các tệp ẩn của bạn.</string>
+<string name="advanced_security">BẢO MẬT</string>
+<string name="uninstall_protection">Chống gỡ cài đặt</string>
+<string name="uninstall_protection_desc">Ngăn người khác xóa ứng dụng này.</string>
+<string name="lock_options">CÀI ĐẶT KHÓA</string>
+<string name="global_lock_title">Khóa tất cả</string>
+<string name="global_lock_desc">Khóa tất cả ứng dụng đã chọn cùng một lúc.</string>
+<string name="dark_mode">Chế độ tối</string>
+<string name="dark_mode_desc">Chuyển đổi giao diện sáng và tối.</string>
+<string name="monitoring_mode">Mức độ bảo mật</string>
+<string name="monitoring_mode_desc">Cường độ phát hiện khóa</string>
+<string name="monitoring_mode_moderate">Trung bình (Tiêu chuẩn)</string>
+<string name="monitoring_mode_hard">Cao (Bảo mật mạnh)</string>
+<string name="monitoring_mode_auto">Tự động (Khuyên dùng)</string>
+<string name="monitoring_mode_usage">Thống kê sử dụng (Tiêu chuẩn)</string>
+<string name="monitoring_mode_shizuku">Shizuku (Hiệu suất cao)</string>
+<string name="monitoring_mode_accessibility">Hỗ trợ tiếp cận (Dự phòng)</string>
+
+<!-- Tour -->
+<string name="tour_skip">Bỏ qua</string>
+<string name="tour_next">Tiếp theo</string>
+<string name="tour_welcome">Chào mừng! Quyền riêng tư của bạn hiện được ẩn trên bản đồ.</string>
+<string name="tour_step1">Nhấn lâu trên bản đồ để thiết lập điểm vào bí mật.</string>
+<string name="tour_step2">Chạm hai lần vào điểm bí mật để xem tệp ẩn.</string>
+<string name="tour_step3">Sử dụng các nút này để tìm vị trí của bạn hoặc đổi kiểu bản đồ.</string>
+<string name="tour_step4">Hãy nhớ điểm bí mật của bạn! Đó là chìa khóa.</string>
+<string name="zoom_in_hint">Phóng to hơn để thiết lập vùng an toàn.</string>
+<string name="access_granted_desc">Chào mừng quay lại! Quyền truy cập được cho phép.</string>
+<string name="zone_restricted_desc">Truy cập bị từ chối. Bạn đang ở ngoài vùng an toàn.</string>
+<string name="system_initialization_desc">Nhấn lâu trên bản đồ để tạo vùng an toàn.</string>
+<string name="lock_type_bio">Vân tay</string>
+<string name="biometric_required">Vui lòng sử dụng vân tay của bạn.</string>
+<string name="map_location_hint">Sử dụng điểm bản đồ để mở khóa.</string>
+<string name="package_visibility">Chọn ứng dụng để khóa</string>
+<string name="tap_map_to_unlock">Chạm bên dưới để mở bản đồ.</string>
+<string name="open_map_interface">Mở bản đồ</string>
+<string name="screenshot_restriction">Không chụp màn hình</string>
+<string name="screenshot_restriction_desc">Ngăn người khác chụp màn hình</string>
+<string name="fingerprint_unlock">Vân tay</string>
+<string name="fingerprint_unlock_desc">Sử dụng vân tay để truy cập nhanh.</string>
+<string name="offline_title">Bạn đang ngoại tuyến</string>
+<string name="offline_message">bật dữ liệu</string>
+<string name="support_links">HỖ TRỢ &amp; PHÁP LÝ</string>
+<string name="tutorial">Hướng dẫn (Xem Video)</string>
+<string name="feedback">Gửi phản hồi</string>
+<string name="terms_of_use">Điều khoản sử dụng</string>
+<string name="faq">Câu hỏi thường gặp / Trợ giúp</string>
+<string name="privacy_policy">Chính sách Bảo mật</string>
+<string name="share_mapplock">Chia sẻ Mapplock</string>
+
+<!-- VaultContentScreen -->
+<string name="settings">Cài đặt</string>
+<string name="lock">Khóa</string>
+<string name="add">Thêm</string>
+<string name="sort">Sắp xếp</string>
+<string name="hide">Ẩn</string>
+<string name="vault_empty">Chưa có ứng dụng nào ở đây.</string>
+<string name="vault_empty_hint">Chạm + để thêm một số tệp.</string>
+<string name="app_lock_desc">Ứng dụng ẩn sẽ chỉ mở khi bạn ở trong vùng an toàn.</string>
+<string name="hide_app_dialog_title">Ẩn ứng dụng</string>
+<string name="cloning_in_progress">Đang chuyển ứng dụng vào vùng an toàn&#8230;</string>
+<string name="hide_app_dialog_body">Điều này sẽ ẩn ứng dụng và nó sẽ chỉ mở từ đây. Tiếp tục?</string>
+<string name="proceed">Tiếp tục</string>
+<string name="clone_success">Ứng dụng đã được ẩn thành công!</string>
+<string name="clone_failed">Thất bại. Vui lòng thử lại.</string>
+<string name="clear_all_hidden_apps">Hiện tất cả ứng dụng</string>
+<string name="active_vaults">Vùng đang hoạt động</string>
+    <plurals name="apps_locked">
+        <item quantity="other">Đã khóa %1$d ứng dụng</item>
+    </plurals>
+    <string name="vault_established">Đã tạo vùng an toàn</string>
+    <plurals name="apps_hidden">
+        <item quantity="other">Đã ẩn %1$d ứng dụng:</item>
+    </plurals>
+<string name="close">Đóng</string>
+<string name="fix">Sửa lỗi</string>
+<string name="get_started">Bắt đầu</string>
+<string name="grant">Cho phép</string>
+<string name="vault_id_label">Vùng %1$s</string>
+
+<!-- MapSelectionScreen -->
+<string name="access_granted">Truy cập được phép</string>
+<string name="zone_restricted">Truy cập bị từ chối</string>
+<string name="system_initialization">Đang thiết lập&#8230;</string>
+<string name="vault_encryption">Đang mã hóa&#8230;</string>
+<string name="lock_type_pin">Mã PIN</string>
+<string name="lock_type_pattern">Hình vẽ</string>
+<string name="lock_type_map">Bản đồ</string>
+<string name="abort">Dừng</string>
+<string name="initialize">Bắt đầu</string>
+<string name="bypass_security">Bỏ qua</string>
+<string name="use_fingerprint">Sử dụng vân tay</string>
+<string name="location_locked">Vị trí bị khóa</string>
+<string name="enter_pin">Nhập mã PIN</string>
+<string name="draw_pattern">Vẽ hình</string>
+<string name="tap_coordinates">Chạm bản đồ</string>
+<string name="verify_identity">Xác minh danh tính</string>
+<string name="outside_radius">Bạn đang ở quá xa vùng an toàn</string>
+<string name="biometric_unavailable">Vân tay không khả dụng</string>
+<string name="fingerprint">Vân tay</string>
+<string name="tap_target_coordinates">Chạm vào điểm bản đồ bí mật</string>
+<string name="location_required_title">Cần quyền vị trí</string>
+<string name="location_required_message">Để bật Bảo mật bản đồ, chúng tôi cần quyền truy cập vị trí của bạn.</string>
+<string name="location_allow_btn">CHO PHÉP QUYỀN</string>
+<string name="location_access_title">TRUY CẬP VỊ TRÍ</string>
+<string name="location_access_message">Chúng tôi cần vị trí của bạn để kích hoạt bảo mật dựa trên vùng.</string>
+<string name="grant_location_access">CẤP QUYỀN VỊ TRÍ</string>
+
+<!-- DashboardTour -->
+<string name="tour_dash_welcome_title">Chào mừng đến với Mapplock</string>
+<string name="tour_dash_welcome_desc">Quyền riêng tư của bạn an toàn với chúng tôi.</string>
+<string name="tour_dash_hide_apps_title">Khóa ứng dụng</string>
+<string name="tour_dash_hide_apps_desc">Chạm vào đây để khóa bất kỳ ứng dụng nào.</string>
+<string name="tour_dash_history_title">Lịch sử khóa</string>
+<string name="tour_dash_history_desc">Quản lý các vị trí an toàn của bạn.</string>
+<string name="tour_dash_categories_title">Kho lưu trữ bí mật</string>
+<string name="tour_dash_categories_desc">Ảnh, video và tệp ẩn sẽ được lưu ở đây.</string>
+<string name="tour_dash_fab_title">Tạo thư mục mới</string>
+<string name="tour_dash_fab_desc">Chạm nút + để tạo thư mục riêng</string>
+<string name="tour_dash_settings_title">Cài đặt</string>
+<string name="tour_dash_settings_desc">Thay đổi khóa, ngôn ngữ và nhiều hơn nữa tại đây.</string>
+    <string name="custom_lock_background">Hình nền khóa tùy chỉnh</string>
+    <string name="custom_lock_background_desc">Đặt hình nền cá nhân của bạn</string>
+    <string name="intruder_capture">Chụp ảnh kẻ xâm nhập</string>
+    <string name="intruder_capture_desc">Chụp ảnh bất kỳ ai cố gắng đột nhập</string>
+    <string name="create_new_folder">Tạo thư mục mới</string>
+    <string name="create_new_folder_desc">Thư mục có thể chứa bất kỳ loại tệp nào.</string>
+    <string name="folder_name">Tên thư mục</string>
+    <string name="appearance">Giao diện</string>
+    <string name="preview_and_hide">ẨN (%1$d)</string>
+    <string name="bg_active_desc">Ảnh đang hoạt động • Chạm để quản lý</string>
+    <string name="change">THAY ĐỔI</string>
+    <string name="remove_btn">XÓA</string>
+    <string name="notification_perm_title">Thông báo</string>
+    <string name="notification_perm_desc">Sử dụng cho thông báo dịch vụ và cảnh báo bảo mật.</string>
+    <string name="usage_perm_title">Truy cập sử dụng</string>
+    <string name="usage_perm_desc">Mapplock cần biết khi nào ứng dụng được mở để hiển thị màn hình khóa.</string>
+    <string name="overlay_perm_title">Quyền hiển thị trên ứng dụng khác</string>
+    <string name="overlay_perm_desc">Mapplock cần vẽ màn hình trên các ứng dụng được bảo vệ.</string>
+    <string name="background_popups_perm_title">Cửa sổ bật lên trong nền</string>
+    <string name="background_popups_perm_desc">Cho phép khởi chạy màn hình bảo mật từ nền.</string>
+    <string name="battery_perm_title">Tắt tối ưu hóa pin</string>
+    <string name="battery_perm_desc">Ngăn hệ thống dừng dịch vụ bảo vệ của Mapplock.</string>
+    <string name="grant_permission">CẤP QUYỀN</string>
+    <string name="security_monitoring_note">Bảo mật yêu cầu giám sát hệ thống liên tục.</string>
+    <string name="search_apps">Tìm ứng dụng&#8230;</string>
+    <string name="recommended">KHUYÊN DÙNG</string>
+    <string name="all_apps">TẤT CẢ ỨNG DỤNG</string>
+    <string name="locked_apps_header">ỨNG DỤNG ĐÃ KHÓA</string>
+    <string name="no_apps_in_zone">Chưa có ứng dụng nào được khóa</string>
+    <string name="unlock_all">MỞ KHÓA TẤT CẢ</string>
+    <string name="user_locked_stats">HƠN %1$d%% NGƯỜI DÙNG ĐÃ KHÓA ỨNG DỤNG NÀY</string>
+    <string name="bulk_action_title">Hành động danh mục</string>
+    <string name="bulk_action_desc">Chọn việc cần làm với tất cả các mục.</string>
+    <string name="recover_all">KHÔI PHỤC TẤT CẢ</string>
+    <string name="delete_all">XÓA TẤT CẢ</string>
+    <string name="delete_folder_confirm">Xóa thư mục và tất cả tệp bên trong?</string>
+    <string name="recover_folder">Khôi phục tệp trước khi xóa</string>
+    <string name="delete_permanently">Xóa vĩnh viễn</string>
+    <string name="connect_dots_to_verify">NỐI CÁC ĐIỂM ĐỂ XÁC MINH</string>
+    <string name="aqi_label">AQI</string>
+    <string name="temp_label">Nhiệt độ</string>
+    <string name="humidity_label">Độ ẩm</string>
+    <string name="importing_files">Đang nhập tệp</string>
+    <string name="deleting_files">Đang xóa tệp</string>
+    <string name="restoring_files">Đang khôi phục tệp</string>
+    <string name="hold_on_message">Vui lòng chờ, điện thoại đang xử lý</string>
+    <string name="completed_percent">Đã hoàn thành %1$d%%</string>
+
+    <!-- Diagnostics -->
+    <string name="system_status">TÌNH TRẠNG HỆ THỐNG</string>
+    <string name="protection_guide_title">Hoạt động 24/7</string>
+    <string name="protection_guide_desc">Để khóa ứng dụng ổn định, Mapplock cần chạy trong nền.</string>
+    <string name="step_battery_title">Pin không hạn chế</string>
+    <string name="step_battery_desc">Ngăn Android dừng Mapplock. Đặt thành \'Không hạn chế\'.</string>
+    <string name="step_autostart_title">Tự khởi động</string>
+    <string name="step_autostart_desc">Cho phép Mapplock tự chạy khi mở máy.</string>
+    <string name="step_recents_title">Khóa trong Ứng dụng gần đây</string>
+    <string name="step_recents_desc">Khóa Mapplock thủ công trong danh sách ứng dụng gần đây.</string>
+    <string name="oem_guide_xiaomi">Chạm vào đây → Pin &amp; hiệu suất → Tiết kiệm pin ứng dụng → Mapplock → Không hạn chế. Bật cả \'Tự khởi động\'.</string>
+    <string name="oem_guide_oppo">Chạm vào đây → Quản lý ứng dụng → Mapplock → Cho phép tự khởi động.</string>
+    <string name="oem_guide_vivo">Chạm vào đây → Pin → Tiêu thụ điện năng nền cao → Bật Mapplock.</string>
+    <string name="oem_guide_samsung">Chạm vào đây → Pin → Giới hạn sử dụng nền → Ứng dụng không bao giờ nghỉ → Thêm Mapplock.</string>
+    <string name="oem_guide_generic">Chạm vào đây → Pin → Không hạn chế / Không tối ưu hóa.</string>
+    <string name="lock_recents_instruction">1. Vuốt lên để xem Ứng dụng gần đây\n2. Nhấn lâu trên Mapplock\n3. Chạm vào biểu tượng \'Khóa\'</string>
+    <string name="indestructible_mode_active">CHẾ ĐỘ KHÔNG THỂ PHÁ HỦY ĐANG BẬT</string>
+    <string name="indestructible_mode_inactive">CẢNH BÁO TÌNH TRẠNG HỆ THỐNG</string>
+    <string name="fix_now">SỬA NGAY</string>
+    <string name="status_active">ĐANG HOẠT ĐỘNG</string>
+    <string name="status_inactive">NGỪNG HOẠT ĐỘNG</string>
+    <string name="accessibility_service">Dịch vụ Hỗ trợ tiếp cận</string>
+    <string name="overlay_permission">Quyền hiển thị trên ứng dụng khác</string>
+    <string name="usage_stats">Thống kê sử dụng</string>
+    <string name="locker_service">Công cụ khóa</string>
+    <string name="bg_protection">Bảo vệ nền (Khuyên dùng)</string>
+    <string name="bg_protection_desc">Ngăn Mapplock bị hệ thống dừng lại.</string>
+    <string name="lock_in_recents_guide">Cách giữ Mapplock luôn hoạt động:\n1. Mở Ứng dụng gần đây\n2. Nhấn lâu Mapplock\n3. Chạm biểu tượng \'Khóa\'</string>
+
+    <string-array name="faq_questions">
+<item>Mapplock là gì và nó khác gì với các trình khóa ứng dụng khác?</item>
+<item>Mapplock bảo vệ dữ liệu của tôi chống lại \'Q-Day\' như thế nào?</item>
+<item>Tính năng \"Map-Gate\" hoạt động như thế nào?</item>
+<item>Ảnh và video riêng tư của tôi có được lưu trên máy chủ Mapplock không?</item>
+<item>Điều gì xảy ra nếu tôi quên mã PIN hoặc Hình vẽ?</item>
+<item>Các tính năng bản đồ có hoạt động khi ngoại tuyến không?</item>
+<item>\"Chụp ảnh kẻ xâm nhập\" là gì?</item>
+<item>\"Chống mất tệp\" là gì và tại sao tôi nên bật nó?</item>
+    </string-array>
+    <string-array name="faq_answers">
+<item>Mapplock là ứng dụng bảo mật thế hệ mới sử dụng trí tuệ dựa trên vị trí để bảo vệ quyền riêng tư. Không giống như các trình khóa thông thường, Mapplock giới thiệu công nghệ \"Map-Gate\", cho phép bạn xác định các vùng an toàn địa lý.</item>
+<item>Mapplock được xây dựng với kiến trúc Chống lại Máy tính lượng tử. Nó ngăn chặn các cuộc tấn công bằng cách sử dụng mã hóa AES-256 nội bộ và kiến trúc zero-knowledge.</item>
+<item>Tính năng Map-Gate cho phép bạn đặt các tọa độ GPS cụ thể làm \"Vùng An toàn\". Khi ra ngoài vùng này, Mapplock sẽ tự động kích hoạt chế độ khóa nghiêm ngặt.</item>
+<item>Không, Mapplock không lưu trữ bất kỳ tệp nào của bạn trên máy chủ của chúng tôi. Tất cả tệp được mã hóa cục bộ trên bộ nhớ trong của thiết bị.</item>
+<item>Bạn có thể sử dụng các phương pháp xác minh phụ như sinh trắc học hoặc \"Điểm bản đồ bí mật\" để khôi phục.</item>
+<item>Có, Mapplock được thiết kế để hoạt động ngay cả khi không có mạng. Ứng dụng sẽ tải trước dữ liệu bản đồ cho khu vực của bạn.</item>
+<item>Đây là tính năng tự động chụp ảnh bất kỳ ai cố gắng đột nhập. Nếu nhập sai mã nhiều lần, máy ảnh trước sẽ âm thầm hoạt động.</item>
+<item>Tính năng này ngăn việc vô tình gỡ cài đặt Mapplock bằng quyền Quản trị viên thiết bị. Điều này đảm bảo dữ liệu của bạn không bị mất do sơ suất.</item>
+    </string-array>
+</resources>

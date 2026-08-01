@@ -3,26 +3,30 @@ package com.aitoyz.mapplock.service
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import com.aitoyz.mapplock.security.LockerLogger
 
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        val actions = listOf(
+        val action = intent.action ?: return
+        
+        // SECURITY GUARD: Ensure we only process allowed system actions.
+        val allowedActions = setOf(
             Intent.ACTION_BOOT_COMPLETED,
             Intent.ACTION_LOCKED_BOOT_COMPLETED,
+            Intent.ACTION_USER_UNLOCKED,
             Intent.ACTION_USER_PRESENT,
             Intent.ACTION_MY_PACKAGE_REPLACED,
-            Intent.ACTION_REBOOT,
-            Intent.ACTION_PACKAGE_ADDED,
-            Intent.ACTION_PACKAGE_REMOVED,
             "com.aitoyz.mapplock.WATCHDOG"
         )
-        if (intent.action in actions) {
-            android.util.Log.d("BootReceiver", "[STABILITY] onReceive: ${intent.action}")
-            
-            val serviceIntent = Intent(context, AppLockerService::class.java)
-            if (intent.action == Intent.ACTION_PACKAGE_ADDED || intent.action == Intent.ACTION_PACKAGE_REMOVED) {
-                serviceIntent.putExtra("refresh_locked_apps", true)
-            }
+        
+        if (action !in allowedActions) return
+
+        LockerLogger.d(LockerLogger.Event.SERVICE_RESTARTED, "[BOOT] onReceive: $action")
+        
+        val serviceIntent = Intent(context, AppLockerService::class.java)
+        if (action == Intent.ACTION_USER_UNLOCKED) {
+            serviceIntent.putExtra("refresh_locked_apps", true)
+        }
             
             try {
                 // Determine if we should start the fallback service
@@ -33,10 +37,9 @@ class BootReceiver : BroadcastReceiver() {
                 } else {
                     context.startService(serviceIntent)
                 }
-                android.util.Log.d("BootReceiver", "[STABILITY] Service start requested")
+                LockerLogger.d(LockerLogger.Event.SERVICE_RESTARTED, "[BOOT] Service start requested")
             } catch (e: Exception) {
-                android.util.Log.e("BootReceiver", "[STABILITY] Failed to start service: ${e.message}")
+                LockerLogger.e(LockerLogger.Event.ERROR, "[BOOT] Failed to start service: ${e.message}")
             }
-        }
     }
 }

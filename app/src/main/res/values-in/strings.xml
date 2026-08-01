@@ -1,0 +1,351 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+<string name="app_name">Mapplock</string>
+<string name="accessibility_description">Mapplock menggunakan layanan ini untuk mendeteksi saat aplikasi yang dikunci diluncurkan, memungkinkan tampilan layar kunci yang aman dan melindungi privasi Anda.</string>
+
+<!-- Jargon Sederhana -->
+<string name="vault">Zona Aman</string>
+<string name="vault_plural">Zona Aman</string>
+<string name="hidden_files">Berkas Rahasia</string>
+<string name="hide_app">Sembunyikan Aplikasi</string>
+<string name="wrong_unlock_alert">Peringatan Penyusup</string>
+<string name="wrong_unlock">Buka Kunci Salah</string>
+<string name="global_lock">Kunci Semua</string>
+<string name="stealth_entry">Entri Rahasia</string>
+
+<!-- Layar Bahasa -->
+<string name="select_language">Pilih Bahasa</string>
+<string name="english">Inggris</string>
+<string name="hindi">Hindi</string>
+<string name="close_btn">Tutup</string>
+<string name="selected_text">Terpilih</string>
+<string name="language">Bahasa</string>
+<string name="search_languages">Cari bahasa&#8230;</string>
+
+<!-- Layar Izin -->
+<string name="security_clearance">Panduan Izin</string>
+<string name="security_clearance_desc">Izin hanya diminta saat diperlukan</string>
+<string name="privacy_note">Kami tidak mengumpulkan, menyimpan, atau membagikan informasi pribadi Anda</string>
+<string name="ads_note">Tindakan ini mungkin mengandung iklan</string>
+
+<string name="permission_usage_access">Pemantauan Aplikasi</string>
+<string name="permission_usage_access_desc">Untuk melihat saat Anda membuka aplikasi yang dikunci.</string>
+<string name="permission_overlay_access">Tampilkan di Atas Aplikasi Lain</string>
+<string name="permission_overlay_access_desc">Untuk menampilkan layar kunci di atas aplikasi lain.</string>
+<string name="permission_camera_access">Kamera</string>
+<string name="permission_camera_access_desc">Untuk mengambil foto siapa pun yang mencoba membobol.</string>
+<string name="permission_location_access">Lokasi</string>
+<string name="permission_location_access_desc">Untuk mengunci/membuka kunci aplikasi saat Anda berada di dekat zona aman.</string>
+<string name="permission_storage_access">Penyimpanan</string>
+<string name="permission_storage_access_desc">Untuk menyembunyikan dan menyimpan foto serta video Anda.</string>
+<string name="permission_background_activity">Jalankan di Latar Belakang</string>
+<string name="permission_background_activity_desc">Untuk menjaga aplikasi tetap bekerja 24/7 demi keamanan Anda.</string>
+<string name="system_ready">Semua Siap!</string>
+<string name="authorize">Izinkan</string>
+<string name="usage_access">Akses Penggunaan</string>
+<string name="usage_access_desc">Memungkinkan Mapplock mendeteksi saat aplikasi yang dilindungi dibuka.</string>
+<string name="overlay_access">Tampilkan di Atas Aplikasi Lain</string>
+<string name="overlay_access_desc">Memungkinkan layar kunci muncul di atas aplikasi yang dilindungi.</string>
+<string name="location_access">Lokasi</string>
+<string name="location_access_desc">Diperlukan untuk zona kunci berbasis peta dan fitur lokasi.</string>
+<string name="background_activity">Abaikan Optimalisasi Baterai</string>
+<string name="background_activity_desc">Memungkinkan layanan kunci berjalan andal tanpa dihentikan oleh sistem.</string>
+<string name="full_storage_access">Kelola Semua Berkas</string>
+<string name="full_storage_access_desc">Diperlukan untuk melindungi dan mengelola berkas di brankas.</string>
+<string name="background_popups">Popup Latar Belakang</string>
+<string name="background_popups_desc">Ketuk di sini → Akses aplikasi khusus → Tampilkan popup saat di latar belakang → Izinkan</string>
+
+<!-- Onboarding -->
+<string name="onboarding_1_title">Samarkan Sebagai Kunci</string>
+<string name="onboarding_1_desc">Peta akan bertindak sebagai lapisan kunci, semua berkas Anda akan tersembunyi di bawah lokasi</string>
+<string name="onboarding_2_title">Sepenuhnya Offline</string>
+<string name="onboarding_2_desc">Tidak ada data Anda yang disimpan di server, Mapplock sepenuhnya offline dan lokal</string>
+<string name="onboarding_3_title">Dibuat di India</string>
+<string name="onboarding_3_desc">Seluruh aplikasi kami bangga buatan India dan dibangun di Bhopal 🌊</string>
+<string name="onboarding_4_title">Cara Menggunakan</string>
+<string name="onboarding_4_desc">Ikuti langkah-langkah sederhana ini untuk mengamankan perangkat Anda.</string>
+<string name="onboarding_4_step1">Tekan lama pada peta</string>
+<string name="onboarding_4_step2">Atur PIN atau pola Anda</string>
+<string name="onboarding_4_step3">Kunci aplikasi atau sembunyikan berkas</string>
+<string name="onboarding_4_step4">Ketuk dua kali di lokasi yang sama untuk masuk ke dasbor</string>
+<string name="onboarding_4_step5">CATATAN: Pilih lokasi acak untuk titik kunci agar tidak mudah ditebak orang lain.</string>
+<string name="onboarding_disclaimer_title">Sanggahan Data Peta</string>
+<string name="onboarding_disclaimer_desc">Data peta dan batas wilayah disediakan apa adanya. Kami tidak mengontrol representasi geografis.</string>
+<string name="onboarding_accept_prefix">Saya mengerti dan menerima </string>
+<string name="onboarding_terms">Ketentuan Layanan</string>
+<string name="onboarding_and"> dan </string>
+<string name="onboarding_privacy">Kebijakan Privasi</string>
+<string name="initialize_system">Mulai</string>
+<string name="next">Lanjutkan</string>
+
+<!-- Layar Peta -->
+<string name="verify_pin">MASUKKAN PIN</string>
+<string name="verify_pattern">GAMBAR POLA</string>
+<string name="cancel">BATAL</string>
+<string name="setup_lock">ATUR KUNCI</string>
+<string name="select_apps">PILIH APLIKASI</string>
+<string name="save_lock">SIMPAN</string>
+<string name="back">KEMBALI</string>
+<string name="search_places">Cari tempat&#8230;</string>
+
+<!-- Dasbor -->
+<string name="app_lock_title">Kunci Aplikasi</string>
+<string name="app_lock_subtitle">Kunci aplikasi Anda</string>
+<string name="history_title">Aplikasi Terkunci</string>
+<string name="history_subtitle">Kelola semua aplikasi yang terkunci</string>
+<string name="categories">KATEGORI</string>
+<string name="photos">Foto</string>
+<string name="videos">Video</string>
+<string name="audio">Audio</string>
+<string name="documents">Dokumen</string>
+<string name="wrong_unlocks">Penyusup</string>
+<string name="recycle_bin">Tempat Sampah</string>
+    <plurals name="items_count">
+        <item quantity="other">%1$d item</item>
+    </plurals>
+
+<!-- Layar Penampil Media -->
+<string name="save_to_gallery">Simpan ke Galeri</string>
+<string name="open_in">Buka Di</string>
+<string name="restore">Pulihkan</string>
+<string name="delete">Hapus</string>
+<string name="restore_file_title">Pulihkan Berkas?</string>
+<string name="restore_file_message">Pindahkan berkas ini kembali ke galeri ponsel.</string>
+<string name="delete_file_title">Hapus Berkas?</string>
+<string name="delete_file_message">Ini akan menghapus berkas selamanya.</string>
+<string name="preview_unavailable">Pratinjau tidak tersedia:</string>
+<string name="use_open_in_hint">Gunakan \'Buka Di\' untuk melihat.</string>
+<string name="open_with">Buka dengan&#8230;</string>
+<string name="restore_confirm">PULIHKAN</string>
+<string name="delete_confirm">HAPUS</string>
+<string name="no_preview">Tidak ada pratinjau untuk %1$s</string>
+<string name="open_in_hint">Gunakan \'Buka Di\' untuk melihat dengan aplikasi lain.</string>
+
+<!-- Pengaturan -->
+<string name="system_permissions">PERIZINAN</string>
+<string name="permission_app_detection">Deteksi Aplikasi</string>
+<string name="permission_app_detection_desc">Untuk melihat saat Anda membuka aplikasi yang dikunci.</string>
+<string name="permission_lock_window">Jendela Kunci</string>
+<string name="permission_lock_window_desc">Untuk menampilkan layar kunci.</string>
+<string name="permission_camera">Kamera</string>
+<string name="permission_camera_desc">Untuk menangkap siapa pun yang mencoba membuka aplikasi Anda.</string>
+<string name="permission_storage">Penyimpanan</string>
+<string name="permission_storage_desc">Untuk menyimpan berkas tersembunyi Anda.</string>
+<string name="advanced_security">KEAMANAN</string>
+<string name="uninstall_protection">Perlindungan Pencopotan</string>
+<string name="uninstall_protection_desc">Cegah orang lain menghapus aplikasi ini.</string>
+<string name="lock_options">PENGATURAN KUNCI</string>
+<string name="global_lock_title">Kunci Semua</string>
+<string name="global_lock_desc">Kunci semua aplikasi pilihan Anda sekaligus.</string>
+<string name="dark_mode">Mode Gelap</string>
+<string name="dark_mode_desc">Ganti tema terang dan gelap.</string>
+<string name="monitoring_mode">Tingkat Keamanan</string>
+<string name="monitoring_mode_desc">Kekuatan deteksi penguncian</string>
+<string name="monitoring_mode_moderate">Moderat (Standar)</string>
+<string name="monitoring_mode_hard">Keras (Perlindungan Tinggi)</string>
+<string name="monitoring_mode_auto">Otomatis (Disarankan)</string>
+<string name="monitoring_mode_usage">Statistik Penggunaan (Standar)</string>
+<string name="monitoring_mode_shizuku">Shizuku (Performa Tinggi)</string>
+<string name="monitoring_mode_accessibility">Aksesibilitas (Cadangan)</string>
+
+<!-- Tur -->
+<string name="tour_skip">Lewati</string>
+<string name="tour_next">Berikutnya</string>
+<string name="tour_welcome">Selamat datang! Privasi Anda sekarang tersembunyi di peta.</string>
+<string name="tour_step1">Tekan lama pada peta untuk mengatur titik entri rahasia Anda.</string>
+<string name="tour_step2">Ketuk dua kali titik rahasia untuk melihat berkas tersembunyi.</string>
+<string name="tour_step3">Gunakan tombol ini untuk menemukan lokasi Anda atau ganti gaya peta.</string>
+<string name="tour_step4">Ingat titik rahasia Anda! Itu adalah kuncinya.</string>
+<string name="zoom_in_hint">Perbesar lagi untuk mengatur zona aman.</string>
+<string name="access_granted_desc">Selamat datang kembali! Akses diizinkan.</string>
+<string name="zone_restricted_desc">Akses Ditolak. Anda berada di luar zona aman.</string>
+<string name="system_initialization_desc">Tekan lama pada peta untuk membuat zona aman.</string>
+<string name="lock_type_bio">Sidik Jari</string>
+<string name="biometric_required">Silakan gunakan sidik jari Anda.</string>
+<string name="map_location_hint">Gunakan titik peta untuk membuka kunci.</string>
+<string name="package_visibility">Pilih aplikasi untuk dikunci</string>
+<string name="tap_map_to_unlock">Ketuk di bawah untuk membuka peta.</string>
+<string name="open_map_interface">Buka Peta</string>
+<string name="screenshot_restriction">Tanpa Tangkapan Layar</string>
+<string name="screenshot_restriction_desc">Cegah orang lain mengambil tangkapan layar</string>
+<string name="fingerprint_unlock">Sidik Jari</string>
+<string name="fingerprint_unlock_desc">Gunakan sidik jari untuk akses cepat.</string>
+<string name="offline_title">Anda sedang offline</string>
+<string name="offline_message">aktifkan data</string>
+<string name="support_links">BANTUAN &amp; HUKUM</string>
+<string name="tutorial">Tutorial (Tonton Video)</string>
+<string name="feedback">Kirim Umpan Balik</string>
+<string name="terms_of_use">Ketentuan Penggunaan</string>
+<string name="faq">FAQ / Bantuan</string>
+<string name="privacy_policy">Kebijakan Privasi</string>
+<string name="share_mapplock">Bagikan Mapplock</string>
+
+<!-- VaultContentScreen -->
+<string name="settings">Pengaturan</string>
+<string name="lock">Kunci</string>
+<string name="add">Tambah</string>
+<string name="sort">Urutkan</string>
+<string name="hide">Sembunyikan</string>
+<string name="vault_empty">Belum ada aplikasi di sini.</string>
+<string name="vault_empty_hint">Ketuk + untuk menambah berkas.</string>
+<string name="app_lock_desc">Aplikasi tersembunyi hanya terbuka saat Anda di zona aman.</string>
+<string name="hide_app_dialog_title">Sembunyikan Aplikasi</string>
+<string name="cloning_in_progress">Memindahkan aplikasi ke zona aman&#8230;</string>
+<string name="hide_app_dialog_body">Ini akan menyembunyikan aplikasi dan hanya terbuka dari sini. Lanjutkan?</string>
+<string name="proceed">Lanjutkan</string>
+<string name="clone_success">Aplikasi berhasil disembunyikan!</string>
+<string name="clone_failed">Gagal. Silakan coba lagi.</string>
+<string name="clear_all_hidden_apps">Tampilkan semua aplikasi</string>
+<string name="active_vaults">Zona Aktif</string>
+    <plurals name="apps_locked">
+        <item quantity="other">%1$d aplikasi dikunci</item>
+    </plurals>
+    <string name="vault_established">Zona Aman Dibuat</string>
+    <plurals name="apps_hidden">
+        <item quantity="other">%1$d aplikasi disembunyikan:</item>
+    </plurals>
+<string name="close">Tutup</string>
+<string name="fix">Perbaiki</string>
+<string name="get_started">Mulai</string>
+<string name="grant">Izinkan</string>
+<string name="vault_id_label">Zona %1$s</string>
+
+<!-- MapSelectionScreen -->
+<string name="access_granted">Akses Diizinkan</string>
+<string name="zone_restricted">Akses Ditolak</string>
+<string name="system_initialization">Mengatur&#8230;</string>
+<string name="vault_encryption">Mengenkripsi&#8230;</string>
+<string name="lock_type_pin">PIN</string>
+<string name="lock_type_pattern">Pola</string>
+<string name="lock_type_map">Peta</string>
+<string name="abort">Berhenti</string>
+<string name="initialize">Mulai</string>
+<string name="bypass_security">Lewati</string>
+<string name="use_fingerprint">Gunakan Sidik Jari</string>
+<string name="location_locked">Lokasi Terkunci</string>
+<string name="enter_pin">Masukkan PIN</string>
+<string name="draw_pattern">Gambar Pola</string>
+<string name="tap_coordinates">Ketuk Peta</string>
+<string name="verify_identity">Verifikasi Identitas Anda</string>
+<string name="outside_radius">Anda terlalu jauh dari zona aman</string>
+<string name="biometric_unavailable">Sidik jari tidak tersedia</string>
+<string name="fingerprint">Sidik Jari</string>
+<string name="tap_target_coordinates">Ketuk titik peta rahasia Anda</string>
+<string name="location_required_title">Izin Lokasi Diperlukan</string>
+<string name="location_required_message">Untuk mengaktifkan Keamanan Peta, kami memerlukan izin lokasi Anda.</string>
+<string name="location_allow_btn">IZINKAN PERIZINAN</string>
+<string name="location_access_title">AKSES LOKASI</string>
+<string name="location_access_message">Kami memerlukan lokasi Anda untuk mengaktifkan keamanan brankas berbasis zona.</string>
+<string name="grant_location_access">BERIKAN AKSES LOKASI</string>
+
+<!-- DashboardTour -->
+<string name="tour_dash_welcome_title">Selamat Datang di Mapplock</string>
+<string name="tour_dash_welcome_desc">Privasi Anda aman bersama kami.</string>
+<string name="tour_dash_hide_apps_title">Kunci Aplikasi</string>
+<string name="tour_dash_hide_apps_desc">Ketuk di sini untuk mengunci aplikasi apa pun.</string>
+<string name="tour_dash_history_title">Riwayat Kunci</string>
+<string name="tour_dash_history_desc">Kelola semua lokasi aman dan aplikasi di dalamnya.</string>
+<string name="tour_dash_categories_title">Brankas Rahasia Anda</string>
+<string name="tour_dash_categories_desc">Foto, video, dan berkas yang Anda sembunyikan akan disimpan di sini.</string>
+<string name="tour_dash_fab_title">Buat Folder Baru</string>
+<string name="tour_dash_fab_desc">Ketuk tombol + untuk membuat folder khusus</string>
+<string name="tour_dash_settings_title">Pengaturan</string>
+<string name="tour_dash_settings_desc">Ubah kunci, bahasa, dan lainnya dari sini.</string>
+    <string name="custom_lock_background">Latar Belakang Kunci Kustom</string>
+    <string name="custom_lock_background_desc">Atur latar belakang pribadi Anda</string>
+    <string name="intruder_capture">Tangkapan Penyusup</string>
+    <string name="intruder_capture_desc">Ambil selfie siapa pun yang mencoba membobol</string>
+    <string name="create_new_folder">Buat Folder Baru</string>
+    <string name="create_new_folder_desc">Folder dapat berisi jenis berkas apa pun.</string>
+    <string name="folder_name">Nama Folder</string>
+    <string name="appearance">Tampilan</string>
+    <string name="preview_and_hide">SEMBUNYIKAN (%1$d)</string>
+    <string name="bg_active_desc">Gambar Aktif • Ketuk untuk mengelola</string>
+    <string name="change">UBAH</string>
+    <string name="remove_btn">HAPUS</string>
+    <string name="notification_perm_title">Notifikasi</string>
+    <string name="notification_perm_desc">Digunakan untuk notifikasi layanan dan peringatan keamanan.</string>
+    <string name="usage_perm_title">Akses Penggunaan</string>
+    <string name="usage_perm_desc">Mapplock perlu tahu kapan aplikasi diluncurkan untuk menampilkan layar kunci.</string>
+    <string name="overlay_perm_title">Izin Hamparan</string>
+    <string name="overlay_perm_desc">Mapplock perlu menampilkan layar kunci di atas aplikasi lain.</string>
+    <string name="background_popups_perm_title">Popup Latar Belakang</string>
+    <string name="background_popups_perm_desc">Memungkinkan Mapplock meluncurkan layar keamanan dari latar belakang.</string>
+    <string name="battery_perm_title">Nonaktifkan Optimalisasi Baterai</string>
+    <string name="battery_perm_desc">Mencegah sistem menghentikan layanan perlindungan Mapplock.</string>
+    <string name="grant_permission">BERIKAN IZIN</string>
+    <string name="security_monitoring_note">Keamanan memerlukan pemantauan sistem yang aktif.</string>
+    <string name="search_apps">Cari aplikasi&#8230;</string>
+    <string name="recommended">DIREKOMENDASIKAN</string>
+    <string name="all_apps">SEMUA APLIKASI</string>
+    <string name="locked_apps_header">APLIKASI TERKUNCI</string>
+    <string name="no_apps_in_zone">Belum ada aplikasi yang dikunci</string>
+    <string name="unlock_all">BUKA SEMUA</string>
+    <string name="user_locked_stats">LEBIH DARI %1$d%% PENGGUNA MENGUNCINYA</string>
+    <string name="bulk_action_title">Tindakan Kategori</string>
+    <string name="bulk_action_desc">Pilih tindakan untuk semua item ini.</string>
+    <string name="recover_all">PULIHKAN SEMUA</string>
+    <string name="delete_all">HAPUS SEMUA</string>
+    <string name="delete_folder_confirm">Hapus folder dan semua berkasnya?</string>
+    <string name="recover_folder">Pulihkan berkas sebelum menghapus</string>
+    <string name="delete_permanently">Hapus Permanen</string>
+    <string name="connect_dots_to_verify">HUBUNGKAN TITIK UNTUK VERIFIKASI</string>
+    <string name="aqi_label">Iku</string>
+    <string name="temp_label">Suhu</string>
+    <string name="humidity_label">Kelembapan</string>
+    <string name="importing_files">Mengimpor Berkas</string>
+    <string name="deleting_files">Menghapus Berkas</string>
+    <string name="restoring_files">Memulihkan Berkas</string>
+    <string name="hold_on_message">Tunggu sebentar, ponsel Anda sedang memproses</string>
+    <string name="completed_percent">%1$d%% Selesai</string>
+
+    <!-- Diagnostics -->
+    <string name="system_status">KESEHATAN SISTEM</string>
+    <string name="protection_guide_title">Tetap Aktif 24/7</string>
+    <string name="protection_guide_desc">Agar kunci andal, Mapplock harus tetap aktif di latar belakang.</string>
+    <string name="step_battery_title">Baterai Tanpa Batas</string>
+    <string name="step_battery_desc">Cegah Android menghentikan Mapplock. Atur ke \'Tidak Dibatasi\'.</string>
+    <string name="step_autostart_title">Mulai Otomatis</string>
+    <string name="step_autostart_desc">Izinkan Mapplock mulai otomatis saat ponsel menyala.</string>
+    <string name="step_recents_title">Kunci di Recents</string>
+    <string name="step_recents_desc">Kunci Mapplock secara manual di daftar \'Aplikasi Terbaru\'.</string>
+    <string name="oem_guide_xiaomi">Ketuk di sini → Baterai &amp; performa → Penghemat baterai aplikasi → Mapplock → Tidak ada batasan. Aktifkan juga \'Mulai otomatis\'.</string>
+    <string name="oem_guide_oppo">Ketuk di sini → Manajemen Aplikasi → Mapplock → Izinkan Mulai Otomatis &amp; Izinkan Aktivitas Latar Belakang.</string>
+    <string name="oem_guide_vivo">Ketuk di sini → Baterai → Konsumsi Daya Latar Belakang Tinggi → Aktifkan Mapplock.</string>
+    <string name="oem_guide_samsung">Ketuk di sini → Baterai → Batas penggunaan latar belakang → Aplikasi yang tidak pernah tidur → Tambah Mapplock.</string>
+    <string name="oem_guide_generic">Ketuk di sini → Baterai → Tidak Dibatasi / Tanpa Optimalisasi.</string>
+    <string name="lock_recents_instruction">1. Geser ke atas untuk melihat Aplikasi Terbaru\n2. Tekan lama pada Mapplock\n3. Ketuk ikon \'Gembok\'</string>
+    <string name="indestructible_mode_active">MODE TIDAK TERHANCURKAN AKTIF</string>
+    <string name="indestructible_mode_inactive">PERINGATAN KESEHATAN SISTEM</string>
+    <string name="fix_now">PERBAIKI SEKARANG</string>
+    <string name="status_active">AKTIF</string>
+    <string name="status_inactive">TIDAK AKTIF</string>
+    <string name="accessibility_service">Layanan Aksesibilitas</string>
+    <string name="overlay_permission">Izin Hamparan</string>
+    <string name="usage_stats">Statistik Penggunaan</string>
+    <string name="locker_service">Mesin Pengunci</string>
+    <string name="bg_protection">Perlindungan Latar Belakang (Disarankan)</string>
+    <string name="bg_protection_desc">Mencegah Mapplock dihentikan oleh sistem.</string>
+    <string name="lock_in_recents_guide">Cara menjaga Mapplock selalu aktif:\n1. Buka Aplikasi Terbaru\n2. Tekan lama Mapplock\n3. Ketuk ikon \'Gembok\'</string>
+
+    <string-array name="faq_questions">
+<item>Apa itu Mapplock dan apa bedanya dengan pengunci aplikasi lain?</item>
+<item>Bagaimana Mapplock melindungi data saya dari \'Q-Day\'?</item>
+<item>Bagaimana cara kerja fitur \"Map-Gate\"?</item>
+<item>Apakah foto dan video pribadi saya disimpan di server Mapplock?</item>
+<item>Apa yang terjadi jika saya lupa PIN atau Pola?</item>
+<item>Apakah fitur peta akan berfungsi jika saya sedang offline?</item>
+<item>Apa itu \"Tangkapan Penyusup\" dan di mana saya bisa melihat fotonya?</item>
+<item>Apa itu \"Perlindungan Kehilangan Berkas\" dan mengapa saya harus mengaktifkannya?</item>
+    </string-array>
+    <string-array name="faq_answers">
+<item>Mapplock adalah aplikasi keamanan generasi berikutnya yang dikembangkan oleh Aitoyz yang menggunakan kecerdasan berbasis lokasi untuk melindungi privasi Anda. Berbeda dengan pengunci standar, Mapplock memperkenalkan teknologi \"Map-Gate\" untuk menentukan zona geografis aman.</item>
+<item>Mapplock dibangun dengan arsitektur Quantum-Resilient. Aplikasi ini mencegah serangan dengan enkripsi AES-256 lokal saja dan arsitektur zero-knowledge. Data Anda tidak pernah meninggalkan perangkat.</item>
+<item>Fitur Map-Gate memungkinkan Anda mengatur koordinat GPS tertentu sebagai \"Zona Aman\". Saat berada di dalam radius, aplikasi Anda dapat diakses dengan mudah. Begitu keluar, Mapplock otomatis mengaktifkan kuncian ketat.</item>
+<item>Tidak, Aitoyz beroperasi pada model \"Privasi Utama\", yang berarti Mapplock tidak menyimpan berkas pribadi Anda di server kami. Semua berkas dienkripsi secara lokal di penyimpanan internal Anda.</item>
+<item>Jika lupa kode Anda, Anda dapat menggunakan metode verifikasi sekunder seperti biometrik atau \"Titik Peta Rahasia\" Anda sebagai metode pemulihan.</item>
+<item>Ya, Mapplock dirancang untuk tetap berfungsi penuh tanpa koneksi internet. Aplikasi mengunduh dan menyimpan data peta area lokal Anda setelah izin lokasi diberikan.</item>
+<item>Tangkapan Penyusup adalah fitur otomatis yang mengambil selfie siapa pun yang mencoba membobol brankas Anda. Jika kode salah dimasukkan beberapa kali, kamera depan akan dipicu secara diam-diam.</item>
+<item>Perlindungan Kehilangan Berkas mencegah pencopotan aplikasi Mapplock secara tidak sengaja menggunakan hak Administrator Perangkat. Ini memastikan dokumen penting Anda tidak terhapus karena kesalahan.</item>
+    </string-array>
+</resources>

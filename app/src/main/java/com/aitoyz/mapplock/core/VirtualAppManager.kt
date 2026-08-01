@@ -15,12 +15,8 @@ import android.net.Uri
  */
 class VirtualAppManager(private val context: Context) {
 
-    private val sandboxDir = com.aitoyz.mapplock.security.StorageManager.getSandboxDir(context)
-    private val prefs = context.getSharedPreferences("virtual_apps", Context.MODE_PRIVATE)
-
-    init {
-        if (!sandboxDir.exists()) sandboxDir.mkdirs()
-    }
+    private val sandboxDir by lazy { com.aitoyz.mapplock.security.StorageManager.getSandboxDir(context) }
+    private val prefs by lazy { context.getSharedPreferences("virtual_apps", Context.MODE_PRIVATE) }
 
     fun isAppHidden(packageName: String): Boolean {
         return prefs.getBoolean("hidden_$packageName", false)

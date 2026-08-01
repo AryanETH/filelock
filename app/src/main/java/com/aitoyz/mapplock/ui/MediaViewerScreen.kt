@@ -403,9 +403,11 @@ fun PhotoViewer(file: File, isDark: Boolean = true, onZoomChanged: (Boolean) -> 
                         }
                     })
                 }
-                // REMOVED: detectDragGestures (One-finger drag)
-                // This ensures one-finger ALWAYS goes to the HorizontalPager
-                .transformable(state = state)
+                .transformable(
+                    state = state,
+                    canPan = { offset -> scale > 1f },
+                    lockRotationOnZoomPan = true
+                )
         ) {
             AsyncImage(
                 model = file,

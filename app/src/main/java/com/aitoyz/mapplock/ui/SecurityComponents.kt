@@ -15,6 +15,7 @@ import androidx.compose.material.icons.automirrored.filled.Backspace
 import com.aitoyz.mapplock.ui.theme.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -54,7 +55,7 @@ fun CompactPinPad(
     autoConfirm: Boolean = true,
     isGlassMode: Boolean = false
 ) {
-    var pin by remember { mutableStateOf("") }
+    var pin by rememberSaveable { mutableStateOf("") }
     var isError by remember { mutableStateOf(false) }
     var isSuccess by remember { mutableStateOf(false) }
     val shakeOffset = remember { Animatable(0f) }
@@ -292,7 +293,7 @@ fun CompactPatternGrid(
     showConfirmButton: Boolean = false,
     isGlassMode: Boolean = false
 ) {
-    var secret by remember { mutableStateOf("") }
+    var secret by rememberSaveable { mutableStateOf("") }
     var isError by remember { mutableStateOf(false) }
     var currentTouchPosition by remember { mutableStateOf<Offset?>(null) }
     val segmentProgress = remember { Animatable(0f) }

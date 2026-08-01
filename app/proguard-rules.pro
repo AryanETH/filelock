@@ -9,18 +9,19 @@
 -dontwarn com.mapbox.**
 
 # --- Security & Crypto Rules ---
-# Keep EncryptedSharedPreferences and KeyStore related classes
--keep class androidx.security.crypto.** { *; }
--keep class androidx.biometric.** { *; }
--dontwarn androidx.security.crypto.**
--dontwarn androidx.biometric.**
+# Keep critical security singletons intact for reliable preference access
+-keep class com.aitoyz.mapplock.security.SecureManager { *; }
+-keep class com.aitoyz.mapplock.security.CryptoManager { *; }
+-keep class com.aitoyz.mapplock.security.LockerRepository { *; }
+-keep class com.aitoyz.mapplock.security.LocaleManager { *; }
 
-# Keep our security logic intact
--keep class com.aitoyz.mapplock.security.** { *; }
+# Initializers for Jetpack Startup must be kept
+-keep class com.aitoyz.mapplock.startup.** { *; }
 
 # --- Jetpack Compose Rules ---
--keep class androidx.compose.ui.platform.** { *; }
--keep class androidx.compose.runtime.** { *; }
+# Using more specific rules to avoid overly broad keep rules
+-keep class androidx.compose.runtime.Recomposer { *; }
+-keep class androidx.compose.ui.platform.AndroidComposeView { *; }
 -keepattributes *Annotation*
 
 # --- Coroutines & Kotlin ---

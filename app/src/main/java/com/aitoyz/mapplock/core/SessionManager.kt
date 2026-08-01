@@ -19,7 +19,7 @@ object SessionManager {
     )
 
     private val sessions = ConcurrentHashMap<String, AppSession>()
-    private val GRACE_PERIOD_MS = 15_000L
+    private val GRACE_PERIOD_MS = 5_000L // Reduced from 15s to 5s for higher production security
 
     // Clock provider for testing
     var clock: () -> Long = { SystemClock.elapsedRealtime() }
@@ -28,6 +28,10 @@ object SessionManager {
         val session = getOrCreate(packageName)
         session.isUnlocked = true
         session.unlockTimestamp = clock()
+        // CRITICAL: Reset background timer on successful unlock.
+        // This prevents "Dual Lock" if the user stays on the PIN screen longer than the grace period.
+        session.backgroundTimestamp = 0
+        session.lastForegroundTimestamp = clock()
         LockerLogger.i(LockerLogger.Event.SESSION_ACTIVE, "[SESSION] $packageName unlocked")
     }
 

@@ -17,7 +17,7 @@ android {
         versionCode 1
         versionName "1.0.0"
 
-        resConfigs "en", "hi"
+        resConfigs "en", "hi", "ar", "es", "pt", "pt-rBR", "in", "ru", "tr", "vi", "fr", "de", "tl", "zh", "bn", "ur"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -50,6 +50,7 @@ android {
 
     buildFeatures {
         compose true
+        buildConfig true
     }
 
     packaging {
@@ -118,7 +119,14 @@ dependencies {
     implementation "androidx.camera:camera-lifecycle:1.4.0"
     implementation "androidx.camera:camera-view:1.4.0"
 
-    // Testing
+    // App Startup
+    implementation "androidx.startup:startup-runtime:1.2.0"
+
+    // Profile Installer for Baseline Profiles
+    implementation "androidx.profileinstaller:profileinstaller:1.4.1"
+
+    // Testing & Debugging
+    debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.14'
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.3.0'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.7.0'

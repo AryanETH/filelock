@@ -65,6 +65,16 @@ class SystemAppFilter(private val context: Context) {
                packageName == "com.google.android.gms" || // GMS Overlays
                packageName == "com.google.android.photopicker" || // Android Photo Picker
                packageName == "com.android.providers.media.module" || // Media provider system task
+               packageName == "com.samsung.android.incallui" || // Samsung Phone
+               packageName == "com.samsung.android.app.telephonyui" ||
+               packageName == "com.miui.securitycenter" || // Xiaomi Security
+               packageName == "com.miui.notification" ||
+               packageName == "com.coloros.safecenter" || // Oppo/Realme
+               packageName == "com.oneplus.launcher" || // OnePlus
+               packageName == "com.nothing.launcher" || // Nothing OS
+               packageName == "com.oppo.launcher" ||
+               packageName == "com.bbk.launcher2" || // Vivo/iQOO
+               packageName == "com.android.systemui" || // General
                packageName == "android" // System process
     }
 
@@ -91,6 +101,11 @@ class SystemAppFilter(private val context: Context) {
     fun isRecents(packageName: String): Boolean {
         return packageName.contains("quickstep") || 
                packageName.contains("recents") || 
-               packageName == "com.android.systemui" // Often handles recents
+               packageName.contains("overview") ||
+               packageName == "com.android.systemui" || // General
+               packageName == "com.sec.android.app.launcher" || // Samsung
+               packageName == "com.miui.home" || // Xiaomi
+               packageName == "com.android.launcher3" || // AOSP / Pixel
+               packageName == "com.google.android.apps.nexuslauncher" // Pixel
     }
 }

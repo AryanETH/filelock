@@ -16,7 +16,7 @@ import java.io.FileOutputStream
 
 class IntruderManager private constructor(context: Context) {
     private val appContext = context.applicationContext
-    private val cryptoManager = CryptoManager()
+    private val cryptoManager by lazy { CryptoManager() }
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var imageCapture: ImageCapture? = null
 

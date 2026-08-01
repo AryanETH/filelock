@@ -100,6 +100,7 @@ class MainActivity : AppCompatActivity() {
         super.attachBaseContext(LocaleManager.getLocaleContext(newBase, lang))
     }
 
+    @OptIn(UnstableApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
@@ -300,6 +301,8 @@ class MainActivity : AppCompatActivity() {
                             "vault" -> {
                                 VaultScreen(
                                     state = uiState,
+                                    virtualAppManager = viewModel.virtualAppManager,
+                                    appCloner = viewModel.appCloner,
                                     onUnlockAttempt = { lat, lon, pin -> 
                                         viewModel.attemptUnlockAtLocation(lat, lon, pin)
                                     },
@@ -322,11 +325,6 @@ class MainActivity : AppCompatActivity() {
                                         viewModel.setPerformingAction(true)
                                         viewModel.openProtectedAppsSettings() 
                                     },
-                                    onOpenAutoStartSettings = {
-                                        viewModel.setPerformingAction(true)
-                                        viewModel.openAutoStartSettings()
-                                    },
-                                    onToggleMasterStealth = { viewModel.toggleMasterStealth() },
                                     onAddFiles = { uris, category -> viewModel.addFilesToVault(uris, category) },
                                     onToggleAppLock = { packageName -> 
                                         if (packageName.isEmpty()) {
@@ -361,13 +359,20 @@ class MainActivity : AppCompatActivity() {
                                     },
                                     onDeleteFile = { fileId -> viewModel.removeFileFromVault(fileId) },
                                     onRestoreFile = { fileId -> viewModel.restoreFileToGallery(fileId) },
-                                    onRemoveAppFromVault = { vaultId, pkg -> viewModel.removeAppFromSpecificVault(vaultId, pkg) },
                                     onFetchGalleryItems = { cat -> viewModel.fetchGalleryItems(cat) },
                                     onToggleDarkMode = { viewModel.toggleDarkMode() },
                                     onToggleFingerprint = { viewModel.toggleFingerprint() },
                                     onSetLanguage = { lang -> viewModel.setLanguage(lang) },
                                     onCompleteTour = { viewModel.completeTour() },
                                     onToggleScreenshotRestriction = { viewModel.toggleScreenshotRestriction() },
+                                    onStartAction = { viewModel.setPerformingAction(true) },
+                                    onEndAction = { viewModel.setPerformingAction(false) },
+                                    onOpenAutoStartSettings = {
+                                        viewModel.setPerformingAction(true)
+                                        viewModel.openAutoStartSettings()
+                                    },
+                                    onToggleMasterStealth = { viewModel.toggleMasterStealth() },
+                                    onRemoveAppFromVault = { vaultId, pkg -> viewModel.removeAppFromSpecificVault(vaultId, pkg) },
                                     onToggleIntruderCapture = { enabled ->
                                         if (enabled && !uiState.hasCameraPermission) {
                                             viewModel.setPerformingAction(true)
@@ -376,6 +381,8 @@ class MainActivity : AppCompatActivity() {
                                             viewModel.toggleIntruderCapture(enabled)
                                         }
                                     },
+                                    onToggleUninstallShield = { viewModel.toggleUninstallShield(it) },
+                                    onRestoreAndUninstall = { viewModel.restoreEverythingAndUninstall() },
                                     onCreateFolder = { viewModel.createFolder(it) },
                                     onDeleteFolder = { name, recover -> viewModel.deleteFolder(name, recover) },
                                     onBulkDelete = { ids, isPermanent -> viewModel.bulkDeleteFiles(ids, isPermanent) },
@@ -385,8 +392,6 @@ class MainActivity : AppCompatActivity() {
                                     onSetMonitoringMode = { viewModel.setMonitoringMode(it) },
                                     onFetchWeather = { lat, lon -> viewModel.fetchWeatherAndAQI(lat, lon) },
                                     onRefreshWeather = { viewModel.refreshWeather() },
-                                    onStartAction = { viewModel.setPerformingAction(true) },
-                                    onEndAction = { viewModel.setPerformingAction(false) },
                                     onRequestGps = { onEnabled ->
                                         checkLocationSettings(this@MainActivity, resolutionLauncher) {
                                             onEnabled()

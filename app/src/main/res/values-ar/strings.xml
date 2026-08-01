@@ -1,25 +1,366 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">قفل الخريطة</string>
-    <string name="language">اللغة</string>
-    <string name="select_language">اختر اللغة</string>
-    <string name="search_languages">بحث عن اللغات...</string>
-    <string name="photos">الصور</string>
-    <string name="videos">الفيديوهات</string>
-    <string name="audio">الصوت</string>
-    <string name="documents">المستندات</string>
+<string name="app_name">Mapplock</string>
+<string name="accessibility_description">يستخدم Mapplock هذه الخدمة للكشف عن وقت تشغيل تطبيق مقفل، مما يسمح له بعرض شاشة قفل آمنة وحماية خصوصيتك.</string>
 
-    <!-- Permission Screen -->
-    <string name="notification_perm_title">تفعيل التنبيهات</string>
-    <string name="notification_perm_desc">يستخدم Mapplock التنبيهات للحفاظ على تشغيل خدمة الحماية بشكل موثوق.</string>
-    <string name="usage_perm_title">الوصول إلى إحصائيات الاستخدام</string>
+<!-- المصطلحات المبسطة -->
+<string name="vault">منطقة آمنة</string>
+<string name="vault_plural">مناطق آمنة</string>
+<string name="hidden_files">ملفات سرية</string>
+<string name="hide_app">إخفاء التطبيق</string>
+<string name="wrong_unlock_alert">تنبيه متسلل</string>
+<string name="wrong_unlock">فتح خاطئ</string>
+<string name="global_lock">قفل الكل</string>
+<string name="stealth_entry">دخول سري</string>
+
+<!-- شاشة اللغة -->
+<string name="select_language">اختر اللغة</string>
+<string name="english">الإنجليزية</string>
+<string name="hindi">الهندية</string>
+<string name="close_btn">إغلاق</string>
+<string name="selected_text">محدد</string>
+<string name="language">اللغة</string>
+<string name="search_languages">البحث عن اللغات&#8230;</string>
+
+<!-- شاشة الأذونات -->
+<string name="security_clearance">دليل الأذونات</string>
+<string name="security_clearance_desc">يتم طلب الأذونات فقط عند الحاجة إليها</string>
+<string name="privacy_note">نحن لا نجمع أو نخزن أو نشارك أيًا من معلوماتك الشخصية</string>
+<string name="ads_note">قد يحتوي هذا الإجراء على إعلانات</string>
+
+<string name="permission_usage_access">مراقبة التطبيقات</string>
+<string name="permission_usage_access_desc">لمعرفة متى تفتح تطبيقًا مقفلاً.</string>
+<string name="permission_overlay_access">العرض فوق التطبيقات الأخرى</string>
+<string name="permission_overlay_access_desc">لعرض شاشة القفل فوق التطبيقات الأخرى.</string>
+<string name="permission_camera_access">الكاميرا</string>
+<string name="permission_camera_access_desc">لالتقاط صورة لأي شخص يحاول الاقتحام.</string>
+<string name="permission_location_access">الموقع</string>
+<string name="permission_location_access_desc">لقفل/إلغاء قفل التطبيقات عندما تكون بالقرب من منطقتك الآمنة.</string>
+<string name="permission_storage_access">التخزين</string>
+<string name="permission_storage_access_desc">لإخفاء وحفظ صورك وفيديوهاتك.</string>
+<string name="permission_background_activity">التشغيل في الخلفية</string>
+<string name="permission_background_activity_desc">للحفاظ على عمل التطبيق على مدار الساعة طوال أيام الأسبوع لسلامتك.</string>
+<string name="system_ready">كل شيء جاهز!</string>
+<string name="authorize">السماح</string>
+<string name="usage_access">الوصول إلى الاستخدام</string>
+<string name="usage_access_desc">يسمح لـ Mapplock باكتشاف وقت فتح التطبيقات المحمية.</string>
+<string name="overlay_access">العرض فوق التطبيقات الأخرى</string>
+<string name="overlay_access_desc">يسمح لشاشة القفل بالظهور فوق التطبيقات المحمية.</string>
+<string name="location_access">الموقع</string>
+<string name="location_access_desc">مطلوب لمناطق القفل القائمة على الخريطة وميزات الموقع.</string>
+<string name="background_activity">تجاهل تحسين البطارية</string>
+<string name="background_activity_desc">يسمح لخدمة القفل بالعمل بشكل موثوق دون أن يوقفها النظام.</string>
+<string name="full_storage_access">إدارة جميع الملفات</string>
+<string name="full_storage_access_desc">مطلوب لحماية وإدارة الملفات في الخزنة.</string>
+<string name="background_popups">النوافذ المنبثقة في الخلفية</string>
+<string name="background_popups_desc">اضغط هنا ← وصول خاص للتطبيقات ← عرض النوافذ المنبثقة أثناء التواجد في الخلفية ← سماح</string>
+
+<!-- Onboarding -->
+<string name="onboarding_1_title">التنكر في شكل قفل</string>
+<string name="onboarding_1_desc">ستعمل الخريطة كطبقة قفل، وستكون جميع ملفاتك مخفية تحت الموقع</string>
+<string name="onboarding_2_title">بدون إنترنت تمامًا</string>
+<string name="onboarding_2_desc">لا يتم تخزين أي من بياناتك في الخوادم، Mapplock يعمل محليًا وبدون إنترنت تمامًا</string>
+<string name="onboarding_3_title">صنع في الهند</string>
+<string name="onboarding_3_desc">تطبيقنا بالكامل هندي بكل فخر وتم بناؤه في بوبال 🌊</string>
+<string name="onboarding_4_title">كيفية الاستخدام</string>
+<string name="onboarding_4_desc">اتبع هذه الخطوات البسيطة لتأمين جهازك.</string>
+<string name="onboarding_4_step1">اضغط لفترة طويلة على الخريطة</string>
+<string name="onboarding_4_step2">قم بتعيين رقم التعريف الشخصي (PIN) أو النمط الخاص بك</string>
+<string name="onboarding_4_step3">قفل تطبيقاتك أو إخفاء ملفاتك</string>
+<string name="onboarding_4_step4">اضغط مرتين على نفس الموقع لإعادة زيارة لوحة التحكم</string>
+<string name="onboarding_4_step5">ملاحظة: اختر موقعًا عشوائيًا لنقاط القفل الخاصة بك حتى لا يتمكن الآخرون من تخمينها بسهولة.</string>
+<string name="onboarding_disclaimer_title">إخلاء مسؤولية بيانات الخريطة</string>
+<string name="onboarding_disclaimer_desc">يتم توفير بيانات الخريطة والحدود كما هي. نحن لا نتحكم في التمثيل الجغرافي.</string>
+<string name="onboarding_accept_prefix">أنا أفهم وأقبل </string>
+<string name="onboarding_terms">شروط الخدمة</string>
+<string name="onboarding_and"> و </string>
+<string name="onboarding_privacy">سياسة الخصوصية</string>
+<string name="initialize_system">ابدأ</string>
+<string name="next">متابعة</string>
+
+<!-- شاشة الخريطة -->
+<string name="verify_pin">أدخل رقم PIN</string>
+<string name="verify_pattern">ارسم النمط</string>
+<string name="cancel">إلغاء</string>
+<string name="setup_lock">إعداد القفل</string>
+<string name="select_apps">اختر التطبيقات</string>
+<string name="save_lock">حفظ</string>
+<string name="back">رجوع</string>
+<string name="search_places">البحث عن مكان&#8230;</string>
+
+<!-- لوحة التحكم -->
+<string name="app_lock_title">قفل التطبيقات</string>
+<string name="app_lock_subtitle">قفل تطبيقاتك</string>
+<string name="history_title">التطبيقات المقفلة</string>
+<string name="history_subtitle">إدارة جميع تطبيقاتك المقفلة</string>
+<string name="categories">الفئات</string>
+<string name="photos">الصور</string>
+<string name="videos">الفيديوهات</string>
+<string name="audio">الصوت</string>
+<string name="documents">المستندات</string>
+<string name="wrong_unlocks">المتسللون</string>
+<string name="recycle_bin">سلة المهملات</string>
+    <plurals name="items_count">
+        <item quantity="zero">لا توجد عناصر</item>
+        <item quantity="one">عنصر واحد</item>
+        <item quantity="two">عنصران</item>
+        <item quantity="few">%1$d عناصر</item>
+        <item quantity="many">%1$d عنصرًا</item>
+        <item quantity="other">%1$d عنصر</item>
+    </plurals>
+
+<!-- شاشة عرض الوسائط -->
+<string name="save_to_gallery">حفظ في المعرض</string>
+<string name="open_in">فتح في</string>
+<string name="restore">استعادة</string>
+<string name="delete">حذف</string>
+<string name="restore_file_title">استعادة الملف؟</string>
+<string name="restore_file_message">نقل هذا الملف مرة أخرى إلى معرض هاتفك.</string>
+<string name="delete_file_title">حذف الملف؟</string>
+<string name="delete_file_message">سيؤدي هذا إلى حذف الملف نهائيًا.</string>
+<string name="preview_unavailable">المعاينة غير متوفرة:</string>
+<string name="use_open_in_hint">استخدم "فتح في" للعرض.</string>
+<string name="open_with">فتح باستخدام&#8230;</string>
+<string name="restore_confirm">استعادة</string>
+<string name="delete_confirm">حذف</string>
+<string name="no_preview">لا توجد معاينة لـ %1$s</string>
+<string name="open_in_hint">استخدم "فتح في" للعرض مع تطبيق آخر.</string>
+
+<!-- الإعدادات -->
+<string name="system_permissions">الأذونات</string>
+<string name="permission_app_detection">اكتشاف التطبيقات</string>
+<string name="permission_app_detection_desc">لمعرفة متى تفتح التطبيقات المقفلة.</string>
+<string name="permission_lock_window">نافذة القفل</string>
+<string name="permission_lock_window_desc">لعرض شاشة القفل.</string>
+<string name="permission_camera">الكاميرا</string>
+<string name="permission_camera_desc">للإمساك بشخص يحاول فتح تطبيقاتك.</string>
+<string name="permission_storage">التخزين</string>
+<string name="permission_storage_desc">لحفظ ملفاتك المخفية.</string>
+<string name="advanced_security">الأمان</string>
+<string name="uninstall_protection">حماية من إلغاء التثبيت</string>
+<string name="uninstall_protection_desc">منع الآخرين من حذف هذا التطبيق.</string>
+<string name="lock_options">إعدادات القفل</string>
+<string name="global_lock_title">قفل الكل</string>
+<string name="global_lock_desc">قفل جميع تطبيقاتك المختارة في وقت واحد.</string>
+<string name="dark_mode">الوضع الداكن</string>
+<string name="dark_mode_desc">التبديل بين السمة الفاتحة والداكنة.</string>
+<string name="monitoring_mode">مستوى الأمان</string>
+<string name="monitoring_mode_desc">قوة اكتشاف القفل</string>
+<string name="monitoring_mode_moderate">متوسط (قياسي)</string>
+<string name="monitoring_mode_hard">صعب (حماية عالية)</string>
+<string name="monitoring_mode_auto">تلقائي (موصى به)</string>
+<string name="monitoring_mode_usage">إحصائيات الاستخدام (قياسي)</string>
+<string name="monitoring_mode_shizuku">Shizuku (أداء عالي)</string>
+<string name="monitoring_mode_accessibility">إمكانية الوصول (احتياطي)</string>
+
+<!-- الجولة -->
+<string name="tour_skip">تخطي</string>
+<string name="tour_next">التالي</string>
+<string name="tour_welcome">أهلاً بك! خصوصيتك مخفية الآن على الخريطة.</string>
+<string name="tour_step1">اضغط لفترة طويلة على الخريطة لتعيين نقطة دخولك السرية.</string>
+<string name="tour_step2">اضغط مرتين على نقطتك السرية لرؤية ملفاتك المخفية.</string>
+<string name="tour_step3">استخدم هذه الأزرار للعثور على نفسك أو تغيير نمط الخريطة.</string>
+<string name="tour_step4">تذكر نقطتك السرية! إنها مفتاحك.</string>
+<string name="zoom_in_hint">قم بالتكبير أكثر لتعيين منطقة آمنة.</string>
+<string name="access_granted_desc">أهلاً بعودتك! تم السماح بالوصول.</string>
+<string name="zone_restricted_desc">تم رفض الوصول. أنت خارج المنطقة الآمنة.</string>
+<string name="system_initialization_desc">اضغط لفترة طويلة على الخريطة لإنشاء منطقة آمنة.</string>
+<string name="lock_type_bio">بصمة الإصبع</string>
+<string name="biometric_required">يرجى استخدام بصمة إصبعك.</string>
+<string name="map_location_hint">استخدم نقطة الخريطة لإلغاء القفل.</string>
+<string name="package_visibility">اختر تطبيقات لقفلها</string>
+<string name="tap_map_to_unlock">اضغط أدناه لفتح الخريطة.</string>
+<string name="open_map_interface">فتح الخريطة</string>
+<string name="screenshot_restriction">لا لقطات شاشة</string>
+<string name="screenshot_restriction_desc">منع الآخرين من أخذ لقطات شاشة</string>
+<string name="fingerprint_unlock">بصمة الإصبع</string>
+<string name="fingerprint_unlock_desc">استخدم بصمة الإصبع للوصول السريع.</string>
+<string name="offline_title">أنت غير متصل بالإنترنت</string>
+<string name="offline_message">يرجى تشغيل البيانات</string>
+<string name="support_links">المساعدة والقانون</string>
+<string name="tutorial">تعليمي (مشاهدة فيديو)</string>
+<string name="feedback">إرسال ملاحظات</string>
+<string name="terms_of_use">شروط الاستخدام</string>
+<string name="faq">الأسئلة الشائعة / المساعدة</string>
+<string name="privacy_policy">سياسة الخصوصية</string>
+<string name="share_mapplock">مشاركة mapplock</string>
+
+<!-- VaultContentScreen -->
+<string name="settings">الإعدادات</string>
+<string name="lock">قفل</string>
+<string name="add">إضافة</string>
+<string name="sort">فرز</string>
+<string name="hide">إخفاء</string>
+<string name="vault_empty">لا توجد تطبيقات هنا بعد.</string>
+<string name="vault_empty_hint">اضغط على + لإضافة بعض الملفات.</string>
+<string name="app_lock_desc">لن تفتح التطبيقات المخفية إلا عندما تكون في منطقتك الآمنة.</string>
+<string name="hide_app_dialog_title">إخفاء التطبيق</string>
+<string name="cloning_in_progress">نقل التطبيق إلى المنطقة الآمنة&#8230;</string>
+<string name="hide_app_dialog_body">سيؤدي هذا إلى إخفاء التطبيق وسيفتح فقط من هنا. هل تريد المتابعة؟</string>
+<string name="proceed">متابعة</string>
+<string name="clone_success">تم إخفاء التطبيق بنجاح!</string>
+<string name="clone_failed">فشل. يرجى المحاولة مرة أخرى.</string>
+<string name="clear_all_hidden_apps">إظهار كل التطبيقات</string>
+<string name="active_vaults">المناطق النشطة</string>
+    <plurals name="apps_locked">
+        <item quantity="zero">لا توجد تطبيقات مقفلة</item>
+        <item quantity="one">تطبيق واحد مقفل</item>
+        <item quantity="two">تطبيقات مقفلان</item>
+        <item quantity="few">%1$d تطبيقات مقفلة</item>
+        <item quantity="many">%1$d تطبيقًا مقفلًا</item>
+        <item quantity="other">%1$d تطبيق مقفل</item>
+    </plurals>
+    <string name="vault_established">تم إنشاء منطقة آمنة</string>
+    <plurals name="apps_hidden">
+        <item quantity="zero">لا توجد تطبيقات مخفية</item>
+        <item quantity="one">تطبيق واحد مخفي:</item>
+        <item quantity="two">تطبيقات مخفيان:</item>
+        <item quantity="few">%1$d تطبيقات مخفية:</item>
+        <item quantity="many">%1$d تطبيقًا مخفيًا:</item>
+        <item quantity="other">%1$d تطبيق مخفي:</item>
+    </plurals>
+<string name="close">إغلاق</string>
+<string name="fix">إصلاح</string>
+<string name="get_started">ابدأ</string>
+<string name="grant">السماح</string>
+<string name="vault_id_label">منطقة %1$s</string>
+
+<!-- MapSelectionScreen -->
+<string name="access_granted">تم السماح بالوصول</string>
+<string name="zone_restricted">تم رفض الوصول</string>
+<string name="system_initialization">جارٍ الإعداد&#8230;</string>
+<string name="vault_encryption">جارٍ التشفير&#8230;</string>
+<string name="lock_type_pin">رقم PIN</string>
+<string name="lock_type_pattern">نمط</string>
+<string name="lock_type_map">خريطة</string>
+<string name="abort">توقف</string>
+<string name="initialize">بدء</string>
+<string name="bypass_security">تخطي</string>
+<string name="use_fingerprint">استخدام البصمة</string>
+<string name="location_locked">الموقع مقفل</string>
+<string name="enter_pin">أدخل رقم PIN</string>
+<string name="draw_pattern">ارسم النمط</string>
+<string name="tap_coordinates">اضغط على الخريطة</string>
+<string name="verify_identity">تحقق من هويتك</string>
+<string name="outside_radius">أنت بعيد جدًا عن المنطقة الآمنة</string>
+<string name="biometric_unavailable">البصمة غير متوفرة</string>
+<string name="fingerprint">البصمة</string>
+<string name="tap_target_coordinates">اضغط على نقطة خريطتك السرية</string>
+<string name="location_required_title">مطلوب إذن الموقع</string>
+<string name="location_required_message">لتفعيل أمان الخريطة والقفل القائم على المنطقة، نحتاج إلى إذن موقعك.</string>
+<string name="location_allow_btn">السماح بالإذن</string>
+<string name="location_access_title">الوصول إلى الموقع</string>
+<string name="location_access_message">نحتاج إلى موقعك لتفعيل أمان الخزنة القائم على المنطقة.</string>
+<string name="grant_location_access">منح الوصول إلى الموقع</string>
+
+<!-- DashboardTour -->
+<string name="tour_dash_welcome_title">أهلاً بك في Mapplock</string>
+<string name="tour_dash_welcome_desc">خصوصيتك في أمان معنا. لنلقِ نظرة سريعة.</string>
+<string name="tour_dash_hide_apps_title">قفل التطبيقات</string>
+<string name="tour_dash_hide_apps_desc">اضغط هنا لقفل أي تطبيق.</string>
+<string name="tour_dash_history_title">سجل القفل</string>
+<string name="tour_dash_history_desc">إدارة جميع مواقعك الآمنة والتطبيقات داخلها.</string>
+<string name="tour_dash_categories_title">خزنتك السرية</string>
+<string name="tour_dash_categories_desc">سيتم حفظ الصور والفيديوهات والملفات التي تخفيها هنا بأمان.</string>
+<string name="tour_dash_fab_title">إنشاء مجلد جديد</string>
+<string name="tour_dash_fab_desc">اضغط على زر + لإنشاء مجلدات مخصصة</string>
+<string name="tour_dash_settings_title">الإعدادات</string>
+<string name="tour_dash_settings_desc">غير قفلك ولغتك وأكثر من هنا.</string>
+    <string name="custom_lock_background">خلفية قفل مخصصة</string>
+    <string name="custom_lock_background_desc">عيّن خلفيتك الشخصية</string>
+    <string name="intruder_capture">التقاط المتسلل</string>
+    <string name="intruder_capture_desc">التقط صورة سيلفي لأي شخص يحاول الاقتحام</string>
+    <string name="create_new_folder">إنشاء مجلد جديد</string>
+    <string name="create_new_folder_desc">يمكن أن تحتوي المجلدات على أي نوع من الملفات.</string>
+    <string name="folder_name">اسم المجلد</string>
+    <string name="appearance">المظهر</string>
+    <string name="preview_and_hide">إخفاء (%1$d)</string>
+    <string name="bg_active_desc">الصورة نشطة • اضغط للإدارة</string>
+    <string name="change">تغيير</string>
+    <string name="remove_btn">إزالة</string>
+    <string name="notification_perm_title">التنبيهات</string>
+    <string name="notification_perm_desc">تستخدم لتنبيهات الخدمة وتنبيهات الأمان الهامة.</string>
+    <string name="usage_perm_title">الوصول إلى الاستخدام</string>
     <string name="usage_perm_desc">يحتاج Mapplock لمعرفة وقت تشغيل التطبيق لعرض شاشة القفل.</string>
-    <string name="overlay_perm_title">العرض فوق التطبيقات الأخرى</string>
+    <string name="overlay_perm_title">إذن التراكب</string>
     <string name="overlay_perm_desc">يحتاج Mapplock لرسم شاشة القفل فوق التطبيقات المحمية.</string>
     <string name="background_popups_perm_title">النوافذ المنبثقة في الخلفية</string>
-    <string name="background_popups_perm_desc">يسمح لـ Mapplock بتشغيل شاشة الأمان فوراً من الخلفية.</string>
+    <string name="background_popups_perm_desc">يسمح لـ Mapplock بتشغيل شاشة الأمان فورًا من الخلفية.</string>
     <string name="battery_perm_title">تعطيل تحسين البطارية</string>
-    <string name="battery_perm_desc">يمنع النظام من إغلاق خدمة حماية Mapplock.</string>
+    <string name="battery_perm_desc">يمنع النظام من إيقاف خدمة حماية Mapplock.</string>
     <string name="grant_permission">منح الإذن</string>
     <string name="security_monitoring_note">يتطلب الأمان مراقبة نشطة للنظام.</string>
+    <string name="search_apps">البحث عن تطبيقات&#8230;</string>
+    <string name="recommended">موصى به</string>
+    <string name="all_apps">كل التطبيقات</string>
+    <string name="locked_apps_header">التطبيقات المقفلة</string>
+    <string name="no_apps_in_zone">لا توجد تطبيقات مقفلة بعد</string>
+    <string name="unlock_all">إلغاء قفل الكل</string>
+    <string name="user_locked_stats">أكثر من %1$d%% من المستخدمين قاموا بقفله</string>
+    <string name="bulk_action_title">إجراءات الفئة</string>
+    <string name="bulk_action_desc">اختر ما تريد فعله بجميع العناصر.</string>
+    <string name="recover_all">استعادة الكل</string>
+    <string name="delete_all">حذف الكل</string>
+    <string name="delete_folder_confirm">حذف المجلد وجميع ملفاته؟</string>
+    <string name="recover_folder">استعادة جميع الملفات قبل الحذف</string>
+    <string name="delete_permanently">حذف نهائي</string>
+    <string name="connect_dots_to_verify">وصل النقاط للتحقق</string>
+    <string name="aqi_label">مؤشر جودة الهواء</string>
+    <string name="temp_label">حرارة</string>
+    <string name="humidity_label">رطوبة</string>
+    <string name="importing_files">جارٍ استيراد الملفات</string>
+    <string name="deleting_files">جارٍ حذف الملفات</string>
+    <string name="restoring_files">جارٍ استعادة الملفات</string>
+    <string name="hold_on_message">انتظر قليلاً، يحاول هاتفك إكمال المهمة</string>
+    <string name="completed_percent">%1$d%% مكتمل</string>
+
+    <!-- Diagnostics -->
+    <string name="system_status">صحة النظام</string>
+    <string name="protection_guide_title">ابقَ نشطًا 24/7</string>
+    <string name="protection_guide_desc">للحفاظ على قفل تطبيقاتك بشكل موثوق، يجب أن يبقى Mapplock نشطًا في الخلفية.</string>
+    <string name="step_battery_title">بطارية غير مقيدة</string>
+    <string name="step_battery_desc">يمنع أندرويد من إيقاف Mapplock لتوفير البطارية. اضبطه على "غير مقيد".</string>
+    <string name="step_autostart_title">بدء تلقائي</string>
+    <string name="step_autostart_desc">يسمح لـ Mapplock بالبدء تلقائيًا عند تشغيل هاتفك.</string>
+    <string name="step_recents_title">قفل في التطبيقات الحديثة</string>
+    <string name="step_recents_desc">قم بقفل Mapplock يدويًا في قائمة "التطبيقات الحديثة" لمنع إغلاقه بالخطأ.</string>
+    <string name="oem_guide_xiaomi">اضغط هنا ← البطارية والأداء ← موفر بطارية التطبيقات ← Mapplock ← لا توجد قيود. قم أيضًا بتفعيل "بدء تلقائي".</string>
+    <string name="oem_guide_oppo">اضغط هنا ← إدارة التطبيقات ← Mapplock ← السماح بالبدء التلقائي.</string>
+    <string name="oem_guide_vivo">اضغط هنا ← البطارية ← استهلاك طاقة عالٍ في الخلفية ← تفعيل Mapplock.</string>
+    <string name="oem_guide_samsung">اضغط هنا ← البطارية ← حدود استخدام الخلفية ← تطبيقات لا تسكن أبدًا ← إضافة Mapplock.</string>
+    <string name="oem_guide_generic">اضغط هنا ← البطارية ← غير مقيد / بدون تحسين.</string>
+    <string name="lock_recents_instruction">1. اسحب لأعلى لرؤية التطبيقات الحديثة\n2. اضغط مطولاً على Mapplock\n3. اضغط على أيقونة "قفل"</string>
+    <string name="indestructible_mode_active">وضع الحماية القصوى نشط</string>
+    <string name="indestructible_mode_inactive">تحذير صحة النظام</string>
+    <string name="fix_now">أصلح الآن</string>
+    <string name="status_active">نشط</string>
+    <string name="status_inactive">غير نشط</string>
+    <string name="accessibility_service">خدمة إمكانية الوصول</string>
+    <string name="overlay_permission">إذن التراكب</string>
+    <string name="usage_stats">إحصائيات الاستخدام</string>
+    <string name="locker_service">محرك القفل</string>
+    <string name="bg_protection">حماية الخلفية (موصى به)</string>
+    <string name="bg_protection_desc">يمنع النظام من إيقاف Mapplock.</string>
+    <string name="lock_in_recents_guide">كيفية الحفاظ على Mapplock نشطًا دائمًا:\n1. افتح التطبيقات الحديثة\n2. اضغط مطولاً على Mapplock\n3. اضغط على أيقونة "قفل"</string>
+
+    <string-array name="faq_questions">
+<item>ما هو Mapplock وكيف يختلف عن أقفال التطبيقات الأخرى؟</item>
+<item>كيف يحمي Mapplock بياناتي ضد "يوم كيو"؟</item>
+<item>كيف تعمل ميزة "بوابة الخريطة"؟</item>
+<item>هل يتم تخزين صوري وفيديوهاتي الخاصة في خوادم Mapplock؟</item>
+<item>ماذا يحدث إذا نسيت رقم PIN أو النمط الخاص بي؟</item>
+<item>هل ستعمل ميزات الخريطة إذا كنت غير متصل بالإنترنت؟</item>
+<item>ما هو "التقاط المتسلل" وأين يمكنني رؤية الصور؟</item>
+<item>ما هي "حماية فقدان الملفات" ولماذا يجب علي تفعيلها؟</item>
+    </string-array>
+    <string-array name="faq_answers">
+<item>Mapplock هو تطبيق أمان من الجيل القادم تم تطويره بواسطة Aitoyz ويستخدم الذكاء القائم على الموقع لحماية خصوصيتك. على عكس الأقفال القياسية، يقدم Mapplock تقنية "بوابة الخريطة"، مما يسمح لك بتحديد مناطق جغرافية آمنة.</item>
+<item>تم بناء Mapplock بهيكلية مقاومة للحوسبة الكمومية. يمنع الهجمات باستخدام تشفير AES-256 متماثل محلي فقط وهيكلية المعرفة الصفرية. بياناتك لا تغادر جهازك أبدًا.</item>
+<item>تتيح لك ميزة بوابة الخريطة تعيين إحداثيات GPS محددة كـ "مناطق آمنة". أثناء تواجدك داخل النطاق، يمكن الوصول إلى تطبيقاتك المحمية بسهولة. وبمجرد الخروج، يفعل Mapplock إغلاقًا عالي الأمان تلقائيًا.</item>
+<item>لا، تعمل Aitoyz على نموذج "الخصوصية أولاً"، مما يعني أن Mapplock لا يخزن أيًا من ملفاتك الشخصية في خوادمنا. يتم تشفير كل شيء محليًا على التخزين الداخلي لجهازك.</item>
+<item>يمكنك استخدام طرق التحقق الثانوية مثل البيومترية أو "نقطة الخريطة السرية" كطريقة استرداد لإعادة تعيين بيانات اعتمادك.</item>
+<item>نعم، تم تصميم Mapplock ليبقى يعمل بكامل وظائفه حتى بدون اتصال إنترنت. يقوم التطبيق بتنزيل وتخزين بيانات الخرائط لمنطقتك المحلية بمجرد منح الأذونات اللازمة.</item>
+<item>التقاط المتسلل هو ميزة أمان تلقائية تلتقط صورة سيلفي سرية لأي شخص يحاول اختراق خزنتك. إذا تم إدخال رمز خاطئ عدة مرات، تفعل الكاميرا الأمامية بصمت.</item>
+<item>تستخدم حماية فقدان الملفات حقوق مدير الجهاز لمنع إلغاء تثبيت Mapplock بالخطأ. هذا يضمن عدم حذف مستنداتك وذكرياتك الهامة عن طريق الخطأ.</item>
+    </string-array>
 </resources>

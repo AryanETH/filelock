@@ -1,0 +1,357 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+<string name="app_name">Mapplock</string>
+<string name="accessibility_description">O Mapplock utiliza este serviço para detectar quando uma aplicação bloqueada é iniciada, permitindo exibir uma tela de bloqueio segura e proteger sua privacidade.</string>
+
+<!-- Jargão Simplificado -->
+<string name="vault">Zona Segura</string>
+<string name="vault_plural">Zonas Seguras</string>
+<string name="hidden_files">Arquivos Secretos</string>
+<string name="hide_app">Ocultar App</string>
+<string name="wrong_unlock_alert">Alerta de Intruso</string>
+<string name="wrong_unlock">Desbloqueio Incorreto</string>
+<string name="global_lock">Bloquear Tudo</string>
+<string name="stealth_entry">Entrada Secreta</string>
+
+<!-- Tela de Idioma -->
+<string name="select_language">Escolher Idioma</string>
+<string name="english">Inglês</string>
+<string name="hindi">Hindi</string>
+<string name="close_btn">Fechar</string>
+<string name="selected_text">Selecionado</string>
+<string name="language">Idioma</string>
+<string name="search_languages">Buscar idiomas&#8230;</string>
+
+<!-- Tela de Permissões -->
+<string name="security_clearance">Guia de Permissões</string>
+<string name="security_clearance_desc">As permissões são solicitadas apenas quando necessário</string>
+<string name="privacy_note">Não coletamos, armazenamos ou compartilhamos suas informações pessoais</string>
+<string name="ads_note">Esta ação pode conter anúncios</string>
+
+<string name="permission_usage_access">Monitoramento de Apps</string>
+<string name="permission_usage_access_desc">Para ver quando você abre um app bloqueado.</string>
+<string name="permission_overlay_access">Exibir sobre outros apps</string>
+<string name="permission_overlay_access_desc">Para mostrar a tela de bloqueio sobre outros apps.</string>
+<string name="permission_camera_access">Câmera</string>
+<string name="permission_camera_access_desc">Para tirar uma foto de quem tentar invadir.</string>
+<string name="permission_location_access">Localização</string>
+<string name="permission_location_access_desc">Para bloquear/desbloquear apps quando estiver perto de sua zona segura.</string>
+<string name="permission_storage_access">Armazenamento</string>
+<string name="permission_storage_access_desc">Para ocultar e salvar suas fotos e vídeos.</string>
+<string name="permission_background_activity">Executar em segundo plano</string>
+<string name="permission_background_activity_desc">Para manter o app funcionando 24/7 para sua segurança.</string>
+<string name="system_ready">Tudo pronto!</string>
+<string name="authorize">Permitir</string>
+<string name="usage_access">Acesso de Uso</string>
+<string name="usage_access_desc">Permite que o Mapplock detecte quando apps protegidos são abertos.</string>
+<string name="overlay_access">Exibir sobre outros apps</string>
+<string name="overlay_access_desc">Permite que a tela de bloqueio apareça sobre apps protegidos.</string>
+<string name="location_access">Localização</string>
+<string name="location_access_desc">Necessário para zonas de bloqueio baseadas no mapa e recursos de localização.</string>
+<string name="background_activity">Ignorar otimização de bateria</string>
+<string name="background_activity_desc">Permite que o serviço funcione de forma confiável sem ser interrompido pelo sistema.</string>
+<string name="full_storage_access">Gerenciar todos os arquivos</string>
+<string name="full_storage_access_desc">Necessário para proteger e gerenciar arquivos no cofre.</string>
+<string name="background_popups">Pop-ups em segundo plano</string>
+<string name="background_popups_desc">Toque aqui → Acesso especial → Exibir pop-ups em segundo plano → Permitir</string>
+
+<!-- Onboarding -->
+<string name="onboarding_1_title">Disfarce como Bloqueio</string>
+<string name="onboarding_1_desc">O mapa agirá como camada de bloqueio, todos os seus arquivos estarão ocultos sob a localização</string>
+<string name="onboarding_2_title">Totalmente Offline</string>
+<string name="onboarding_2_desc">Nenhum dado é armazenado em servidores, o Mapplock é totalmente offline e local</string>
+<string name="onboarding_3_title">Feito na Índia</string>
+<string name="onboarding_3_desc">Nosso app é orgulhosamente indiano e construído em Bhopal 🌊</string>
+<string name="onboarding_4_title">Como usar</string>
+<string name="onboarding_4_desc">Siga estes passos simples para garantir a segurança do seu dispositivo.</string>
+<string name="onboarding_4_step1">Pressione e segure no mapa</string>
+<string name="onboarding_4_step2">Defina seu PIN ou padrão</string>
+<string name="onboarding_4_step3">Bloqueie seus apps ou oculte arquivos</string>
+<string name="onboarding_4_step4">Toque duas veces no mesmo local para voltar ao painel</string>
+<string name="onboarding_4_step5">NOTA: Escolha um local aleatório para seus pontos de bloqueio para que outros não adivinhem facilmente.</string>
+<string name="onboarding_disclaimer_title">Aviso legal de dados do mapa</string>
+<string name="onboarding_disclaimer_desc">Dados do mapa e fronteiras são fornecidos como estão. Não controlamos as representações geográficas.</string>
+<string name="onboarding_accept_prefix">Eu entendo e aceito os </string>
+<string name="onboarding_terms">Termos de Serviço</string>
+<string name="onboarding_and"> e a </string>
+<string name="onboarding_privacy">Política de Privacidade</string>
+<string name="initialize_system">Começar</string>
+<string name="next">Continuar</string>
+
+<!-- Tela de Mapa -->
+<string name="verify_pin">INSERIR PIN</string>
+<string name="verify_pattern">DESENHAR PADRÃO</string>
+<string name="cancel">CANCELAR</string>
+<string name="setup_lock">CONFIGURAR BLOQUEIO</string>
+<string name="select_apps">ESCOLHER APPS</string>
+<string name="save_lock">SALVAR</string>
+<string name="back">VOLTAR</string>
+<string name="search_places">Buscar lugar&#8230;</string>
+
+<!-- Dashboard -->
+<string name="app_lock_title">Bloquear Apps</string>
+<string name="app_lock_subtitle">Bloqueie seus apps</string>
+<string name="history_title">Apps Bloqueados</string>
+<string name="history_subtitle">Gerencie todos os seus apps bloqueados</string>
+<string name="categories">CATEGORIAS</string>
+<string name="photos">Fotos</string>
+<string name="videos">Vídeos</string>
+<string name="audio">Áudio</string>
+<string name="documents">Documentos</string>
+<string name="wrong_unlocks">Intrusos</string>
+<string name="recycle_bin">Lixeira</string>
+    <plurals name="items_count">
+        <item quantity="one">%1$d item</item>
+        <item quantity="many">%1$d itens</item>
+        <item quantity="other">%1$d itens</item>
+    </plurals>
+
+<!-- Tela de Visualização de Mídia -->
+<string name="save_to_gallery">Salvar na Galeria</string>
+<string name="open_in">Abrir em</string>
+<string name="restore">Restaurar</string>
+<string name="delete">Excluir</string>
+<string name="restore_file_title">Restaurar arquivo?</string>
+<string name="restore_file_message">Mover este arquivo de volta para a galeria do telefone.</string>
+<string name="delete_file_title">Excluir arquivo?</string>
+<string name="delete_file_message">Isto excluirá o arquivo para sempre.</string>
+<string name="preview_unavailable">Pré-visualização indisponível:</string>
+<string name="use_open_in_hint">Use \'Abrir em\' para visualizar.</string>
+<string name="open_with">Abrir com&#8230;</string>
+<string name="restore_confirm">RESTAURAR</string>
+<string name="delete_confirm">EXCLUIR</string>
+<string name="no_preview">Sem pré-visualização para %1$s</string>
+<string name="open_in_hint">Use \'Abrir em\' para ver com outro app.</string>
+
+<!-- Configurações -->
+<string name="system_permissions">PERMISSÕES</string>
+<string name="permission_app_detection">Detecção de Apps</string>
+<string name="permission_app_detection_desc">Para ver quando você abre apps bloqueados.</string>
+<string name="permission_lock_window">Janela de Bloqueio</string>
+<string name="permission_lock_window_desc">Para mostrar a tela de bloqueio.</string>
+<string name="permission_camera">Câmera</string>
+<string name="permission_camera_desc">Para capturar quem tentar abrir seus apps.</string>
+<string name="permission_storage">Armazenamento</string>
+<string name="permission_storage_desc">Para salvar seus arquivos ocultos.</string>
+<string name="advanced_security">SEGURANÇA</string>
+<string name="uninstall_protection">Proteção de Desinstalação</string>
+<string name="uninstall_protection_desc">Evita que outros excluam este app.</string>
+<string name="lock_options">CONFIGURAÇÕES DE BLOQUEIO</string>
+<string name="global_lock_title">Bloquear Tudo</string>
+<string name="global_lock_desc">Bloqueia todos os apps selecionados de uma vez.</string>
+<string name="dark_mode">Modo Escuro</string>
+<string name="dark_mode_desc">Alternar entre tema claro e escuro.</string>
+<string name="monitoring_mode">Nível de Segurança</string>
+<string name="monitoring_mode_desc">Força de detecção de bloqueio</string>
+<string name="monitoring_mode_moderate">Moderado (Padrão)</string>
+<string name="monitoring_mode_hard">Forte (Alta Proteção)</string>
+<string name="monitoring_mode_auto">Automático (Recomendado)</string>
+<string name="monitoring_mode_usage">Estatísticas de uso (Padrão)</string>
+<string name="monitoring_mode_shizuku">Shizuku (Alta Performance)</string>
+<string name="monitoring_mode_accessibility">Acessibilidade (Reserva)</string>
+
+<!-- Tour -->
+<string name="tour_skip">Pular</string>
+<string name="tour_next">Próximo</string>
+<string name="tour_welcome">Bem-vindo! Sua privacidade agora está oculta no mapa.</string>
+<string name="tour_step1">Pressione e segure no mapa para definir seu ponto de entrada secreto.</string>
+<string name="tour_step2">Toque duas vezes no seu ponto secreto para ver seus arquivos ocultos.</string>
+<string name="tour_step3">Use estes botões para se localizar ou mudar o estilo do mapa.</string>
+<string name="tour_step4">Lembre-se do seu ponto secreto! Ele é sua chave.</string>
+<string name="zoom_in_hint">Aumente o zoom para definir uma zona segura.</string>
+<string name="access_granted_desc">Bem-vindo de volta! Acesso permitido.</string>
+<string name="zone_restricted_desc">Acesso Negado. Você está fora da zona segura.</string>
+<string name="system_initialization_desc">Pressione e segure no mapa para criar uma zona segura.</string>
+<string name="lock_type_bio">Digital</string>
+<string name="biometric_required">Por favor, use sua digital.</string>
+<string name="map_location_hint">Use o ponto do mapa para desbloquear.</string>
+<string name="package_visibility">Escolher apps para bloquear</string>
+<string name="tap_map_to_unlock">Toque abaixo para abrir o mapa.</string>
+<string name="open_map_interface">Abrir Mapa</string>
+<string name="screenshot_restriction">Sem Prints</string>
+<string name="screenshot_restriction_desc">Evita que outros tirem prints da tela</string>
+<string name="fingerprint_unlock">Digital</string>
+<string name="fingerprint_unlock_desc">Use digital para acesso rápido.</string>
+<string name="offline_title">Você está offline</string>
+<string name="offline_message">ligue os dados</string>
+<string name="support_links">AJUDA E LEGAL</string>
+<string name="tutorial">Tutorial (Ver Vídeo)</string>
+<string name="feedback">Enviar Feedback</string>
+<string name="terms_of_use">Termos de Uso</string>
+<string name="faq">FAQ / Ajuda</string>
+<string name="privacy_policy">Política de Privacidade</string>
+<string name="share_mapplock">Compartilhar Mapplock</string>
+
+<!-- VaultContentScreen -->
+<string name="settings">Configurações</string>
+<string name="lock">Bloquear</string>
+<string name="add">Adicionar</string>
+<string name="sort">Ordenar</string>
+<string name="hide">Ocultar</string>
+<string name="vault_empty">Nenhum app aqui ainda.</string>
+<string name="vault_empty_hint">Toque em + para adicionar arquivos.</string>
+<string name="app_lock_desc">Apps ocultos só abrirão quando você estiver na zona segura.</string>
+<string name="hide_app_dialog_title">Ocultar App</string>
+<string name="cloning_in_progress">Movendo app para zona segura&#8230;</string>
+<string name="hide_app_dialog_body">Isto ocultará o app e ele só abrirá por aqui. Continuar?</string>
+<string name="proceed">Continuar</string>
+<string name="clone_success">App ocultado com sucesso!</string>
+<string name="clone_failed">Falhou. Tente novamente.</string>
+<string name="clear_all_hidden_apps">Exibir todos os apps</string>
+<string name="active_vaults">Zonas Ativas</string>
+    <plurals name="apps_locked">
+        <item quantity="one">%1$d app bloqueado</item>
+        <item quantity="many">%1$d apps bloqueados</item>
+        <item quantity="other">%1$d apps bloqueados</item>
+    </plurals>
+    <string name="vault_established">Zona Segura Criada</string>
+    <plurals name="apps_hidden">
+        <item quantity="one">%1$d app oculto:</item>
+        <item quantity="many">%1$d apps ocultos:</item>
+        <item quantity="other">%1$d apps ocultos:</item>
+    </plurals>
+<string name="close">Fechar</string>
+<string name="fix">Corrigir</string>
+<string name="get_started">Começar</string>
+<string name="grant">Permitir</string>
+<string name="vault_id_label">Zona %1$s</string>
+
+<!-- MapSelectionScreen -->
+<string name="access_granted">Acesso Permitido</string>
+<string name="zone_restricted">Acesso Negado</string>
+<string name="system_initialization">Configurando&#8230;</string>
+<string name="vault_encryption">Criptografando&#8230;</string>
+<string name="lock_type_pin">PIN</string>
+<string name="lock_type_pattern">Padrão</string>
+<string name="lock_type_map">Mapa</string>
+<string name="abort">Parar</string>
+<string name="initialize">Iniciar</string>
+<string name="bypass_security">Pular</string>
+<string name="use_fingerprint">Usar Digital</string>
+<string name="location_locked">Localização Bloqueada</string>
+<string name="enter_pin">Inserir PIN</string>
+<string name="draw_pattern">Desenhar Padrão</string>
+<string name="tap_coordinates">Tocar no Mapa</string>
+<string name="verify_identity">Verifique se é você</string>
+<string name="outside_radius">Você está muito longe da zona segura</string>
+<string name="biometric_unavailable">Digital indisponível</string>
+<string name="fingerprint">Digital</string>
+<string name="tap_target_coordinates">Toque no seu ponto secreto do mapa</string>
+<string name="location_required_title">Permissão de Localização Necessária</string>
+<string name="location_required_message">Para habilitar a segurança pelo mapa, precisamos da sua permissão de localização.</string>
+<string name="location_allow_btn">PERMITIR PERMISSÃO</string>
+<string name="location_access_title">ACESSO À LOCALIZAÇÃO</string>
+<string name="location_access_message">Precisamos da sua localização para habilitar a segurança por zona.</string>
+<string name="grant_location_access">DAR ACESSO À LOCALIZAÇÃO</string>
+
+<!-- DashboardTour -->
+<string name="tour_dash_welcome_title">Bem-vindo ao Mapplock</string>
+<string name="tour_dash_welcome_desc">Sua privacidade está segura conosco.</string>
+<string name="tour_dash_hide_apps_title">Bloquear Apps</string>
+<string name="tour_dash_hide_apps_desc">Toque aqui para bloquear qualquer app.</string>
+<string name="tour_dash_history_title">Histórico de Bloqueio</string>
+<string name="tour_dash_history_desc">Gerencie seus locais seguros e seus apps.</string>
+<string name="tour_dash_categories_title">Seu Cofre Secreto</string>
+<string name="tour_dash_categories_desc">Fotos, vídeos e arquivos serão salvos aqui com segurança.</string>
+<string name="tour_dash_fab_title">Criar Nova Pasta</string>
+<string name="tour_dash_fab_desc">Toque no botão + para criar pastas personalizadas</string>
+<string name="tour_dash_settings_title">Configurações</string>
+<string name="tour_dash_settings_desc">Mude seu bloqueio, idioma e mais por aqui.</string>
+    <string name="custom_lock_background">Fundo de Bloqueio Personalizado</string>
+    <string name="custom_lock_background_desc">Defina seu fundo pessoal</string>
+    <string name="intruder_capture">Captura de Intruso</string>
+    <string name="intruder_capture_desc">Tira uma selfie de quem tentar invadir</string>
+    <string name="create_new_folder">Criar Nova Pasta</string>
+    <string name="create_new_folder_desc">Pastas podem conter qualquer tipo de arquivo.</string>
+    <string name="folder_name">Nome da Pasta</string>
+    <string name="appearance">Aparência</string>
+    <string name="preview_and_hide">OCULTAR (%1$d)</string>
+    <string name="bg_active_desc">Imagem ativa • Toque para gerenciar</string>
+    <string name="change">ALTERAR</string>
+    <string name="remove_btn">REMOVER</string>
+    <string name="notification_perm_title">Notificações</string>
+    <string name="notification_perm_desc">Usado para notificações do serviço e alertas de segurança.</string>
+    <string name="usage_perm_title">Acesso de Uso</string>
+    <string name="usage_perm_desc">O Mapplock precisa saber quando um app é iniciado para mostrar o bloqueio.</string>
+    <string name="overlay_perm_title">Permissão de Sobreposição</string>
+    <string name="overlay_perm_desc">O Mapplock precisa desenhar a tela sobre apps protegidos.</string>
+    <string name="background_popups_perm_title">Pop-ups em segundo plano</string>
+    <string name="background_popups_perm_desc">Permite lançar a tela de segurança a partir do segundo plano.</string>
+    <string name="battery_perm_title">Desativar otimização de bateria</string>
+    <string name="battery_perm_desc">Evita que o sistema interrompa o serviço de proteção.</string>
+    <string name="grant_permission">DAR PERMISSÃO</string>
+    <string name="security_monitoring_note">Segurança requer monitoramento ativo do sistema.</string>
+    <string name="search_apps">Buscar apps&#8230;</string>
+    <string name="recommended">RECOMENDADO</string>
+    <string name="all_apps">TODOS OS APPS</string>
+    <string name="locked_apps_header">APPS BLOQUEADOS</string>
+    <string name="no_apps_in_zone">Nenhum app bloqueado ainda</string>
+    <string name="unlock_all">DESBLOQUEAR TUDO</string>
+    <string name="user_locked_stats">MAIS DE %1$d%% DOS USUÁRIOS TÊM ESTE APP BLOQUEADO</string>
+    <string name="bulk_action_title">Ações de Categoria</string>
+    <string name="bulk_action_desc">Escolha o que fazer com todos os itens.</string>
+    <string name="recover_all">RECUPERAR TUDO</string>
+    <string name="delete_all">EXCLUIR TUDO</string>
+    <string name="delete_folder_confirm">Excluir pasta e todos os seus arquivos?</string>
+    <string name="recover_folder">Recuperar arquivos antes de excluir</string>
+    <string name="delete_permanently">Excluir Permanentemente</string>
+    <string name="connect_dots_to_verify">CONECTE OS PONTOS PARA VERIFICAR</string>
+    <string name="aqi_label">IQA</string>
+    <string name="temp_label">Temp</string>
+    <string name="humidity_label">Umidade</string>
+    <string name="importing_files">Importando arquivos</string>
+    <string name="deleting_files">Excluindo arquivos</string>
+    <string name="restoring_files">Restaurando arquivos</string>
+    <string name="hold_on_message">Espere um pouco, seu telefone está processando</string>
+    <string name="completed_percent">%1$d%% Concluído</string>
+
+    <!-- Diagnostics -->
+    <string name="system_status">SAÚDE DO SISTEMA</string>
+    <string name="protection_guide_title">Ativo 24/7</string>
+    <string name="protection_guide_desc">Para manter seus apps bloqueados com confiança, o Mapplock precisa estar ativo em segundo plano.</string>
+    <string name="step_battery_title">Bateria sem restrições</string>
+    <string name="step_battery_desc">Evita que o Android interrompa o Mapplock para economizar bateria. Defina como \'Sem restrições\'.</string>
+    <string name="step_autostart_title">Início Automático</string>
+    <string name="step_autostart_desc">Permite que o Mapplock inicie automaticamente ao ligar o telefone.</string>
+    <string name="step_recents_title">Bloquear em Recentes</string>
+    <string name="step_recents_desc">Bloqueie manualmente o Mapplock na sua lista de \'Apps Recentes\'.</string>
+    <string name="oem_guide_xiaomi">Toque aqui → Bateria e desempenho → Economia de bateria em apps → Mapplock → Sem restrições. Também ative \'Início automático\'.</string>
+    <string name="oem_guide_oppo">Toque aqui → Gestão de apps → Mapplock → Permitir início automático e Atividade em segundo plano.</string>
+    <string name="oem_guide_vivo">Toque aqui → Bateria → Alto consumo de energia em segundo plano → Ativar Mapplock.</string>
+    <string name="oem_guide_samsung">Toque aqui → Bateria → Limites de uso em segundo plano → Apps que nunca suspendem → Adicionar Mapplock.</string>
+    <string name="oem_guide_generic">Toque aqui → Bateria → Sem restrições / Sem otimização.</string>
+    <string name="lock_recents_instruction">1. Deslize para cima para ver os Apps Recentes\n2. Pressione e segure o Mapplock\n3. Toque no ícone de \'Cadeado\'</string>
+    <string name="indestructible_mode_active">MODO INDESTRUTÍVEL ATIVO</string>
+    <string name="indestructible_mode_inactive">AVISO DE SAÚDE DO SISTEMA</string>
+    <string name="fix_now">CORRIGIR AGORA</string>
+    <string name="status_active">ATIVO</string>
+    <string name="status_inactive">INATIVO</string>
+    <string name="accessibility_service">Serviço de Acessibilidade</string>
+    <string name="overlay_permission">Permissão de Sobreposição</string>
+    <string name="usage_stats">Estatísticas de Uso</string>
+    <string name="locker_service">Motor de Bloqueio</string>
+    <string name="bg_protection">Proteção em segundo plano (Recomendado)</string>
+    <string name="bg_protection_desc">Evita que o Mapplock seja interrompido pelo sistema.</string>
+    <string name="lock_in_recents_guide">Como manter o Mapplock sempre ativo:\n1. Abra os Apps Recentes\n2. Pressione e segure o Mapplock\n3. Toque no ícone de \'Cadeado\'</string>
+
+    <string-array name="faq_questions">
+<item>O que é o Mapplock e como ele é diferente de outros bloqueadores?</item>
+<item>Como o Mapplock protege meus dados contra o \'Dia-Q\'?</item>
+<item>Como funciona o recurso \"Map-Gate\"?</item>
+<item>Minhas fotos e vídeos privados são salvos nos servidores do Mapplock?</item>
+<item>O que acontece se eu esquecer meu PIN ou Padrão?</item>
+<item>Os recursos do mapa funcionarão se eu estiver offline?</item>
+<item>O que é a \"Captura de Intruso\" e onde posso ver as fotos?</item>
+<item>O que é a \"Proteção contra perda de arquivos\" e por que devo ativá-la?</item>
+    </string-array>
+    <string-array name="faq_answers">
+<item>O Mapplock é uma aplicação de segurança de próxima geração desenvolvida pela Aitoyz que utiliza inteligência baseada em localização para proteger sua privacidade. Diferente dos bloqueadores padrão que dependem apenas de PINs, o Mapplock introduz a tecnologia \"Map-Gate\", permitindo definir zonas geográficas seguras.</item>
+<item>O Mapplock é construído com uma arquitetura resistente à computação quântica. Ele evita ataques usando criptografia simétrica AES-256 local e uma arquitetura de conhecimento zero. Como seus dados nunca saem do dispositivo, eles não podem ser coletados.</item>
+<item>O recurso Map-Gate permite definir coordenadas GPS específicas como \"Zonas Seguras\". Enquanto estiver dentro do raio, seus apps protegidos podem ser acessados com facilidade. Ao sair, o Mapplock ativa um bloqueio de alta segurança automaticamente.</item>
+<item>Não, a Aitoyz opera em um modelo de \"Privacidade em Primeiro Lugar\", o que significa que o Mapplock não armazena nenhum dos seus arquivos pessoais em nossos servidores. Tudo é criptografado localmente no armazenamento interno do seu dispositivo.</item>
+<item>Se esquecer seu código, você pode usar os métodos secundários como autenticação biométrica ou seu \"Ponto Secreto do Mapa\" como método de recuperação. Recomendamos configurar múltiplas opções.</item>
+<item>Sim, o Mapplock foi projetado para funcionar plenamente mesmo sem conexão ativa. O app baixa e guarda dados do mapa para sua área local assim que você concede as permissões necessárias.</item>
+<item>A Captura de Intruso é um recurso automático que tira uma selfie secreta de quem tentar invadir. Se um código incorreto for inserido várias vezes, o app aciona a câmera frontal silenciosamente.</item>
+<item>A Proteção contra perda de arquivos evita a desinstalação acidental do Mapplock usando direitos de Administrador do Dispositivo. Isso garante que seus documentos e memórias importantes nunca sejam apagados por engano.</item>
+    </string-array>
+</resources>

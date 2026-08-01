@@ -1,0 +1,354 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+<string name="app_name">Mapplock</string>
+<string name="accessibility_description">Mapplock اس سروس کو یہ معلوم کرنے کے لیے استعمال کرتا ہے کہ کب کوئی لاک شدہ ایپلیکیشن کھولی گئی ہے، تاکہ ایک محفوظ لاک اسکرین دکھائی جا سکے اور آپ کی رازداری کی حفاظت کی جا سکے۔</string>
+
+<!-- سادہ اصطلاحات -->
+<string name="vault">محفوظ زون</string>
+<string name="vault_plural">محفوظ زونز</string>
+<string name="hidden_files">خفیہ فائلیں</string>
+<string name="hide_app">ایپ چھپائیں</string>
+<string name="wrong_unlock_alert">گھس پیٹھیے کا الرٹ</string>
+<string name="wrong_unlock">غلط ان لاک</string>
+<string name="global_lock">سب لاک کریں</string>
+<string name="stealth_entry">خفیہ انٹری</string>
+
+<!-- زبان کی اسکرین -->
+<string name="select_language">زبان منتخب کریں</string>
+<string name="english">انگریزی</string>
+<string name="hindi">ہندی</string>
+<string name="close_btn">بند کریں</string>
+<string name="selected_text">منتخب شدہ</string>
+<string name="language">زبان</string>
+<string name="search_languages">زبان تلاش کریں&#8230;</string>
+
+<!-- اجازت نامہ اسکرین -->
+<string name="security_clearance">اجازت نامہ گائیڈ</string>
+<string name="security_clearance_desc">اجازت صرف ضرورت پڑنے پر مانگی جاتی ہے</string>
+<string name="privacy_note">ہم آپ کی کوئی بھی ذاتی معلومات جمع یا شیئر نہیں کرتے</string>
+<string name="ads_note">اس کارروائی میں اشتہارات ہو سکتے ہیں</string>
+
+<string name="permission_usage_access">ایپ مانیٹرنگ</string>
+<string name="permission_usage_access_desc">یہ دیکھنے کے لیے کہ آپ نے لاک شدہ ایپ کب کھولی۔</string>
+<string name="permission_overlay_access">دیگر ایپس کے اوپر دکھائیں</string>
+<string name="permission_overlay_access_desc">دیگر ایپس کے اوپر لاک اسکرین دکھانے کے لیے۔</string>
+<string name="permission_camera_access">کیمرہ</string>
+<string name="permission_camera_access_desc">کوشش کرنے والے کسی بھی شخص کی تصویر لینے کے لیے۔</string>
+<string name="permission_location_access">لوکیشن</string>
+<string name="permission_location_access_desc">جب آپ اپنے محفوظ زون کے قریب ہوں تو ایپس کو لاک/ان لاک کرنے کے لیے۔</string>
+<string name="permission_storage_access">اسٹوریج</string>
+<string name="permission_storage_access_desc">آپ کی تصاویر اور ویڈیوز کو چھپانے اور محفوظ کرنے کے لیے۔</string>
+<string name="permission_background_activity">بیک گراؤنڈ میں چلائیں</string>
+<string name="permission_background_activity_desc">آپ کی حفاظت کے لیے ایپ کو 24/7 فعال رکھنے کے لیے۔</string>
+<string name="system_ready">سب تیار ہے!</string>
+<string name="authorize">اجازت دیں</string>
+<string name="usage_access">استعمال تک رسائی</string>
+<string name="usage_access_desc">Mapplock کو یہ جاننے کی اجازت دیتا ہے کہ محفوظ ایپس کب کھولی گئی ہیں۔</string>
+<string name="overlay_access">دیگر ایپس کے اوپر دکھائیں</string>
+<string name="overlay_access_desc">لاک اسکرین کو محفوظ ایپس کے اوپر ظاہر ہونے دیتا ہے۔</string>
+<string name="location_access">لوکیشن</string>
+<string name="location_access_desc">نقشہ پر مبنی لاک زونز اور لوکیشن فیچرز کے لیے ضروری ہے۔</string>
+<string name="background_activity">بیٹری آپٹیمائزیشن کو نظر انداز کریں</string>
+<string name="background_activity_desc">لاک سروس کو سسٹم کے ذریعے بند کیے بغیر چلنے دیتا ہے۔</string>
+<string name="full_storage_access">تمام فائلوں کا انتظام کریں</string>
+<string name="full_storage_access_desc">والٹ میں فائلوں کی حفاظت اور انتظام کے لیے ضروری ہے۔</string>
+<string name="background_popups">بیک گراؤنڈ پاپ اپس</string>
+<string name="background_popups_desc">یہاں ٹیپ کریں ← خصوصی ایپ رسائی ← بیک گراؤنڈ میں پاپ اپس دکھائیں ← اجازت دیں</string>
+
+<!-- آن بورڈنگ -->
+<string name="onboarding_1_title">نقشہ کا روپ</string>
+<string name="onboarding_1_desc">نقشہ لاک لیئر کے طور پر کام کرے گا، آپ کی تمام فائلیں لوکیشن کے نیچے چھپی ہوں گی</string>
+<string name="onboarding_2_title">مکمل طور پر آف لائن</string>
+<string name="onboarding_2_desc">آپ کا کوئی بھی ڈیٹا سرورز پر محفوظ نہیں کیا جاتا، Mapplock مکمل طور پر مقامی ہے</string>
+<string name="onboarding_3_title">انڈیا میں تیار کردہ</string>
+<string name="onboarding_3_desc">ہماری پوری ایپ انڈیا کی فخر ہے اور بھوپال میں بنائی گئی ہے 🌊</string>
+<string name="onboarding_4_title">استعمال کرنے کا طریقہ</string>
+<string name="onboarding_4_desc">اپنے آلے کو محفوظ بنانے کے لیے ان آسان اقدامات پر عمل کریں۔</string>
+<string name="onboarding_4_step1">نقشے پر دیر تک دبائیں</string>
+<string name="onboarding_4_step2">اپنا PIN یا پیٹرن سیٹ کریں</string>
+<string name="onboarding_4_step3">اپنی ایپس کو لاک کریں یا فائلیں چھپائیں</string>
+<string name="onboarding_4_step4">ڈیش بورڈ پر واپس جانے کے لیے اسی لوکیشن پر دو بار ٹیپ کریں</string>
+<string name="onboarding_4_step5">نوٹ: اپنے لاک پوائنٹس کے لیے کوئی بھی جگہ منتخب کریں تاکہ دوسرے آسانی سے اندازہ نہ لگا سکیں۔</string>
+<string name="onboarding_disclaimer_title">نقشہ ڈیٹا ڈس کلیمر</string>
+<string name="onboarding_disclaimer_desc">نقشہ کا ڈیٹا اور سرحدیں جوں کی توں فراہم کی گئی ہیں۔ ہم جغرافیائی نمائندگی کو کنٹرول نہیں کرتے۔</string>
+<string name="onboarding_accept_prefix">میں سمجھتا ہوں اور قبول کرتا ہوں </string>
+<string name="onboarding_terms">سروس کی شرائط</string>
+<string name="onboarding_and"> اور </string>
+<string name="onboarding_privacy">رازداری کی پالیسی</string>
+<string name="initialize_system">شروع کریں</string>
+<string name="next">جاری رکھیں</string>
+
+<!-- نقشہ اسکرین -->
+<string name="verify_pin">PIN درج کریں</string>
+<string name="verify_pattern">پیٹرن بنائیں</string>
+<string name="cancel">منسوخ کریں</string>
+<string name="setup_lock">لاک سیٹ کریں</string>
+<string name="select_apps">ایپس منتخب کریں</string>
+<string name="save_lock">محفوظ کریں</string>
+<string name="back">واپس</string>
+<string name="search_places">جگہ تلاش کریں&#8230;</string>
+
+<!-- ڈیش بورڈ -->
+<string name="app_lock_title">ایپس لاک کریں</string>
+<string name="app_lock_subtitle">اپنی ایپس کو لاک کریں</string>
+<string name="history_title">لاک شدہ ایپس</string>
+<string name="history_subtitle">اپنی تمام لاک شدہ ایپس کا انتظام کریں</string>
+<string name="categories">اقسام</string>
+<string name="photos">تصاویر</string>
+<string name="videos">ویڈیوز</string>
+<string name="audio">آڈیو</string>
+<string name="documents">دستاویزات</string>
+<string name="wrong_unlocks">گھس پیٹھیے</string>
+<string name="recycle_bin">ری سائیکل بن</string>
+    <plurals name="items_count">
+        <item quantity="one">%1$d آئٹم</item>
+        <item quantity="other">%1$d آئٹمز</item>
+    </plurals>
+
+<!-- میڈیا ویور اسکرین -->
+<string name="save_to_gallery">گیلری میں محفوظ کریں</string>
+<string name="open_in">اس میں کھولیں</string>
+<string name="restore">بحال کریں</string>
+<string name="delete">ڈیلیٹ کریں</string>
+<string name="restore_file_title">فائل بحال کریں؟</string>
+<string name="restore_file_message">اس فائل کو واپس اپنے فون کی گیلری میں لے جائیں۔</string>
+<string name="delete_file_title">فائل ڈیلیٹ کریں؟</string>
+<string name="delete_file_message">یہ فائل کو ہمیشہ کے لیے ختم کر دے گا۔</string>
+<string name="preview_unavailable">پری ویو دستیاب نہیں ہے:</string>
+<string name="use_open_in_hint">دیکھنے کے لیے \'اس میں کھولیں\' استعمال کریں۔</string>
+<string name="open_with">اس کے ساتھ کھولیں&#8230;</string>
+<string name="restore_confirm">بحال کریں</string>
+<string name="delete_confirm">ڈیلیٹ کریں</string>
+<string name="no_preview">%1$s کے لیے کوئی پری ویو نہیں ہے</string>
+<string name="open_in_hint">کسی اور ایپ کے ساتھ دیکھنے کے لیے \'اس میں کھولیں\' استعمال کریں۔</string>
+
+<!-- سیٹنگز -->
+<string name="system_permissions">اجازت نامے</string>
+<string name="permission_app_detection">ایپ کی شناخت</string>
+<string name="permission_app_detection_desc">یہ دیکھنے کے لیے کہ آپ نے محفوظ ایپس کب کھولیں۔</string>
+<string name="permission_lock_window">لاک ونڈو</string>
+<string name="permission_lock_window_desc">لاک اسکرین دکھانے کے لیے۔</string>
+<string name="permission_camera">کیمرہ</string>
+<string name="permission_camera_desc">آپ کی ایپس کھولنے کی کوشش کرنے والے کو پکڑنے کے لیے۔</string>
+<string name="permission_storage">اسٹوریج</string>
+<string name="permission_storage_desc">آپ کی خفیہ فائلوں کو محفوظ کرنے کے لیے۔</string>
+<string name="advanced_security">سیکیورٹی</string>
+<string name="uninstall_protection">ان انسٹال پروٹیکشن</string>
+<string name="uninstall_protection_desc">دوسروں کو یہ ایپ ڈیلیٹ کرنے سے روکیں۔</string>
+<string name="lock_options">لاک کی سیٹنگز</string>
+<string name="global_lock_title">سب لاک کریں</string>
+<string name="global_lock_desc">اپنی تمام منتخب کردہ ایپس کو ایک ساتھ لاک کریں۔</string>
+<string name="dark_mode">ڈارک موڈ</string>
+<string name="dark_mode_desc">لائٹ اور ڈارک تھیم کے درمیان تبدیل کریں۔</string>
+<string name="monitoring_mode">سیکیورٹی لیول</string>
+<string name="monitoring_mode_desc">لاک کی شناخت کی طاقت</string>
+<string name="monitoring_mode_moderate">درمیانہ (معیاری)</string>
+<string name="monitoring_mode_hard">سخت (اعلیٰ تحفظ)</string>
+<string name="monitoring_mode_auto">خودکار (تجویز کردہ)</string>
+<string name="monitoring_mode_usage">استعمال کے اعدادوشمار (معیاری)</string>
+<string name="monitoring_mode_shizuku">Shizuku (اعلیٰ کارکردگی)</string>
+<string name="monitoring_mode_accessibility">رسائی (بیک اپ)</string>
+
+<!-- ٹور -->
+<string name="tour_skip">چھوڑیں</string>
+<string name="tour_next">اگلا</string>
+<string name="tour_welcome">خوش آمدید! آپ کی رازداری اب نقشے پر چھپی ہوئی ہے۔</string>
+<string name="tour_step1">اپنا خفیہ انٹری پوائنٹ سیٹ کرنے کے لیے نقشے پر دیر تک دبائیں۔</string>
+<string name="tour_step2">اپنی چھپی ہوئی فائلیں دیکھنے کے لیے اپنے خفیہ پوائنٹ پر دو بار ٹیپ کریں۔</string>
+<string name="tour_step3">اپنی لوکیشن تلاش کرنے یا نقشے کا انداز بدلنے کے لیے ان بٹنوں کا استعمال کریں۔</string>
+<string name="tour_step4">اپنا خفیہ پوائنٹ یاد رکھیں! یہ آپ کی چابی ہے۔</string>
+<string name="zoom_in_hint">محفوظ زون سیٹ کرنے کے لیے مزید زوم ان کریں۔</string>
+<string name="access_granted_desc">خوش آمدید! رسائی کی اجازت ہے۔</string>
+<string name="zone_restricted_desc">رسائی مسترد کر دی گئی۔ آپ محفوظ زون سے باہر ہیں۔</string>
+<string name="system_initialization_desc">محفوظ زون بنانے کے لیے نقشے پر دیر تک دبائیں۔</string>
+<string name="lock_type_bio">فنگر پرنٹ</string>
+<string name="biometric_required">براہ کرم اپنا فنگر پرنٹ استعمال کریں۔</string>
+<string name="map_location_hint">ان لاک کرنے کے لیے نقشہ کا پوائنٹ استعمال کریں۔</string>
+<string name="package_visibility">لاک کرنے کے لیے ایپس منتخب کریں</string>
+<string name="tap_map_to_unlock">نقشہ کھولنے کے لیے نیچے ٹیپ کریں۔</string>
+<string name="open_map_interface">نقشہ کھولیں</string>
+<string name="screenshot_restriction">اسکرین شاٹ بند</string>
+<string name="screenshot_restriction_desc">دوسروں کو اسکرین شاٹس لینے سے روکیں</string>
+<string name="fingerprint_unlock">فنگر پرنٹ</string>
+<string name="fingerprint_unlock_desc">فوری رسائی کے لیے فنگر پرنٹ استعمال کریں۔</string>
+<string name="offline_title">آپ آف لائن ہیں</string>
+<string name="offline_message">ڈیٹا آن کریں</string>
+<string name="support_links">مدد اور قانونی</string>
+<string name="tutorial">ٹیوٹوریل (ویڈیو دیکھیں)</string>
+<string name="feedback">فیڈ بیک بھیجیں</string>
+<string name="terms_of_use">استعمال کی شرائط</string>
+<string name="faq">سوالات / مدد</string>
+<string name="privacy_policy">رازداری کی پالیسی</string>
+<string name="share_mapplock">Mapplock شیئر کریں</string>
+
+<!-- VaultContentScreen -->
+<string name="settings">سیٹنگز</string>
+<string name="lock">لاک</string>
+<string name="add">شامل کریں</string>
+<string name="sort">ترتیب دیں</string>
+<string name="hide">چھپائیں</string>
+<string name="vault_empty">یہاں ابھی کوئی ایپ نہیں ہے۔</string>
+<string name="vault_empty_hint">کچھ فائلیں شامل کرنے کے لیے + ٹیپ کریں۔</string>
+<string name="app_lock_desc">چھپی ہوئی ایپس صرف تب کھلیں گی جب آپ اپنے محفوظ زون میں ہوں گے۔</string>
+<string name="hide_app_dialog_title">ایپ چھپائیں</string>
+<string name="cloning_in_progress">ایپ کو محفوظ زون میں منتقل کیا جا رہا ہے&#8230;</string>
+<string name="hide_app_dialog_body">یہ ایپ کو چھپا دے گا اور یہ صرف یہاں سے کھلے گی۔ جاری رکھیں؟</string>
+<string name="proceed">جاری رکھیں</string>
+<string name="clone_success">ایپ کامیابی سے چھپا دی گئی ہے!</string>
+<string name="clone_failed">ناکام ہو گیا۔ دوبارہ کوشش کریں۔</string>
+<string name="clear_all_hidden_apps">تمام ایپس کو ظاہر کریں</string>
+<string name="active_vaults">فعال زونز</string>
+    <plurals name="apps_locked">
+        <item quantity="one">%1$d ایپ لاک ہے</item>
+        <item quantity="other">%1$d ایپس لاک ہیں</item>
+    </plurals>
+    <string name="vault_established">محفوظ زون بن گیا</string>
+    <plurals name="apps_hidden">
+        <item quantity="one">%1$d ایپ چھپی ہوئی ہے:</item>
+        <item quantity="other">%1$d ایپس چھپی ہوئی ہیں:</item>
+    </plurals>
+<string name="close">بند کریں</string>
+<string name="fix">ٹھیک کریں</string>
+<string name="get_started">شروع کریں</string>
+<string name="grant">اجازت دیں</string>
+<string name="vault_id_label">زون %1$s</string>
+
+<!-- MapSelectionScreen -->
+<string name="access_granted">رسائی کی اجازت ہے</string>
+<string name="zone_restricted">رسائی مسترد کر دی گئی</string>
+<string name="system_initialization">سیٹ اپ ہو رہا ہے&#8230;</string>
+<string name="vault_encryption">اینکرپٹ کیا جا رہا ہے&#8230;</string>
+<string name="lock_type_pin">PIN</string>
+<string name="lock_type_pattern">پیٹرن</string>
+<string name="lock_type_map">نقشہ</string>
+<string name="abort">رکیں</string>
+<string name="initialize">شروع کریں</string>
+<string name="bypass_security">چھوڑیں</string>
+<string name="use_fingerprint">فنگر پرنٹ استعمال کریں</string>
+<string name="location_locked">لوکیشن لاک ہے</string>
+<string name="enter_pin">PIN درج کریں</string>
+<string name="draw_pattern">پیٹرن بنائیں</string>
+<string name="tap_coordinates">نقشے پر ٹیپ کریں</string>
+<string name="verify_identity">تصدیق کریں کہ یہ آپ ہیں</string>
+<string name="outside_radius">آپ محفوظ زون سے بہت دور ہیں</string>
+<string name="biometric_unavailable">فنگر پرنٹ دستیاب نہیں ہے</string>
+<string name="fingerprint">فنگر پرنٹ</string>
+<string name="tap_target_coordinates">اپنے خفیہ نقشہ پوائنٹ پر ٹیپ کریں</string>
+<string name="location_required_title">لوکیشن کی اجازت درکار ہے</string>
+<string name="location_required_message">نقشہ سیکیورٹی اور زون لاکنگ کے لیے ہمیں آپ کی لوکیشن کی اجازت چاہیے۔</string>
+<string name="location_allow_btn">اجازت دیں</string>
+<string name="location_access_title">لوکیشن تک رسائی</string>
+<string name="location_access_message">ہمیں محفوظ والٹ سیکیورٹی کے لیے آپ کی لوکیشن کی ضرورت ہے۔</string>
+<string name="grant_location_access">لوکیشن کی رسائی دیں</string>
+
+<!-- DashboardTour -->
+<string name="tour_dash_welcome_title">Mapplock میں خوش آمدید</string>
+<string name="tour_dash_welcome_desc">آپ کی رازداری ہمارے پاس محفوظ ہے۔</string>
+<string name="tour_dash_hide_apps_title">ایپس لاک کریں</string>
+<string name="tour_dash_hide_apps_desc">کسی بھی ایپ کو لاک کرنے کے لیے یہاں ٹیپ کریں۔</string>
+<string name="tour_dash_history_title">لاک ہسٹری</string>
+<string name="tour_dash_history_desc">اپنے تمام محفوظ مقامات کا انتظام کریں۔</string>
+<string name="tour_dash_categories_title">آپ کا خفیہ والٹ</string>
+<string name="tour_dash_categories_desc">آپ کی چھپی ہوئی تصاویر اور فائلیں یہاں محفوظ ہوں گی۔</string>
+<string name="tour_dash_fab_title">نیا فولڈر بنائیں</string>
+<string name="tour_dash_fab_desc">اپنی مرضی کے فولڈر بنانے کے لیے + بٹن دبائیں</string>
+<string name="tour_dash_settings_title">سیٹنگز</string>
+<string name="tour_dash_settings_desc">لاک، زبان اور بہت کچھ یہاں سے بدلیں۔</string>
+    <string name="custom_lock_background">لاک کا اپنا بیک گراؤنڈ</string>
+    <string name="custom_lock_background_desc">اپنا ذاتی بیک گراؤنڈ سیٹ کریں</string>
+    <string name="intruder_capture">گھس پیٹھیے کی تصویر</string>
+    <string name="intruder_capture_desc">کوشش کرنے والے کسی بھی شخص کی خفیہ سیلفی لیں</string>
+    <string name="create_new_folder">نیا فولڈر بنائیں</string>
+    <string name="create_new_folder_desc">فولڈرز میں کسی بھی قسم کی فائلیں ہو سکتی ہیں۔</string>
+    <string name="folder_name">فولڈر کا نام</string>
+    <string name="appearance">ظاہری شکل</string>
+    <string name="preview_and_hide">چھپائیں (%1$d)</string>
+    <string name="bg_active_desc">بیک گراؤنڈ فعال ہے • انتظام کے لیے ٹیپ کریں</string>
+    <string name="change">تبدیل کریں</string>
+    <string name="remove_btn">ختم کریں</string>
+    <string name="notification_perm_title">نوٹیفیکیشنز</string>
+    <string name="notification_perm_desc">سروس نوٹیفیکیشنز اور سیکیورٹی الرٹس کے لیے استعمال ہوتا ہے۔</string>
+    <string name="usage_perm_title">استعمال تک رسائی</string>
+    <string name="usage_perm_desc">لاک اسکرین دکھانے کے لیے ایپ کھلنے کا علم ہونا ضروری ہے۔</string>
+    <string name="overlay_perm_title">اوورلے کی اجازت</string>
+    <string name="overlay_perm_desc">محفوظ ایپس کے اوپر لاک اسکرین دکھانے کے لیے ضروری ہے۔</string>
+    <string name="background_popups_perm_title">بیک گراؤنڈ پاپ اپس</string>
+    <string name="background_popups_perm_desc">سیکیورٹی اسکرین کو بیک گراؤنڈ سے کھولنے دیتا ہے۔</string>
+    <string name="battery_perm_title">بیٹری آپٹیمائزیشن بند کریں</string>
+    <string name="battery_perm_desc">سسٹم کو سیکیورٹی سروس بند کرنے سے روکتا ہے۔</string>
+    <string name="grant_permission">اجازت دیں</string>
+    <string name="security_monitoring_note">سیکیورٹی کے لیے سسٹم مانیٹرنگ ضروری ہے۔</string>
+    <string name="search_apps">ایپ تلاش کریں&#8230;</string>
+    <string name="recommended">تجویز کردہ</string>
+    <string name="all_apps">تمام ایپس</string>
+    <string name="locked_apps_header">لاک شدہ ایپس</string>
+    <string name="no_apps_in_zone">ابھی کوئی ایپ لاک نہیں ہے</string>
+    <string name="unlock_all">سب ان لاک کریں</string>
+    <string name="user_locked_stats">%1$d%% سے زائد صارفین نے اسے لاک کیا ہے</string>
+    <string name="bulk_action_title">کیٹیگری کے اقدامات</string>
+    <string name="bulk_action_desc">تمام آئٹمز کے ساتھ کیا کرنا ہے، منتخب کریں۔</string>
+    <string name="recover_all">سب بحال کریں</string>
+    <string name="delete_all">سب ختم کریں</string>
+    <string name="delete_folder_confirm">فولڈر اور اس کی تمام فائلیں ختم کریں؟</string>
+    <string name="recover_folder">ختم کرنے سے پہلے فائلیں بحال کریں</string>
+    <string name="delete_permanently">ہمیشہ کے لیے ختم کریں</string>
+    <string name="connect_dots_to_verify">تصدیق کے لیے نقطوں کو ملائیں</string>
+    <string name="aqi_label">ہوا کا معیار</string>
+    <string name="temp_label">ٹمپریچر</string>
+    <string name="humidity_label">نمی</string>
+    <string name="importing_files">فائلیں لائی جا رہی ہیں</string>
+    <string name="deleting_files">فائلیں ختم کی جا رہی ہیں</string>
+    <string name="restoring_files">فائلیں بحال کی جا رہی ہیں</string>
+    <string name="hold_on_message">انتظار کریں، آپ کا فون کام کر رہا ہے</string>
+    <string name="completed_percent">%1$d%% مکمل</string>
+
+    <!-- Diagnostics -->
+    <string name="system_status">سسٹم کی صحت</string>
+    <string name="protection_guide_title">24/7 فعال رہیں</string>
+    <string name="protection_guide_desc">مضبوط لاک کے لیے Mapplock کا بیک گراؤنڈ میں چلنا ضروری ہے۔</string>
+    <string name="step_battery_title">غیر محدود بیٹری</string>
+    <string name="step_battery_desc">اینڈروئیڈ کو ایپ بند کرنے سے روکیں۔ \'غیر محدود\' پر سیٹ کریں۔</string>
+    <string name="step_autostart_title">آٹو اسٹارٹ</string>
+    <string name="step_autostart_desc">فون آن ہوتے ہی ایپ کو چلنے دیتا ہے۔</string>
+    <string name="step_recents_title">حالیہ ایپس میں لاک کریں</string>
+    <string name="step_recents_desc">ایپ کو حالیہ ایپس کی فہرست میں لاک کریں۔</string>
+    <string name="oem_guide_xiaomi">یہاں ٹیپ کریں → بیٹری → ایپ بیٹری سیور → Mapplock → کوئی پابندی نہیں۔</string>
+    <string name="oem_guide_oppo">یہاں ٹیپ کریں → ایپ مینجمنٹ → Mapplock → آٹو اسٹارٹ آن کریں۔</string>
+    <string name="oem_guide_vivo">یہاں ٹیپ کریں → بیٹری → بیک گراؤنڈ پاور → Mapplock آن کریں۔</string>
+    <string name="oem_guide_samsung">یہاں ٹیپ کریں → بیٹری → بیک گراؤنڈ لمیٹ → کبھی نہ سونے والی ایپس۔</string>
+    <string name="oem_guide_generic">یہاں ٹیپ کریں → بیٹری → غیر محدود / کوئی آپٹیمائزیشن نہیں۔</string>
+    <string name="lock_recents_instruction">1. حالیہ ایپس کھولیں\n2. Mapplock پر دیر تک دبائیں\n3. \'لاک\' آئیکن پر کلک کریں</string>
+    <string name="indestructible_mode_active">ناقابل تسخیر موڈ فعال ہے</string>
+    <string name="indestructible_mode_inactive">سسٹم کی صحت کی وارننگ</string>
+    <string name="fix_now">ابھی ٹھیک کریں</string>
+    <string name="status_active">فعال</string>
+    <string name="status_inactive">غیر فعال</string>
+    <string name="accessibility_service">رسائی کی سروس</string>
+    <string name="overlay_permission">اوورلے کی اجازت</string>
+    <string name="usage_stats">استعمال کے اعدادوشمار</string>
+    <string name="locker_service">لاک کا انجن</string>
+    <string name="bg_protection">بیک گراؤنڈ پروٹیکشن (تجویز کردہ)</string>
+    <string name="bg_protection_desc">سسٹم کو ایپ روکنے سے روکتا ہے۔</string>
+    <string name="lock_in_recents_guide">ایپ کو ہمیشہ فعال رکھنے کا طریقہ:\n1. حالیہ ایپس کھولیں\n2. ایپ پر دیر تک دبائیں\n3. \'لاک\' آئیکن پر ٹیپ کریں</string>
+
+    <string-array name="faq_questions">
+<item>Mapplock کیا ہے اور یہ دوسروں سے کیسے مختلف ہے؟</item>
+<item>Mapplock ڈیٹا کی حفاظت کیسے کرتا ہے؟</item>
+<item>\"Map-Gate\" فیچر کیسے کام کرتا ہے؟</item>
+<item>کیا میرا ڈیٹا آپ کے سرور پر محفوظ ہوتا ہے؟</item>
+<item>اگر میں اپنا پاس ورڈ بھول جاؤں تو کیا ہوگا؟</item>
+<item>کیا نقشہ انٹرنیٹ کے بغیر کام کرے گا؟</item>
+<item>گھس پیٹھیے کی تصویر لینے کا فیچر کیا ہے؟</item>
+<item>ڈیلیٹ ہونے سے بچاؤ کا فیچر کیوں ضروری ہے؟</item>
+    </string-array>
+    <string-array name="faq_answers">
+<item>Mapplock ایک جدید ترین سیکیورٹی ایپ ہے جو لوکیشن کی بنیاد پر آپ کی رازداری کی حفاظت کرتی ہے۔</item>
+<item>ہم AES-256 اینکرپشن استعمال کرتے ہیں۔ آپ کا ڈیٹا کبھی بھی آپ کے آلے سے باہر نہیں جاتا۔</item>
+<item>Map-Gate آپ کو مخصوص مقامات کو محفوظ زون کے طور پر سیٹ کرنے دیتا ہے۔</item>
+<item>نہیں۔ آپ کا تمام ڈیٹا آپ کے فون پر ہی اینکرپٹ ہو کر محفوظ ہوتا ہے۔</item>
+<item>آپ بائیومیٹرک یا اپنے \'خفیہ نقشہ پوائنٹ\' کے ذریعے رسائی حاصل کر سکتے ہیں۔</item>
+<item>جی ہاں۔ ایپ نقشہ کا ڈیٹا پہلے سے محفوظ کر لیتی ہے اور آف لائن بھی کام کرتی ہے۔</item>
+<item>یہ فیچر غلط کوڈ ڈالنے والے کی خفیہ سیلفی لے لیتا ہے۔</item>
+<item>یہ ایپ کو غلطی سے ڈیلیٹ ہونے سے بچاتا ہے تاکہ آپ کا خفیہ ڈیٹا ضائع نہ ہو۔</item>
+    </string-array>
+</resources>

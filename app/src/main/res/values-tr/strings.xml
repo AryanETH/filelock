@@ -1,0 +1,354 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+<string name="app_name">Mapplock</string>
+<string name="accessibility_description">Mapplock, kilitli bir uygulama başlatıldığında algılamak için bu hizmeti kullanır, böylece güvenli bir kilit ekranı katmanı görüntüleyebilir ve gizliliğinizi koruyabilir.</string>
+
+<!-- Sadeleştirilmiş Terimler -->
+<string name="vault">Güvenli Bölge</string>
+<string name="vault_plural">Güvenli Bölgeler</string>
+<string name="hidden_files">Gizli Dosyalar</string>
+<string name="hide_app">Uygulamayı Gizle</string>
+<string name="wrong_unlock_alert">Davetsiz Misafir Uyarısı</string>
+<string name="wrong_unlock">Hatalı Kilit Açma</string>
+<string name="global_lock">Tümünü Kilitle</string>
+<string name="stealth_entry">Gizli Giriş</string>
+
+<!-- Dil Ekranı -->
+<string name="select_language">Dil Seçin</string>
+<string name="english">İngilizce</string>
+<string name="hindi">Hintçe</string>
+<string name="close_btn">Kapat</string>
+<string name="selected_text">Seçildi</string>
+<string name="language">Dil</string>
+<string name="search_languages">Dil ara&#8230;</string>
+
+<!-- İzin Ekranı -->
+<string name="security_clearance">İzin Rehberi</string>
+<string name="security_clearance_desc">İzinler sadece ihtiyaç duyulduğunda istenir</string>
+<string name="privacy_note">Kişisel bilgilerinizi toplamıyoruz, saklamıyoruz veya paylaşmıyoruz</string>
+<string name="ads_note">Bu işlem reklam içerebilir</string>
+
+<string name="permission_usage_access">Uygulama İzleme</string>
+<string name="permission_usage_access_desc">Kilitli bir uygulamayı ne zaman açtığınızı görmek için.</string>
+<string name="permission_overlay_access">Diğer uygulamaların üzerinde göster</string>
+<string name="permission_overlay_access_desc">Kilit ekranını diğer uygulamaların üzerinde göstermek için.</string>
+<string name="permission_camera_access">Kamera</string>
+<string name="permission_camera_access_desc">İzinsiz girmeye çalışanların fotoğrafını çekmek için.</string>
+<string name="permission_location_access">Konum</string>
+<string name="permission_location_access_desc">Güvenli bölgenize yaklaştığınızda uygulamaları kilitlemek/açmak için.</string>
+<string name="permission_storage_access">Depolama</string>
+<string name="permission_storage_access_desc">Fotoğraflarınızı ve videolarınızı gizlemek ve kaydetmek için.</string>
+<string name="permission_background_activity">Arka planda çalıştır</string>
+<string name="permission_background_activity_desc">Güvenliğiniz için uygulamanın 7/24 çalışmasını sağlar.</string>
+<string name="system_ready">Her Şey Hazır!</string>
+<string name="authorize">İzin Ver</string>
+<string name="usage_access">Kullanım Erişimi</string>
+<string name="usage_access_desc">Mapplock\'un korunan uygulamaların ne zaman açıldığını algılamasını sağlar.</string>
+<string name="overlay_access">Diğer uygulamaların üzerinde göster</string>
+<string name="overlay_access_desc">Kilit ekranının korunan uygulamaların üzerinde görünmesini sağlar.</string>
+<string name="location_access">Konum</string>
+<string name="location_access_desc">Harita tabanlı kilit bölgeleri ve konum özellikleri için gereklidir.</string>
+<string name="background_activity">Pil optimizasyonunu yoksay</string>
+<string name="background_activity_desc">Kilit hizmetinin sistem tarafından durdurulmadan güvenilir şekilde çalışmasını sağlar.</string>
+<string name="full_storage_access">Tüm Dosyaları Yönet</string>
+<string name="full_storage_access_desc">Kasadaki dosyaları korumak ve yönetmek için gereklidir.</string>
+<string name="background_popups">Arka Plan Açılır Pencereleri</string>
+<string name="background_popups_desc">Buraya dokunun → Özel uygulama erişimi → Arka planda açılır pencereleri göster → İzin Ver</string>
+
+<!-- Onboarding -->
+<string name="onboarding_1_title">Harita Kılığında Kilit</string>
+<string name="onboarding_1_desc">Harita bir kilit katmanı görevi görür, tüm dosyalarınız konumun altında gizlenir</string>
+<string name="onboarding_2_title">Tamamen Çevrimdışı</string>
+<string name="onboarding_2_desc">Verilerinizin hiçbiri sunucularda saklanmaz, Mapplock tamamen çevrimdışı ve yereldir</string>
+<string name="onboarding_3_title">Hindistan\'da Üretildi</string>
+<string name="onboarding_3_desc">Tüm uygulamamız Hindistan gururuyla Bhopal\'de inşa edildi 🌊</string>
+<string name="onboarding_4_title">Nasıl Kullanılır</string>
+<string name="onboarding_4_desc">Cihazınızı güvence altına almak için bu basit adımları izleyin.</string>
+<string name="onboarding_4_step1">Haritaya uzun basın</string>
+<string name="onboarding_4_step2">PIN veya deseninizi ayarlayın</string>
+<string name="onboarding_4_step3">Uygulamalarınızı kilitleyin veya dosyalarınızı gizleyin</string>
+<string name="onboarding_4_step4">Panele dönmek için aynı konuma iki kez dokunun</string>
+<string name="onboarding_4_step5">NOT: Başkalarının kolayca tahmin edememesi için kilit noktalarınız için rastgele bir konum seçin.</string>
+<string name="onboarding_disclaimer_title">Harita Verileri Sorumluluk Reddi</string>
+<string name="onboarding_disclaimer_desc">Harita verileri ve sınırlar olduğu gibi sunulmaktadır. Coğrafi gösterimleri kontrol etmiyoruz.</string>
+<string name="onboarding_accept_prefix">Şartları anlıyorum ve kabul ediyorum: </string>
+<string name="onboarding_terms">Hizmet Şartları</string>
+<string name="onboarding_and"> ve </string>
+<string name="onboarding_privacy">Gizlilik Politikası</string>
+<string name="initialize_system">Başla</string>
+<string name="next">Devam Et</string>
+
+<!-- Harita Ekranı -->
+<string name="verify_pin">PIN GİRİN</string>
+<string name="verify_pattern">DESENİ ÇİZİN</string>
+<string name="cancel">İPTAL</string>
+<string name="setup_lock">KİLİDİ AYARLA</string>
+<string name="select_apps">UYGULAMALARI SEÇ</string>
+<string name="save_lock">KAYDET</string>
+<string name="back">GERİ</string>
+<string name="search_places">Yer ara&#8230;</string>
+
+<!-- Dashboard -->
+<string name="app_lock_title">Uygulamaları Kilitle</string>
+<string name="app_lock_subtitle">Uygulamalarınızı kilitleyin</string>
+<string name="history_title">Kilitli Uygulamalar</string>
+<string name="history_subtitle">Tüm kilitli uygulamalarınızı yönetin</string>
+<string name="categories">KATEGORİLER</string>
+<string name="photos">Fotoğraflar</string>
+<string name="videos">Videolar</string>
+<string name="audio">Ses</string>
+<string name="documents">Belgeler</string>
+<string name="wrong_unlocks">Davetsiz Misafirler</string>
+<string name="recycle_bin">Geri Dönüşüm Kutusu</string>
+    <plurals name="items_count">
+        <item quantity="one">%1$d öğe</item>
+        <item quantity="other">%1$d öğe</item>
+    </plurals>
+
+<!-- Medya Görüntüleyici Ekranı -->
+<string name="save_to_gallery">Galeriye Kaydet</string>
+<string name="open_in">Birlikte Aç</string>
+<string name="restore">Geri Yükle</string>
+<string name="delete">Sil</string>
+<string name="restore_file_title">Dosya Geri Yüklensin mi?</string>
+<string name="restore_file_message">Bu dosyayı telefon galerisine geri taşı.</string>
+<string name="delete_file_title">Dosya Silinsin mi?</string>
+<string name="delete_file_message">Bu işlem dosyayı kalıcı olarak silecektir.</string>
+<string name="preview_unavailable">Önizleme kullanılamıyor:</string>
+<string name="use_open_in_hint">Görüntülemek için \'Birlikte Aç\'ı kullanın.</string>
+<string name="open_with">Birlikte aç&#8230;</string>
+<string name="restore_confirm">GERİ YÜKLE</string>
+<string name="delete_confirm">SİL</string>
+<string name="no_preview">%1$s için önizleme yok</string>
+<string name="open_in_hint">Başka bir uygulamayla görüntülemek için \'Birlikte Aç\'ı kullanın.</string>
+
+<!-- Ayarlar -->
+<string name="system_permissions">İZİNLER</string>
+<string name="permission_app_detection">Uygulama Algılama</string>
+<string name="permission_app_detection_desc">Kilitli uygulamaları ne zaman açtığınızı görmek için.</string>
+<string name="permission_lock_window">Kilit Penceresi</string>
+<string name="permission_lock_window_desc">Kilit ekranını göstermek için.</string>
+<string name="permission_camera">Kamera</string>
+<string name="permission_camera_desc">Uygulamalarınızı açmaya çalışan birini yakalamak için.</string>
+<string name="permission_storage">Depolama</string>
+<string name="permission_storage_desc">Gizli dosyalarınızı kaydetmek için.</string>
+<string name="advanced_security">GÜVENLİK</string>
+<string name="uninstall_protection">Kaldırma Koruması</string>
+<string name="uninstall_protection_desc">Başkalarının bu uygulamayı silmesini engelleyin.</string>
+<string name="lock_options">KİLİT AYARLARI</string>
+<string name="global_lock_title">Tümünü Kilitle</string>
+<string name="global_lock_desc">Seçilen tüm uygulamaları tek seferde kilitleyin.</string>
+<string name="dark_mode">Karanlık Mod</string>
+<string name="dark_mode_desc">Aydınlık ve karanlık tema arasında geçiş yapın.</string>
+<string name="monitoring_mode">Güvenlik Seviyesi</string>
+<string name="monitoring_mode_desc">Kilitleme algılama gücü</string>
+<string name="monitoring_mode_moderate">Orta (Standart)</string>
+<string name="monitoring_mode_hard">Zor (Yüksek Koruma)</string>
+<string name="monitoring_mode_auto">Otomatik (Önerilen)</string>
+<string name="monitoring_mode_usage">Kullanım İstatistikleri (Standart)</string>
+<string name="monitoring_mode_shizuku">Shizuku (Yüksek Performans)</string>
+<string name="monitoring_mode_accessibility">Erişilebilirlik (Yedek)</string>
+
+<!-- Tur -->
+<string name="tour_skip">Atla</string>
+<string name="tour_next">İleri</string>
+<string name="tour_welcome">Hoş geldiniz! Gizliliğiniz artık haritada gizli.</string>
+<string name="tour_step1">Gizli giriş noktanızı ayarlamak için haritaya uzun basın.</string>
+<string name="tour_step2">Gizli dosyalarınızı görmek için gizli noktanıza iki kez dokunun.</string>
+<string name="tour_step3">Kendinizi bulmak veya harita stilini değiştirmek için bu butonları kullanın.</string>
+<string name="tour_step4">Gizli noktanızı unutmayın! O sizin anahtarınızdır.</string>
+<string name="zoom_in_hint">Güvenli bölge oluşturmak için daha fazla yakınlaştırın.</string>
+<string name="access_granted_desc">Tekrar hoş geldiniz! Erişime izin verildi.</string>
+<string name="zone_restricted_desc">Erişim Reddedildi. Güvenli bölgenin dışındasınız.</string>
+<string name="system_initialization_desc">Güvenli bölge oluşturmak için haritaya uzun basın.</string>
+<string name="lock_type_bio">Parmak İzi</string>
+<string name="biometric_required">Lütfen parmak izinizi kullanın.</string>
+<string name="map_location_hint">Kilidi açmak için harita noktasını kullanın.</string>
+<string name="package_visibility">Kilitlemek için uygulamaları seçin</string>
+<string name="tap_map_to_unlock">Haritayı açmak için aşağıya dokunun.</string>
+<string name="open_map_interface">Haritayı Aç</string>
+<string name="screenshot_restriction">Ekran Görüntüsü Yok</string>
+<string name="screenshot_restriction_desc">Başkalarının ekran görüntüsü almasını engelleyin</string>
+<string name="fingerprint_unlock">Parmak İzi</string>
+<string name="fingerprint_unlock_desc">Hızlı erişim için parmak izini kullanın.</string>
+<string name="offline_title">Çevrimdışısınız</string>
+<string name="offline_message">veriyi açın</string>
+<string name="support_links">YARDIM VE YASAL</string>
+<string name="tutorial">Eğitim (Videoyu İzle)</string>
+<string name="feedback">Geri Bildirim Gönder</string>
+<string name="terms_of_use">Kullanım Şartları</string>
+<string name="faq">SSS / Yardım</string>
+<string name="privacy_policy">Gizlilik Politikası</string>
+<string name="share_mapplock">Mapplock\'u paylaş</string>
+
+<!-- VaultContentScreen -->
+<string name="settings">Ayarlar</string>
+<string name="lock">Kilitle</string>
+<string name="add">Ekle</string>
+<string name="sort">Sırala</string>
+<string name="hide">Gizle</string>
+<string name="vault_empty">Henüz uygulama yok.</string>
+<string name="vault_empty_hint">Dosya eklemek için + simgesine dokunun.</string>
+<string name="app_lock_desc">Gizli uygulamalar sadece güvenli bölgenizdeyken açılır.</string>
+<string name="hide_app_dialog_title">Uygulamayı Gizle</string>
+<string name="cloning_in_progress">Uygulama güvenli bölgeye taşınıyor&#8230;</string>
+<string name="hide_app_dialog_body">Bu işlem uygulamayı gizleyecek ve sadece buradan açılacaktır. Devam edilsin mi?</string>
+<string name="proceed">Devam Et</string>
+<string name="clone_success">Uygulama başarıyla gizlendi!</string>
+<string name="clone_failed">Başarısız oldu. Lütfen tekrar deneyin.</string>
+<string name="clear_all_hidden_apps">Tüm uygulamaları göster</string>
+<string name="active_vaults">Aktif Bölgeler</string>
+    <plurals name="apps_locked">
+        <item quantity="one">%1$d uygulama kilitli</item>
+        <item quantity="other">%1$d uygulama kilitli</item>
+    </plurals>
+    <string name="vault_established">Güvenli Bölge Oluşturuldu</string>
+    <plurals name="apps_hidden">
+        <item quantity="one">%1$d uygulama gizlendi:</item>
+        <item quantity="other">%1$d uygulama gizlendi:</item>
+    </plurals>
+<string name="close">Kapat</string>
+<string name="fix">Düzelt</string>
+<string name="get_started">Başla</string>
+<string name="grant">İzin Ver</string>
+<string name="vault_id_label">Bölge %1$s</string>
+
+<!-- MapSelectionScreen -->
+<string name="access_granted">Erişim İzin Verildi</string>
+<string name="zone_restricted">Erişim Reddedildi</string>
+<string name="system_initialization">Ayarlanıyor&#8230;</string>
+<string name="vault_encryption">Şifreleniyor&#8230;</string>
+<string name="lock_type_pin">PIN</string>
+<string name="lock_type_pattern">Desen</string>
+<string name="lock_type_map">Harita</string>
+<string name="abort">Durdur</string>
+<string name="initialize">Başlat</string>
+<string name="bypass_security">Atla</string>
+<string name="use_fingerprint">Parmak İzi Kullan</string>
+<string name="location_locked">Konum Kilitli</string>
+<string name="enter_pin">PIN Girin</string>
+<string name="draw_pattern">Desen Çizin</string>
+<string name="tap_coordinates">Haritaya Dokun</string>
+<string name="verify_identity">Siz olduğunuzu doğrulayın</string>
+<string name="outside_radius">Güvenli bölgeden çok uzaktasınız</string>
+<string name="biometric_unavailable">Parmak izi kullanılamıyor</string>
+<string name="fingerprint">Parmak İzi</string>
+<string name="tap_target_coordinates">Gizli harita noktanıza dokunun</string>
+<string name="location_required_title">Konum İzni Gerekiyor</string>
+<string name="location_required_message">Harita Güvenliğini etkinleştirmek için konum izninize ihtiyacımız var.</string>
+<string name="location_allow_btn">İZNİ VER</string>
+<string name="location_access_title">KONUM ERİŞİMİ</string>
+<string name="location_access_message">Bölge bazlı kasa güvenliği için konumunuza ihtiyacımız var.</string>
+<string name="grant_location_access">KONUM ERİŞİMİ VER</string>
+
+<!-- DashboardTour -->
+<string name="tour_dash_welcome_title">Mapplock\'a Hoş Geldiniz</string>
+<string name="tour_dash_welcome_desc">Gizliliğiniz bizimle güvende.</string>
+<string name="tour_dash_hide_apps_title">Uygulamaları Kilitle</string>
+<string name="tour_dash_hide_apps_desc">Herhangi bir uygulamayı kilitlemek için buraya dokunun.</string>
+<string name="tour_dash_history_title">Kilit Geçmişi</string>
+<string name="tour_dash_history_desc">Tüm güvenli konumlarınızı yönetin.</string>
+<string name="tour_dash_categories_title">Gizli Kasanız</string>
+<string name="tour_dash_categories_desc">Gizlediğiniz dosyalar burada güvenle saklanır.</string>
+<string name="tour_dash_fab_title">Yeni Klasör Oluştur</string>
+<string name="tour_dash_fab_desc">Özel klasörler oluşturmak için + butonuna dokunun</string>
+<string name="tour_dash_settings_title">Ayarlar</string>
+<string name="tour_dash_settings_desc">Kilidi, dili ve daha fazlasını buradan değiştirin.</string>
+    <string name="custom_lock_background">Özel Kilit Arkaplanı</string>
+    <string name="custom_lock_background_desc">Kişisel arkaplanınızı ayarlayın</string>
+    <string name="intruder_capture">Davetsiz Misafir Çekimi</string>
+    <string name="intruder_capture_desc">Girmeye çalışan herkesin selfiesini çek</string>
+    <string name="create_new_folder">Yeni Klasör Oluştur</string>
+    <string name="create_new_folder_desc">Klasörler her türlü dosya tipini içerebilir.</string>
+    <string name="folder_name">Klasör Adı</string>
+    <string name="appearance">Görünüm</string>
+    <string name="preview_and_hide">GİZLE (%1$d)</string>
+    <string name="bg_active_desc">Görüntü Aktif • Yönetmek için dokun</string>
+    <string name="change">DEĞİŞTİR</string>
+    <string name="remove_btn">KALDIR</string>
+    <string name="notification_perm_title">Bildirimler</string>
+    <string name="notification_perm_desc">Hizmet bildirimleri ve güvenlik uyarıları için kullanılır.</string>
+    <string name="usage_perm_title">Kullanım Erişimi</string>
+    <string name="usage_perm_desc">Mapplock, kilit ekranını göstermek için bir uygulamanın ne zaman başlatıldığını bilmelidir.</string>
+    <string name="overlay_perm_title">Üstte Gösterim İzni</string>
+    <string name="overlay_perm_desc">Mapplock, kilit ekranını korunan uygulamaların üzerinde göstermelidir.</string>
+    <string name="background_popups_perm_title">Arka Plan Açılır Pencereleri</string>
+    <string name="background_popups_perm_desc">Güvenlik ekranının arka plandan anında açılmasını sağlar.</string>
+    <string name="battery_perm_title">Pil Optimizasyonunu Devre Dışı Bırak</string>
+    <string name="battery_perm_desc">Sistemin Mapplock koruma hizmetini durdurmasını engeller.</string>
+    <string name="grant_permission">İZNİ VER</string>
+    <string name="security_monitoring_note">Güvenlik aktif sistem izleme gerektirir.</string>
+    <string name="search_apps">Uygulama ara&#8230;</string>
+    <string name="recommended">ÖNERİLEN</string>
+    <string name="all_apps">TÜM UYGULAMALAR</string>
+    <string name="locked_apps_header">KİLİTLİ UYGULAMALAR</string>
+    <string name="no_apps_in_zone">Henüz kilitli uygulama yok</string>
+    <string name="unlock_all">TÜMÜNÜ AÇ</string>
+    <string name="user_locked_stats">KULLANICILARIN %%1$d\'SİNDEN FAZLASI KİLİTLEDİ</string>
+    <string name="bulk_action_title">Kategori İşlemleri</string>
+    <string name="bulk_action_desc">Tüm öğelerle ne yapacağınızı seçin.</string>
+    <string name="recover_all">TÜMÜNÜ GERİ YÜKLE</string>
+    <string name="delete_all">TÜMÜNÜ SİL</string>
+    <string name="delete_folder_confirm">Klasörü ve tüm dosyalarını sil?</string>
+    <string name="recover_folder">Silmeden önce dosyaları geri yükle</string>
+    <string name="delete_permanently">Kalıcı Olarak Sil</string>
+    <string name="connect_dots_to_verify">DOĞRULAMAK İÇİN NOKTALARI BİRLEŞTİRİN</string>
+    <string name="aqi_label">HKA</string>
+    <string name="temp_label">Sıcaklık</string>
+    <string name="humidity_label">Nem</string>
+    <string name="importing_files">Dosyalar İçe Aktarılıyor</string>
+    <string name="deleting_files">Dosyalar Siliniyor</string>
+    <string name="restoring_files">Dosyalar Geri Yükleniyor</string>
+    <string name="hold_on_message">Bekleyin, telefonunuz işlemi gerçekleştiriyor</string>
+    <string name="completed_percent">%%1$d Tamamlandı</string>
+
+    <!-- Diagnostics -->
+    <string name="system_status">SİSTEM SAĞLIĞI</string>
+    <string name="protection_guide_title">7/24 Aktif Kalın</string>
+    <string name="protection_guide_desc">Mapplock\'un güvenilir çalışması için arka planda aktif kalması gerekir.</string>
+    <string name="step_battery_title">Kısıtlanmamış Pil</string>
+    <string name="step_battery_desc">Android\'in Mapplock\'u durdurmasını engeller. \'Kısıtlanmamış\' yapın.</string>
+    <string name="step_autostart_title">Otomatik Başlatma</string>
+    <string name="step_autostart_desc">Telefon açıldığında Mapplock\'un otomatik başlamasını sağlar.</string>
+    <string name="step_recents_title">Son Kullanılanlarda Kilitle</string>
+    <string name="step_recents_desc">Yanlışlıkla kapanmasını önlemek için \'Son Uygulamalar\' listesinde kilitleyin.</string>
+    <string name="oem_guide_xiaomi">Buraya dokun → Pil ve performans → Uygulama pil tasarrufu → Mapplock → Kısıtlama yok. Ayrıca \'Otomatik başlatma\'yı açın.</string>
+    <string name="oem_guide_oppo">Buraya dokun → Uygulama Yönetimi → Mapplock → Otomatik Başlatmaya İzin Ver.</string>
+    <string name="oem_guide_vivo">Buraya dokun → Pil → Yüksek Arka Plan Güç Tüketimi → Mapplock\'u Etkinleştir.</string>
+    <string name="oem_guide_samsung">Buraya dokun → Pil → Arka plan kullanım sınırları → Hiç uyutulmayan uygulamalar → Mapplock\'u ekle.</string>
+    <string name="oem_guide_generic">Buraya dokun → Pil → Kısıtlanmamış / Optimizasyon yok.</string>
+    <string name="lock_recents_instruction">1. Son Uygulamaları görmek için yukarı kaydırın\n2. Mapplock\'a uzun basın\n3. \'Kilit\' simgesine dokunun</string>
+    <string name="indestructible_mode_active">SARSILMAZ MOD AKTİF</string>
+    <string name="indestructible_mode_inactive">SİSTEM SAĞLIĞI UYARISI</string>
+    <string name="fix_now">HEMEN DÜZELT</string>
+    <string name="status_active">AKTİF</string>
+    <string name="status_inactive">PASİF</string>
+    <string name="accessibility_service">Erişilebilirlik Hizmeti</string>
+    <string name="overlay_permission">Üstte Gösterim İzni</string>
+    <string name="usage_stats">Kullanım İstatistikleri</string>
+    <string name="locker_service">Kilitleme Motoru</string>
+    <string name="bg_protection">Arka Plan Koruması (Önerilen)</string>
+    <string name="bg_protection_desc">Mapplock\'un sistem tarafından durdurulmasını engeller.</string>
+    <string name="lock_in_recents_guide">Mapplock\'u her zaman aktif tutma:\n1. Son Uygulamaları Aç\n2. Mapplock\'a uzun bas\n3. \'Kilit\' simgesine dokun</string>
+
+    <string-array name="faq_questions">
+<item>Mapplock nedir ve diğer uygulama kilitleyicilerden farkı nedir?</item>
+<item>Mapplock verilerimi \'Q-Günü\'ne karşı nasıl korur?</item>
+<item>\"Map-Gate\" özelliği nasıl çalışır?</item>
+<item>Özel fotoğraflarım Mapplock sunucularında saklanıyor mu?</item>
+<item>PIN veya Desenimi unutursam ne olur?</item>
+<item>Çevrimdışıysam harita özellikleri çalışır mı?</item>
+<item>\"Davetsiz Misafir Çekimi\" nedir?</item>
+<item>\"Dosya Kaybı Koruması\" nedir ve neden açmalıyım?</item>
+    </string-array>
+    <string-array name="faq_answers">
+<item>Mapplock, gizliliğinizi korumak için konum tabanlı zekayı kullanan yeni nesil bir güvenlik uygulamasıdır. Standart kilitleyicilerin aksine güvenli bölgeler tanımlamanıza olanak tanır.</item>
+<item>Mapplock, Kuantum Dirençli bir mimari ile inşa edilmiştir. Yerel AES-256 şifreleme ve sıfır bilgi mimarisi kullanır. Verileriniz asla cihazınızdan çıkmaz.</item>
+<item>Map-Gate özelliği, belirli GPS koordinatlarını \"Güvenli Bölgeler\" olarak ayarlamanıza olanak tanır. Bu bölgeden çıktığınız anda yüksek güvenlikli kilitleme tetiklenir.</item>
+<item>Hayır, Mapplock hiçbir kişisel dosyanızı sunucularımızda saklamaz. Her şey cihazınızın dahili depolamasında yerel olarak şifrelenir.</item>
+<item>Biyometrik doğrulama veya \"Gizli Harita Noktanız\"ı kurtarma yöntemi olarak kullanabilirsiniz.</item>
+<item>Evet, Mapplock internet bağlantısı olmadan da tam işlevsel kalacak şekilde tasarlanmıştır. Uygulama, harita verilerini önceden önbelleğe alır.</item>
+<item>Kasaya girmeye çalışan herkesin gizlice selfiesini çeken bir özelliktir. Hatalı giriş yapıldığında ön kamera tetiklenir.</item>
+<item>Cihaz Yöneticisi haklarını kullanarak uygulamanın yanlışlıkla silinmesini engeller. Bu, dosyalarınızın kalıcı olarak kaybolmamasını sağlar.</item>
+    </string-array>
+</resources>

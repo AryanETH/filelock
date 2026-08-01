@@ -17,8 +17,7 @@ data class GalleryItem(
 
 data class AppInfo(
     val packageName: String,
-    val appName: String,
-    val icon: Drawable? = null
+    val appName: String
 )
 
 enum class LockType {
@@ -74,6 +73,7 @@ data class VaultState(
     val hasBatteryOptimizationPermission: Boolean = false,
     val hasBackgroundPopupsPermission: Boolean = false,
     val hasNotificationPermission: Boolean = false,
+    val hasAccessibilityPermission: Boolean = false,
     val isLockerServiceRunning: Boolean = false,
     val isUsageAccessActive: Boolean = false,
     val isIndestructibleModeActive: Boolean = false,

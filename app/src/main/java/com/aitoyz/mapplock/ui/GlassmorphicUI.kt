@@ -22,8 +22,8 @@ import com.aitoyz.mapplock.ui.theme.CyberBlue
  */
 @Composable
 fun GlassMaterialCard(
-    modifier: Modifier = Modifier,
     isDark: Boolean = true,
+    modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit
 ) {
     // Apple's "Material" approach:

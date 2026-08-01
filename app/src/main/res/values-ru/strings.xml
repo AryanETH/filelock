@@ -1,0 +1,360 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+<string name="app_name">Mapplock</string>
+<string name="accessibility_description">Mapplock использует эту службу для обнаружения запуска заблокированных приложений, что позволяет отображать защищенный экран блокировки и защищать вашу конфиденциальность.</string>
+
+<!-- Упрощенная терминология -->
+<string name="vault">Безопасная зона</string>
+<string name="vault_plural">Безопасные зоны</string>
+<string name="hidden_files">Секретные файлы</string>
+<string name="hide_app">Скрыть приложение</string>
+<string name="wrong_unlock_alert">Тревога: Попытка взлома</string>
+<string name="wrong_unlock">Неверный пароль</string>
+<string name="global_lock">Заблокировать все</string>
+<string name="stealth_entry">Секретный вход</string>
+
+<!-- Экран выбора языка -->
+<string name="select_language">Выберите язык</string>
+<string name="english">Английский</string>
+<string name="hindi">Хинди</string>
+<string name="close_btn">Закрыть</string>
+<string name="selected_text">Выбрано</string>
+<string name="language">Язык</string>
+<string name="search_languages">Поиск языка&#8230;</string>
+
+<!-- Экран разрешений -->
+<string name="security_clearance">Руководство по разрешениям</string>
+<string name="security_clearance_desc">Разрешения запрашиваются только при необходимости</string>
+<string name="privacy_note">Мы не собираем, не храним и не передаем ваши личные данные</string>
+<string name="ads_note">Это действие может содержать рекламу</string>
+
+<string name="permission_usage_access">Мониторинг приложений</string>
+<string name="permission_usage_access_desc">Чтобы знать, когда вы открываете заблокированное приложение.</string>
+<string name="permission_overlay_access">Поверх других приложений</string>
+<string name="permission_overlay_access_desc">Чтобы показывать экран блокировки поверх приложений.</string>
+<string name="permission_camera_access">Камера</string>
+<string name="permission_camera_access_desc">Чтобы сфотографировать того, кто пытается взломать защиту.</string>
+<string name="permission_location_access">Геолокация</string>
+<string name="permission_location_access_desc">Для блокировки/разблокировки приложений рядом с безопасной зоной.</string>
+<string name="permission_storage">Хранилище</string>
+<string name="permission_storage_access_desc">Чтобы скрывать и сохранять ваши фото и видео.</string>
+<string name="permission_storage_access">Доступ к хранилищу</string>
+<string name="permission_background_activity">Работа в фоне</string>
+<string name="permission_background_activity_desc">Чтобы приложение работало круглосуточно для вашей безопасности.</string>
+<string name="system_ready">Все готово!</string>
+<string name="authorize">Разрешить</string>
+<string name="usage_access">Доступ к использованию</string>
+<string name="usage_access_desc">Позволяет Mapplock определять запуск защищенных приложений.</string>
+<string name="overlay_access">Поверх других окон</string>
+<string name="overlay_access_desc">Позволяет экрану блокировки появляться поверх приложений.</string>
+<string name="location_access">Местоположение</string>
+<string name="location_access_desc">Требуется для работы зон блокировки на основе карты.</string>
+<string name="background_activity">Игнорировать оптимизацию батареи</string>
+<string name="background_activity_desc">Обеспечивает надежную работу службы блокировки без остановок системой.</string>
+<string name="full_storage_access">Доступ ко всем файлам</string>
+<string name="full_storage_access_desc">Необходимо для защиты и управления файлами в сейфе.</string>
+<string name="background_popups">Всплывающие окна в фоне</string>
+<string name="background_popups_desc">Нажмите здесь → Спец. доступ → Отображение всплывающих окон → Разрешить</string>
+
+<!-- Onboarding -->
+<string name="onboarding_1_title">Маскировка под карту</string>
+<string name="onboarding_1_desc">Карта служит слоем блокировки, все файлы скрыты под выбранной локацией</string>
+<string name="onboarding_2_title">Полностью офлайн</string>
+<string name="onboarding_2_desc">Ваши данные не передаются на серверы, Mapplock работает локально</string>
+<string name="onboarding_3_title">Сделано в Индии</string>
+<string name="onboarding_3_desc">Наше приложение создано с гордостью в Индии, в городе Бхопал 🌊</string>
+<string name="onboarding_4_title">Как пользоваться</string>
+<string name="onboarding_4_desc">Следуйте простым шагам для защиты вашего устройства.</string>
+<string name="onboarding_4_step1">Долгое нажатие на карту</string>
+<string name="onboarding_4_step2">Установите PIN или графический ключ</string>
+<string name="onboarding_4_step3">Заблокируйте приложения или скройте файлы</string>
+<string name="onboarding_4_step4">Двойной тап в том же месте для входа в панель управления</string>
+<string name="onboarding_4_step5">ПРИМЕЧАНИЕ: Выбирайте случайные места для точек блокировки, чтобы их было сложно угадать.</string>
+<string name="onboarding_disclaimer_title">Отказ от ответственности (Карты)</string>
+<string name="onboarding_disclaimer_desc">Данные карт предоставляются \"как есть\". Мы не контролируем географические границы.</string>
+<string name="onboarding_accept_prefix">Я понимаю и принимаю </string>
+<string name="onboarding_terms">Условия использования</string>
+<string name="onboarding_and"> и </string>
+<string name="onboarding_privacy">Политику конфиденциальности</string>
+<string name="initialize_system">Начать</string>
+<string name="next">Продолжить</string>
+
+<!-- Map Screen -->
+<string name="verify_pin">ВВЕДИТЕ PIN</string>
+<string name="verify_pattern">РИСУЙТЕ КЛЮЧ</string>
+<string name="cancel">ОТМЕНА</string>
+<string name="setup_lock">НАСТРОИТЬ БЛОКИРОВКУ</string>
+<string name="select_apps">ВЫБРАТЬ ПРИЛОЖЕНИЯ</string>
+<string name="save_lock">СОХРАНИТЬ</string>
+<string name="back">НАЗАД</string>
+<string name="search_places">Поиск места&#8230;</string>
+
+<!-- Dashboard -->
+<string name="app_lock_title">Блокировка приложений</string>
+<string name="app_lock_subtitle">Заблокируйте свои приложения</string>
+<string name="history_title">Заблокировано</string>
+<string name="history_subtitle">Управление заблокированными приложениями</string>
+<string name="categories">КАТЕГОРИИ</string>
+<string name="photos">Фото</string>
+<string name="videos">Видео</string>
+<string name="audio">Аудио</string>
+<string name="documents">Документы</string>
+<string name="wrong_unlocks">Взломщики</string>
+<string name="recycle_bin">Корзина</string>
+    <plurals name="items_count">
+        <item quantity="one">%1$d файл</item>
+        <item quantity="few">%1$d файла</item>
+        <item quantity="many">%1$d файлов</item>
+        <item quantity="other">%1$d файла</item>
+    </plurals>
+
+<!-- Media Viewer Screen -->
+<string name="save_to_gallery">Сохранить в галерею</string>
+<string name="open_in">Открыть в&#8230;</string>
+<string name="restore">Восстановить</string>
+<string name="delete">Удалить</string>
+<string name="restore_file_title">Восстановить файл?</string>
+<string name="restore_file_message">Вернуть этот файл в общую галерею телефона.</string>
+<string name="delete_file_title">Удалить файл?</string>
+<string name="delete_file_message">Файл будет удален навсегда.</string>
+<string name="preview_unavailable">Предпросмотр недоступен:</string>
+<string name="use_open_in_hint">Используйте \'Открыть в\'.</string>
+<string name="open_with">Открыть с помощью&#8230;</string>
+<string name="restore_confirm">ВОССТАНОВИТЬ</string>
+<string name="delete_confirm">УДАЛИТЬ</string>
+<string name="no_preview">Нет предпросмотра для %1$s</string>
+<string name="open_in_hint">Открыть через другое приложение.</string>
+
+<!-- Settings -->
+<string name="system_permissions">РАЗРЕШЕНИЯ</string>
+<string name="permission_app_detection">Распознавание приложений</string>
+<string name="permission_app_detection_desc">Чтобы знать, когда открываются приложения.</string>
+<string name="permission_lock_window">Окно блокировки</string>
+<string name="permission_lock_window_desc">Для отображения защитного экрана.</string>
+<string name="permission_camera">Камера</string>
+<string name="permission_camera_desc">Чтобы поймать того, кто пытается зайти в ваши приложения.</string>
+<string name="permission_storage_desc">Для сохранения скрытых файлов.</string>
+<string name="advanced_security">БЕЗОПАСНОСТЬ</string>
+<string name="uninstall_protection">Защита от удаления</string>
+<string name="uninstall_protection_desc">Запретить другим удалять это приложение.</string>
+<string name="lock_options">НАСТРОЙКИ БЛОКИРОВКИ</string>
+<string name="global_lock_title">Заблокировать все</string>
+<string name="global_lock_desc">Блокировать все выбранные приложения разом.</string>
+<string name="dark_mode">Темная тема</string>
+<string name="dark_mode_desc">Переключить светлую и темную темы.</string>
+<string name="monitoring_mode">Уровень защиты</string>
+<string name="monitoring_mode_desc">Сила обнаружения запуска</string>
+<string name="monitoring_mode_moderate">Обычный (Стандарт)</string>
+<string name="monitoring_mode_hard">Высокий (Макс. защита)</string>
+<string name="monitoring_mode_auto">Авто (Рекомендуется)</string>
+<string name="monitoring_mode_usage">Статистика (Стандарт)</string>
+<string name="monitoring_mode_shizuku">Shizuku (Высокая мощь)</string>
+<string name="monitoring_mode_accessibility">Спец. возможности (Резерв)</string>
+
+<!-- Tour -->
+<string name="tour_skip">Пропустить</string>
+<string name="tour_next">Далее</string>
+<string name="tour_welcome">Добро пожаловать! Ваша приватность теперь скрыта на карте.</string>
+<string name="tour_step1">Зажмите на карте, чтобы поставить секретную точку входа.</string>
+<string name="tour_step2">Дважды нажмите на точку, чтобы увидеть скрытые файлы.</string>
+<string name="tour_step3">Используйте кнопки для ориентации или смены стиля карты.</string>
+<string name="tour_step4">Запомните свою точку! Это ваш ключ.</string>
+<string name="zoom_in_hint">Приблизьте карту, чтобы создать зону.</string>
+<string name="access_granted_desc">С возвращением! Доступ разрешен.</string>
+<string name="zone_restricted_desc">Доступ запрещен. Вы вне безопасной зоны.</string>
+<string name="system_initialization_desc">Зажмите на карте для создания зоны.</string>
+<string name="lock_type_bio">Отпечаток пальца</string>
+<string name="biometric_required">Пожалуйста, используйте отпечаток.</string>
+<string name="map_location_hint">Используйте точку на карте для входа.</string>
+<string name="package_visibility">Выберите приложения</string>
+<string name="tap_map_to_unlock">Нажмите ниже, чтобы открыть карту.</string>
+<string name="open_map_interface">Открыть карту</string>
+<string name="screenshot_restriction">Запрет скриншотов</string>
+<string name="screenshot_restriction_desc">Запретить другим делать снимки экрана</string>
+<string name="fingerprint_unlock">Отпечаток пальца</string>
+<string name="fingerprint_unlock_desc">Быстрый вход по отпечатку.</string>
+<string name="offline_title">Вы не в сети</string>
+<string name="offline_message">включите передачу данных</string>
+<string name="support_links">ПОМОЩЬ И ПРАВО</string>
+<string name="tutorial">Обучение (Смотреть видео)</string>
+<string name="feedback">Отправить отзыв</string>
+<string name="terms_of_use">Условия использования</string>
+<string name="faq">Частые вопросы / Помощь</string>
+<string name="privacy_policy">Политика конфиденциальности</string>
+<string name="share_mapplock">Поделиться Mapplock</string>
+
+<!-- VaultContentScreen -->
+<string name="settings">Настройки</string>
+<string name="lock">Закрыть</string>
+<string name="add">Добавить</string>
+<string name="sort">Сортировка</string>
+<string name="hide">Скрыть</string>
+<string name="vault_empty">Здесь пока пусто.</string>
+<string name="vault_empty_hint">Нажмите +, чтобы скрыть файлы.</string>
+<string name="app_lock_desc">Приложения откроются только внутри вашей зоны.</string>
+<string name="hide_app_dialog_title">Скрыть приложение</string>
+<string name="cloning_in_progress">Перенос приложения в сейф&#8230;</string>
+<string name="hide_app_dialog_body">Приложение будет скрыто и станет доступно только отсюда.</string>
+<string name="proceed">Продолжить</string>
+<string name="clone_success">Приложение успешно скрыто!</string>
+<string name="clone_failed">Ошибка. Попробуйте еще раз.</string>
+<string name="clear_all_hidden_apps">Вернуть все приложения</string>
+<string name="active_vaults">Активные зоны</string>
+    <plurals name="apps_locked">
+        <item quantity="one">Заблокировано %1$d приложение</item>
+        <item quantity="few">Заблокировано %1$d приложения</item>
+        <item quantity="many">Заблокировано %1$d приложений</item>
+        <item quantity="other">Заблокировано %1$d приложения</item>
+    </plurals>
+    <string name="vault_established">Зона создана</string>
+    <plurals name="apps_hidden">
+        <item quantity="one">Скрыто %1$d приложение:</item>
+        <item quantity="few">Скрыто %1$d приложения:</item>
+        <item quantity="many">Скрыто %1$d приложений:</item>
+        <item quantity="other">Скрыто %1$d приложения:</item>
+    </plurals>
+<string name="close">Закрыть</string>
+<string name="fix">Исправить</string>
+<string name="get_started">Начать</string>
+<string name="grant">Разрешить</string>
+<string name="vault_id_label">Зона %1$s</string>
+
+<!-- MapSelectionScreen -->
+<string name="access_granted">Доступ разрешен</string>
+<string name="zone_restricted">Доступ запрещен</string>
+<string name="system_initialization">Настройка&#8230;</string>
+<string name="vault_encryption">Шифрование&#8230;</string>
+<string name="lock_type_pin">PIN-код</string>
+<string name="lock_type_pattern">Рисунок</string>
+<string name="lock_type_map">Карта</string>
+<string name="abort">Стоп</string>
+<string name="initialize">Старт</string>
+<string name="bypass_security">Пропустить</string>
+<string name="use_fingerprint">Использовать отпечаток</string>
+<string name="location_locked">Геолокация заблокирована</string>
+<string name="enter_pin">Введите PIN</string>
+<string name="draw_pattern">Нарисуйте ключ</string>
+<string name="tap_coordinates">Нажмите на карту</string>
+<string name="verify_identity">Подтвердите личность</string>
+<string name="outside_radius">Вы слишком далеко от зоны</string>
+<string name="biometric_unavailable">Отпечаток недоступен</string>
+<string name="fingerprint">Отпечаток</string>
+<string name="tap_target_coordinates">Нажмите на секретную точку</string>
+<string name="location_required_title">Нужен доступ к геолокации</string>
+<string name="location_required_message">Для работы защиты на основе карт нам нужно ваше местоположение.</string>
+<string name="location_allow_btn">ДАЙТЕ РАЗРЕШЕНИЕ</string>
+<string name="location_access_title">ДОСТУП К ГЕОПОЗИЦИИ</string>
+<string name="location_access_message">Нам нужно знать, где вы находитесь, для работы зон защиты.</string>
+<string name="grant_location_access">РАЗРЕШИТЬ ДОСТУП</string>
+
+<!-- DashboardTour -->
+<string name="tour_dash_welcome_title">Добро пожаловать в Mapplock</string>
+<string name="tour_dash_welcome_desc">Ваши данные под надежной защитой.</string>
+<string name="tour_dash_hide_apps_title">Блокировка приложений</string>
+<string name="tour_dash_hide_apps_desc">Нажмите здесь, чтобы защитить любое приложение.</string>
+<string name="tour_dash_history_title">История зон</string>
+<string name="tour_dash_history_desc">Управление всеми вашими зонами защиты.</string>
+<string name="tour_dash_categories_title">Ваш секретный сейф</string>
+<string name="tour_dash_categories_desc">Фото, видео и файлы хранятся здесь в зашифрованном виде.</string>
+<string name="tour_dash_fab_title">Новая папка</string>
+<string name="tour_dash_fab_desc">Нажмите +, чтобы создать свою папку</string>
+<string name="tour_dash_settings_title">Настройки</string>
+<string name="tour_dash_settings_desc">Меняйте пароли, язык и другое здесь.</string>
+    <string name="custom_lock_background">Свой фон блокировки</string>
+    <string name="custom_lock_background_desc">Установите любое фото на фон</string>
+    <string name="intruder_capture">Съемка взломщика</string>
+    <string name="intruder_capture_desc">Сделает фото того, кто введет неверный код</string>
+    <string name="create_new_folder">Создать папку</string>
+    <string name="create_new_folder_desc">Папки могут содержать любые типы файлов.</string>
+    <string name="folder_name">Имя папки</string>
+    <string name="appearance">Внешний вид</string>
+    <string name="preview_and_hide">СКРЫТЬ (%1$d)</string>
+    <string name="bg_active_desc">Фон активен • Нажмите для управления</string>
+    <string name="change">ИЗМЕНИТЬ</string>
+    <string name="remove_btn">УДАЛИТЬ</string>
+    <string name="notification_perm_title">Уведомления</string>
+    <string name="notification_perm_desc">Нужны для работы службы и оповещений безопасности.</string>
+    <string name="usage_perm_title">Доступ к статистике</string>
+    <string name="usage_perm_desc">Нужно для определения запуска приложений.</string>
+    <string name="overlay_perm_title">Поверх окон</string>
+    <string name="overlay_perm_desc">Нужно для отображения экрана блокировки.</string>
+    <string name="background_popups_perm_title">Всплывающие окна</string>
+    <string name="background_popups_perm_desc">Позволяет мгновенно открывать защиту из фона.</string>
+    <string name="battery_perm_title">Без ограничений питания</string>
+    <string name="battery_perm_desc">Предотвращает остановку защиты системой.</string>
+    <string name="grant_permission">РАЗРЕШИТЬ</string>
+    <string name="security_monitoring_note">Защита требует активного мониторинга системы.</string>
+    <string name="search_apps">Поиск приложений&#8230;</string>
+    <string name="recommended">РЕКОМЕНДУЕМ</string>
+    <string name="all_apps">ВСЕ ПРИЛОЖЕНИЯ</string>
+    <string name="locked_apps_header">ЗАБЛОКИРОВАНО</string>
+    <string name="no_apps_in_zone">В этой зоне нет приложений</string>
+    <string name="unlock_all">РАЗБЛОКИРОВАТЬ ВСЕ</string>
+    <string name="user_locked_stats">БОЛЕЕ %1$d%% ПОЛЬЗОВАТЕЛЕЙ ЗАБЛОКИРОВАЛИ ЭТО</string>
+    <string name="bulk_action_title">Действия</string>
+    <string name="bulk_action_desc">Выберите действие для всех файлов.</string>
+    <string name="recover_all">ВЕРНУТЬ ВСЕ</string>
+    <string name="delete_all">УДАЛИТЬ ВСЕ</string>
+    <string name="delete_folder_confirm">Удалить папку и все файлы в ней?</string>
+    <string name="recover_folder">Восстановить файлы перед удалением</string>
+    <string name="delete_permanently">Удалить безвозвратно</string>
+    <string name="connect_dots_to_verify">СОЕДИНИТЕ ТОЧКИ</string>
+    <string name="aqi_label">Индекс возд.</string>
+    <string name="temp_label">Темп.</string>
+    <string name="humidity_label">Влажность</string>
+    <string name="importing_files">Импорт файлов</string>
+    <string name="deleting_files">Удаление файлов</string>
+    <string name="restoring_files">Восстановление файлов</string>
+    <string name="hold_on_message">Подождите, телефон выполняет операцию</string>
+    <string name="completed_percent">%1$d%% Готово</string>
+
+    <!-- Diagnostics -->
+    <string name="system_status">СОСТОЯНИЕ СИСТЕМЫ</string>
+    <string name="protection_guide_title">Работа 24/7</string>
+    <string name="protection_guide_desc">Для надежной работы Mapplock должен быть всегда активен.</string>
+    <string name="step_battery_title">Без ограничений батареи</string>
+    <string name="step_battery_desc">Запретить Android отключать Mapplock.</string>
+    <string name="step_autostart_title">Автозапуск</string>
+    <string name="step_autostart_desc">Разрешить запуск при включении телефона.</string>
+    <string name="step_recents_title">Закрепить в списке</string>
+    <string name="step_recents_desc">Закрепите приложение в меню недавних.</string>
+    <string name="oem_guide_xiaomi">Настройки → Батарея → Контроль активности → Mapplock → Нет ограничений.</string>
+    <string name="oem_guide_oppo">Настройки → Приложения → Mapplock → Автозапуск → Вкл.</string>
+    <string name="oem_guide_vivo">Настройки → Батарея → Расход в фоне → Mapplock.</string>
+    <string name="oem_guide_samsung">Настройки → Обслуживание → Батарея → Mapplock в исключения.</string>
+    <string name="oem_guide_generic">Настройки → Батарея → Экономия заряда → Mapplock → Не экономить.</string>
+    <string name="lock_recents_instruction">1. Откройте список недавних приложений\n2. Нажмите на иконку Mapplock\n3. Выберите \'Заблокировать\'</string>
+    <string name="indestructible_mode_active">ЗАЩИТА АКТИВНА</string>
+    <string name="indestructible_mode_inactive">СБОЙ ЗАЩИТЫ</string>
+    <string name="fix_now">ИСПРАВИТЬ</string>
+    <string name="status_active">АКТИВНО</string>
+    <string name="status_inactive">НЕАКТИВНО</string>
+    <string name="accessibility_service">Спец. возможности</string>
+    <string name="overlay_permission">Разрешение поверх окон</string>
+    <string name="usage_stats">Статистика</string>
+    <string name="locker_service">Движок защиты</string>
+    <string name="bg_protection">Защита в фоне (Рекомендуется)</string>
+    <string name="bg_protection_desc">Не дает системе остановить работу защиты.</string>
+    <string name="lock_in_recents_guide">Как закрепить Mapplock:\n1. Откройте Недавние\n2. Удерживайте Mapplock\n3. Нажмите на \'Замок\'</string>
+
+    <string-array name="faq_questions">
+<item>Что такое Mapplock и чем он лучше других?</item>
+<item>Как Mapplock защищает данные от квантовых компьютеров?</item>
+<item>Как работает функция \"Map-Gate\"?</item>
+<item>Хранятся ли мои фото на ваших серверах?</item>
+<item>Что если я забуду пароль?</item>
+<item>Будет ли карта работать без интернета?</item>
+<item>Что такое съемка взломщика?</item>
+<item>Зачем нужна защита от удаления?</item>
+    </string-array>
+    <string-array name="faq_answers">
+<item>Mapplock — это защита нового поколения, использующая геолокацию для охраны вашей приватности. В отличие от обычных локеров, мы используем технологию \"Map-Gate\".</item>
+<item>Мы используем квантово-устойчивое AES-256 шифрование. Данные хранятся только локально и не покидают устройство.</item>
+<item>Map-Gate позволяет задать GPS-координаты как безопасные зоны. Вне этих зон приложения блокируются автоматически.</item>
+<item>Нет, мы придерживаемся модели полной анонимности. Ваши файлы шифруются и остаются только на вашем телефоне.</item>
+<item>Вы можете восстановить доступ через биометрию или свою секретную точку на карте.</item>
+<item>Да, приложение кэширует карты и работает полностью автономно после первой настройки.</item>
+<item>Приложение тайно фотографирует на фронтальную камеру любого, кто введет неверный код.</item>
+<item>Эта функция предотвращает случайное удаление приложения, защищая ваши скрытые данные от потери.</item>
+    </string-array>
+</resources>

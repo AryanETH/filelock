@@ -2,6 +2,7 @@ package com.aitoyz.mapplock.ui
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.Manifest
 import android.media.MediaMetadataRetriever
 import android.media.ThumbnailUtils
 import android.app.Application
@@ -42,6 +43,8 @@ import java.net.URL
 import org.json.JSONObject
 import org.json.JSONArray
 import java.util.UUID
+import com.aitoyz.mapplock.core.VirtualAppManager
+import com.aitoyz.mapplock.core.AppCloner
 import android.app.admin.DevicePolicyManager
 import android.content.ContentValues
 import android.os.Environment
@@ -49,11 +52,18 @@ import android.graphics.pdf.PdfRenderer
 import android.os.ParcelFileDescriptor
 import android.provider.MediaStore
 import android.widget.Toast
+import androidx.core.content.edit
 import com.aitoyz.mapplock.R
 import kotlinx.coroutines.withContext
 import com.posthog.PostHog
+import androidx.annotation.OptIn
+import androidx.media3.common.util.UnstableApi
 
+@OptIn(UnstableApi::class)
 class VaultViewModel(application: Application) : AndroidViewModel(application) {
+    val virtualAppManager = VirtualAppManager(application)
+    val appCloner = AppCloner(application)
+
     private val _uiState = MutableStateFlow(VaultState())
     val uiState: StateFlow<VaultState> = _uiState.asStateFlow()
 
@@ -79,20 +89,26 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     init {
-        prefs.registerOnSharedPreferenceChangeListener(preferenceListener)
-        ensureMainActivityEnabled()
-        createNoMediaFile()
-        loadInstalledApps()
-        loadPersistedVaults()
-        checkFirstRun()
-        checkPermissions()
-        updateFileCounts()
-        
-        lock()
-        startLockerServiceIfNeeded()
-        
-        if (!prefs.getBoolean("is_first_run", true)) {
-            startMapDownload()
+        viewModelScope.launch(Dispatchers.IO) {
+            com.aitoyz.mapplock.security.StorageManager.ensureDirsExist(getApplication())
+            // Trigger lazy loading of virtual app manager on IO thread
+            virtualAppManager.isAppHidden("test") 
+            prefs.registerOnSharedPreferenceChangeListener(preferenceListener)
+            ensureMainActivityEnabled()
+            createNoMediaFile()
+            loadPersistedVaults()
+            checkFirstRun()
+            checkPermissions()
+            updateFileCounts()
+            
+            withContext(Dispatchers.Main) {
+                lock()
+                startLockerServiceIfNeeded()
+                
+                if (!prefs.getBoolean("is_first_run", true)) {
+                    startMapDownload()
+                }
+            }
         }
     }
 
@@ -103,7 +119,11 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
             if (!vaultDir.exists()) vaultDir.mkdirs()
             val noMedia = File(vaultDir, ".nomedia")
             if (!noMedia.exists()) {
-                try { noMedia.createNewFile() } catch (e: Exception) { android.util.Log.e("VaultViewModel", "Failed to create .nomedia", e) }
+                try { 
+                    noMedia.createNewFile() 
+                } catch (e: Exception) { 
+                    com.aitoyz.mapplock.security.LockerLogger.e(com.aitoyz.mapplock.security.LockerLogger.Event.ERROR, "Failed to create .nomedia", e) 
+                }
             }
         }
     }
@@ -115,12 +135,12 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
 
     fun completeOnboarding() {
         // Legacy method, will be replaced by granular steps
-        prefs.edit().putBoolean("is_first_run", false).apply()
+        prefs.edit { putBoolean("is_first_run", false) }
         _uiState.update { it.copy(isFirstRun = false) }
     }
 
     fun completeIntroGuide() {
-        prefs.edit().putBoolean("intro_guide_completed", true).apply()
+        prefs.edit { putBoolean("intro_guide_completed", true) }
         _uiState.update { it.copy(introGuideCompleted = true) }
     }
 
@@ -149,7 +169,7 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun completeTour() {
-        prefs.edit().putBoolean("tour_completed", true).apply()
+        prefs.edit { putBoolean("tour_completed", true) }
         _uiState.update { it.copy(showTour = false) }
     }
 
@@ -197,7 +217,14 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
 
         _uiState.update { it.copy(isNetworkAvailable = true) }
 
-        com.google.android.gms.location.LocationServices.getFusedLocationProviderClient(getApplication<Application>()).lastLocation.addOnSuccessListener { location ->
+        val context = getApplication<Application>()
+        if (androidx.core.content.ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+            androidx.core.content.ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            _uiState.update { it.copy(isMapDownloading = false) }
+            return
+        }
+
+        com.google.android.gms.location.LocationServices.getFusedLocationProviderClient(context).lastLocation.addOnSuccessListener { location ->
             location?.let { 
                 val geoPoint = GeoPoint(it.latitude, it.longitude)
                 viewModelScope.launch {
@@ -261,7 +288,7 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
                     saveFileInfo(fileId, fileName, encryptedFile.absolutePath, category, encryptedSize, thumbFile.absolutePath, folderName)
                     itemsToDelete.add(Triple(uri, originalSize, originalPath))
                 } catch (e: Exception) {
-                    android.util.Log.e("VaultViewModel", "Error adding file to vault", e)
+                    com.aitoyz.mapplock.security.LockerLogger.e(com.aitoyz.mapplock.security.LockerLogger.Event.ERROR, "Error adding file to vault", e)
                 }
             }
             _uiState.update { it.copy(operationProgress = null) }
@@ -392,7 +419,7 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
     private fun getFilePathFromUri(context: Context, uri: Uri): String? {
         if ("file" == uri.scheme) return uri.path
         try {
-            context.contentResolver.query(uri, arrayOf(android.provider.MediaStore.MediaColumns.DATA), null, null, null)?.use { cursor ->
+            context.contentResolver.query(uri, arrayOf(MediaStore.MediaColumns.DATA), null, null, null)?.use { cursor ->
                 if (cursor.moveToFirst()) return cursor.getString(0)
             }
         } catch (e: Exception) {}
@@ -466,34 +493,51 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun updateFileCounts() {
-        val fileIds = prefs.getStringSet("vault_file_ids", emptySet()) ?: emptySet()
-        val customFolders = (prefs.getStringSet("custom_folders", emptySet()) ?: emptySet()).toList().sorted()
-        val activeVaultId = _uiState.value.activeVaultId
-        val files = mutableListOf<VaultFile>()
-        var photos = 0; var videos = 0; var audio = 0; var docs = 0; var intruders = 0; var trashed = 0
-        fileIds.forEach { id ->
-            val vaultId = prefs.getString("file_${id}_vault_id", null)
-            if (vaultId != activeVaultId) return@forEach
-
-            val name = prefs.getString("file_${id}_name", "") ?: ""
-            val path = prefs.getString("file_${id}_path", "") ?: ""
-            val catStr = prefs.getString("file_${id}_category", "") ?: ""
-            val category = try { FileCategory.valueOf(catStr) } catch (e: Exception) { FileCategory.OTHER }
-            val thumbPath = prefs.getString("file_${id}_thumb", null)
-            val folderName = prefs.getString("file_${id}_folder", null)
-            val file = VaultFile(id, name, path, category, prefs.getLong("file_${id}_size", 0), prefs.getLong("file_${id}_timestamp", 0), thumbPath, folderName, vaultId)
-            files.add(file)
+        viewModelScope.launch(Dispatchers.IO) {
+            val fileIds = prefs.getStringSet("vault_file_ids", emptySet()) ?: emptySet()
+            val customFolders = (prefs.getStringSet("custom_folders", emptySet()) ?: emptySet()).toList().sorted()
+            val activeVaultId = _uiState.value.activeVaultId
+            val filesList = mutableListOf<VaultFile>()
+            var photos = 0; var videos = 0; var audio = 0; var docs = 0; var intruders = 0; var trashed = 0
             
-            if (category == FileCategory.RECYCLE_BIN) {
-                trashed++
-            } else if (folderName == null) {
-                when (category) {
-                    FileCategory.PHOTO -> photos++; FileCategory.VIDEO -> videos++; FileCategory.AUDIO -> audio++; FileCategory.DOCUMENT -> docs++; FileCategory.INTRUDER -> intruders++
-                    else -> {}
+            fileIds.forEach { id ->
+                val vaultId = prefs.getString("file_${id}_vault_id", null)
+                if (vaultId != activeVaultId) return@forEach
+
+                val name = prefs.getString("file_${id}_name", "") ?: ""
+                val path = prefs.getString("file_${id}_path", "") ?: ""
+                val catStr = prefs.getString("file_${id}_category", "") ?: ""
+                val category = try { FileCategory.valueOf(catStr) } catch (e: Exception) { FileCategory.OTHER }
+                val thumbPath = prefs.getString("file_${id}_thumb", null)
+                val folderName = prefs.getString("file_${id}_folder", null)
+                val file = VaultFile(id, name, path, category, prefs.getLong("file_${id}_size", 0), prefs.getLong("file_${id}_timestamp", 0), thumbPath, folderName, vaultId)
+                filesList.add(file)
+                
+                if (category == FileCategory.RECYCLE_BIN) {
+                    trashed++
+                } else if (folderName == null) {
+                    when (category) {
+                        FileCategory.PHOTO -> photos++; FileCategory.VIDEO -> videos++; FileCategory.AUDIO -> audio++; FileCategory.DOCUMENT -> docs++; FileCategory.INTRUDER -> intruders++
+                        else -> {}
+                    }
                 }
             }
+            
+            val sortedFiles = filesList.sortedByDescending { f -> f.addedTimestamp }
+            
+            _uiState.update { 
+                it.copy(
+                    files = sortedFiles, 
+                    customFolders = customFolders, 
+                    photoCount = photos, 
+                    videoCount = videos, 
+                    audioCount = audio, 
+                    documentCount = docs, 
+                    intruderCount = intruders, 
+                    recycleBinCount = trashed
+                ) 
+            }
         }
-        _uiState.update { it.copy(files = files.sortedByDescending { f -> f.addedTimestamp }, customFolders = customFolders, photoCount = photos, videoCount = videos, audioCount = audio, documentCount = docs, intruderCount = intruders, recycleBinCount = trashed) }
     }
 
     private fun ensureMainActivityEnabled() {
@@ -506,7 +550,7 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
                 PackageManager.DONT_KILL_APP
             )
         } catch (e: Exception) {
-            android.util.Log.e("VaultViewModel", "Failed to enable MainActivity", e)
+            com.aitoyz.mapplock.security.LockerLogger.e(com.aitoyz.mapplock.security.LockerLogger.Event.ERROR, "Failed to enable MainActivity", e)
         }
     }
 
@@ -543,50 +587,71 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun checkPermissions() {
-        val context = getApplication<Application>()
-        val hasUsage = hasUsageStatsPermission(context)
-        val hasOverlay = Settings.canDrawOverlays(context)
-        val hasCamera = androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
-        val hasLocation = androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
-        val hasBattery = hasBatteryOptimizationPermission(context)
-        val hasBackgroundPopups = prefs.getBoolean("perm_background_popups", false)
-        val hasNotifications = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
-        } else true
-        val hasStorage = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_MEDIA_IMAGES) == PackageManager.PERMISSION_GRANTED
-        } else {
-            androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
-        }
-        val hasFullStorage = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) Environment.isExternalStorageManager() else true
-        
-        // System Health Diagnostics
-        val isLockerRunning = com.aitoyz.mapplock.service.AppLockerService.isRunning()
-        
-        // Indestructible Mode check
-        val isIndestructible = hasBattery && hasUsage && hasOverlay && isLockerRunning
-        
-        if (hasUsage && hasOverlay && !isLockerRunning) {
-            startLockerServiceIfNeeded()
-        }
+        viewModelScope.launch(Dispatchers.IO) {
+            val context = getApplication<Application>()
+            val hasUsage = hasUsageStatsPermission(context)
+            val hasOverlay = Settings.canDrawOverlays(context)
+            val hasCamera = androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
+            val hasLocation = androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+            val hasBattery = hasBatteryOptimizationPermission(context)
+            val hasBackgroundPopups = prefs.getBoolean("perm_background_popups", false)
+            
+            val hasNotifications = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+            } else true
+            
+            val hasStorage = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_MEDIA_IMAGES) == PackageManager.PERMISSION_GRANTED
+            } else {
+                androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+            }
+            
+            val hasFullStorage = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) Environment.isExternalStorageManager() else true
+            val hasAccessibility = isAccessibilityServiceEnabled(context)
+            
+            // System Health Diagnostics
+            val isLockerRunning = com.aitoyz.mapplock.service.AppLockerService.isRunning()
+            
+            // Indestructible Mode check
+            val isIndestructible = hasBattery && hasUsage && hasOverlay && isLockerRunning
+            
+            withContext(Dispatchers.Main) {
+                if (hasUsage && hasOverlay && !isLockerRunning) {
+                    startLockerServiceIfNeeded()
+                }
 
-        if (hasLocation && !_uiState.value.hasLocationPermission) startMapDownload()
-        _uiState.update {
-            it.copy(
-                hasUsageStatsPermission = hasUsage,
-                hasOverlayPermission = hasOverlay,
-                hasCameraPermission = hasCamera,
-                hasLocationPermission = hasLocation,
-                hasStoragePermission = hasStorage,
-                hasFullStoragePermission = hasFullStorage,
-                hasBatteryOptimizationPermission = hasBattery,
-                hasBackgroundPopupsPermission = hasBackgroundPopups,
-                hasNotificationPermission = hasNotifications,
-                isLockerServiceRunning = isLockerRunning,
-                isUsageAccessActive = hasUsage,
-                isIndestructibleModeActive = isIndestructible
-            )
+                if (hasLocation && !_uiState.value.hasLocationPermission) startMapDownload()
+                
+                _uiState.update {
+                    it.copy(
+                        hasUsageStatsPermission = hasUsage,
+                        hasOverlayPermission = hasOverlay,
+                        hasCameraPermission = hasCamera,
+                        hasLocationPermission = hasLocation,
+                        hasStoragePermission = hasStorage,
+                        hasFullStoragePermission = hasFullStorage,
+                        hasBatteryOptimizationPermission = hasBattery,
+                        hasBackgroundPopupsPermission = hasBackgroundPopups,
+                        hasNotificationPermission = hasNotifications,
+                        hasAccessibilityPermission = hasAccessibility,
+                        isLockerServiceRunning = isLockerRunning,
+                        isUsageAccessActive = hasUsage,
+                        isIndestructibleModeActive = isIndestructible
+                    )
+                }
+            }
         }
+    }
+
+    private fun isAccessibilityServiceEnabled(context: Context): Boolean {
+        val expectedServiceName = ComponentName(context, com.aitoyz.mapplock.backend.accessibility.AppLockAccessibilityService::class.java).flattenToString()
+        val enabledServices = Settings.Secure.getString(context.contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES) ?: return false
+        val splitter = android.text.TextUtils.SimpleStringSplitter(':')
+        splitter.setString(enabledServices)
+        while (splitter.hasNext()) {
+            if (splitter.next().equals(expectedServiceName, ignoreCase = true)) return true
+        }
+        return false
     }
 
     fun toggleUninstallShield(enable: Boolean) {
@@ -676,7 +741,7 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
                 com.aitoyz.mapplock.security.SecureManager.getInstance(context).removeFileInfo(fileId)
             }
         } catch (e: Exception) {
-            android.util.Log.e("VaultViewModel", "Failed to restore file", e)
+            com.aitoyz.mapplock.security.LockerLogger.e(com.aitoyz.mapplock.security.LockerLogger.Event.ERROR, "Failed to restore file", e)
         }
     }
 
@@ -699,6 +764,7 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun openUsageStatsSettings() { getApplication<Application>().startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+    fun openAccessibilitySettings() { getApplication<Application>().startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
     fun openFullStorageSettings() { if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) getApplication<Application>().startActivity(Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION, Uri.parse("package:${getApplication<Application>().packageName}")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
     fun openOverlaySettings() { getApplication<Application>().startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:${getApplication<Application>().packageName}")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
     fun openProtectedAppsSettings() {
@@ -711,7 +777,7 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
             context.startActivity(intent)
             return
         } catch (e: Exception) {
-            android.util.Log.e("VaultViewModel", "Failed to launch standard ignore battery dialog", e)
+            com.aitoyz.mapplock.security.LockerLogger.e(com.aitoyz.mapplock.security.LockerLogger.Event.ERROR, "Failed to launch standard ignore battery dialog", e)
         }
 
         // 2. Fallback to OEM specific settings
@@ -806,22 +872,25 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
             val resolveInfos = pm.queryIntentActivities(intent, 0)
             val lockedApps = getLockedApps()
             
-            val apps = resolveInfos.mapNotNull { info ->
+            val apps = resolveInfos.asSequence().mapNotNull { info ->
                 try {
                     val activityInfo = info.activityInfo ?: return@mapNotNull null
                     val pkg = activityInfo.packageName ?: return@mapNotNull null
+                    
+                    // Pre-verify that we can load the icon to avoid empty slots later
+                    try { pm.getApplicationIcon(pkg) } catch (e: Exception) { return@mapNotNull null }
+
                     if (lockedApps.contains(pkg)) return@mapNotNull null
                     
                     AppInfo(
                         packageName = pkg,
-                        appName = info.loadLabel(pm).toString(),
-                        icon = info.loadIcon(pm)
+                        appName = info.loadLabel(pm).toString()
                     )
                 } catch (e: Exception) {
-                    android.util.Log.e("VaultViewModel", "Failed to load info for app", e)
+                    com.aitoyz.mapplock.security.LockerLogger.e(com.aitoyz.mapplock.security.LockerLogger.Event.ERROR, "Failed to load info for app", e)
                     null
                 }
-            }.distinctBy { it.packageName }.sortedBy { it.appName }
+            }.distinctBy { it.packageName }.sortedBy { it.appName }.toList()
 
             _uiState.update { it.copy(installedApps = apps) }
         }
@@ -875,7 +944,7 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
             activeVaultId = prefs.getString("active_vault_id", null), 
             isFingerprintEnabled = prefs.getBoolean("fingerprint_enabled", true), 
             isDarkMode = prefs.getBoolean("is_dark_mode", false), 
-            monitoringMode = MonitoringMode.valueOf(prefs.getString("monitoring_mode", MonitoringMode.AUTO.name) ?: MonitoringMode.AUTO.name),
+            monitoringMode = MonitoringMode.valueOf(prefs.getString("monitoring_mode", MonitoringMode.USAGE_STATS.name) ?: MonitoringMode.USAGE_STATS.name),
             isScreenshotRestricted = prefs.getBoolean("screenshot_restriction", false),
             isIntruderCaptureEnabled = prefs.getBoolean("intruder_capture_enabled", false),
             currentLanguage = language, 
@@ -894,21 +963,41 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
         val vaultIds = (prefs.getStringSet("vault_ids", emptySet()) ?: emptySet()).toMutableSet()
         if (vaultIds.size >= 2) return
         
-        PostHog.capture(event = "vault_created", properties = mapOf(
-            "radius" to radius,
-            "lock_type" to lockType.name,
-            "apps_locked_count" to hiddenApps.size
-        ))
+        viewModelScope.launch(Dispatchers.IO) {
+            PostHog.capture(event = "vault_created", properties = mapOf(
+                "radius" to radius,
+                "lock_type" to lockType.name,
+                "apps_locked_count" to hiddenApps.size
+            ))
 
-        val id = UUID.randomUUID().toString()
-        val appsToLock = hiddenApps.toMutableSet().apply { 
-            remove("com.android.settings")
-            remove("com.android.vending")
-            remove("com.google.android.vending")
+            val id = UUID.randomUUID().toString()
+            val appsToLock = hiddenApps.toMutableSet().apply { 
+                remove("com.android.settings")
+                remove("com.android.vending")
+                remove("com.google.android.vending")
+            }
+            vaultIds.add(id)
+            
+            prefs.edit {
+                putStringSet("vault_ids", vaultIds)
+                putFloat("vault_${id}_lat", point.latitude.toFloat())
+                putFloat("vault_${id}_lon", point.longitude.toFloat())
+                putFloat("vault_${id}_radius", radius)
+                putString("vault_${id}_lock_type", lockType.name)
+                putString("vault_${id}_secret", secret)
+                putStringSet("vault_${id}_apps", appsToLock)
+                putLong("vault_${id}_timestamp", System.currentTimeMillis())
+                putBoolean("is_locked", false)
+                putString("active_vault_id", id)
+            }
+            
+            ensureOffline(point)
+            
+            withContext(Dispatchers.Main) {
+                loadPersistedVaults()
+                notifyServiceToRefresh()
+            }
         }
-        vaultIds.add(id)
-        prefs.edit().apply { putStringSet("vault_ids", vaultIds); putFloat("vault_${id}_lat", point.latitude.toFloat()); putFloat("vault_${id}_lon", point.longitude.toFloat()); putFloat("vault_${id}_radius", radius); putString("vault_${id}_lock_type", lockType.name); putString("vault_${id}_secret", secret); putStringSet("vault_${id}_apps", appsToLock); putLong("vault_${id}_timestamp", System.currentTimeMillis()); putBoolean("is_locked", false); putString("active_vault_id", id); commit() }
-        ensureOffline(point); loadPersistedVaults(); notifyServiceToRefresh()
     }
 
     fun clearAllVaults() {
@@ -1036,7 +1125,7 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
     fun removeAppFromSpecificVault(vaultId: String, packageName: String) {
         val vault = _uiState.value.vaults.find { it.id == vaultId } ?: return
         val newHiddenApps = vault.hiddenApps.toMutableSet().apply { remove(packageName) }
-        prefs.edit().putStringSet("vault_${vaultId}_apps", newHiddenApps).commit(); loadPersistedVaults(); notifyServiceToRefresh()
+        prefs.edit { putStringSet("vault_${vaultId}_apps", newHiddenApps) }; loadPersistedVaults(); notifyServiceToRefresh()
     }
 
     private fun notifyServiceToRefresh() {
@@ -1048,7 +1137,7 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
         val vaultId = _uiState.value.activeVaultId ?: return
         val vault = _uiState.value.vaults.find { it.id == vaultId } ?: return
         val newHiddenApps = vault.hiddenApps.toMutableSet().apply { if (contains(packageName)) remove(packageName) else add(packageName) }
-        prefs.edit().putStringSet("vault_${vaultId}_apps", newHiddenApps).commit(); loadPersistedVaults(); notifyServiceToRefresh()
+        prefs.edit { putStringSet("vault_${vaultId}_apps", newHiddenApps) }; loadPersistedVaults(); notifyServiceToRefresh()
     }
 
     fun launchApp(packageName: String) {
@@ -1061,7 +1150,7 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
                 context.startActivity(this) 
             }
         } catch (e: Exception) {
-            android.util.Log.e("VaultViewModel", "Failed to launch app: $packageName", e)
+            com.aitoyz.mapplock.security.LockerLogger.e(com.aitoyz.mapplock.security.LockerLogger.Event.ERROR, "Failed to launch app: $packageName", e)
         }
     }
 
@@ -1075,11 +1164,16 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
     fun toggleDarkMode() { val newValue = !_uiState.value.isDarkMode; prefs.edit().putBoolean("is_dark_mode", newValue).apply(); _uiState.update { it.copy(isDarkMode = newValue) } }
 
     fun setMonitoringMode(mode: MonitoringMode) {
+        val context = getApplication<Application>()
+        if (mode == MonitoringMode.ACCESSIBILITY && !isAccessibilityServiceEnabled(context)) {
+            openAccessibilitySettings()
+            return
+        }
+        
         prefs.edit().putString("monitoring_mode", mode.name).apply()
         _uiState.update { it.copy(monitoringMode = mode) }
         
         // Restart service to apply new backend
-        val context = getApplication<Application>()
         if (com.aitoyz.mapplock.service.AppLockerService.isRunning()) {
             val intent = Intent(context, com.aitoyz.mapplock.service.AppLockerService::class.java)
             context.stopService(intent)

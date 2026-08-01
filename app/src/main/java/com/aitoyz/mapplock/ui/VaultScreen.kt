@@ -107,6 +107,8 @@ import android.content.Intent
 @Composable
 fun VaultScreen(
     state: VaultState,
+    virtualAppManager: com.aitoyz.mapplock.core.VirtualAppManager,
+    appCloner: com.aitoyz.mapplock.core.AppCloner,
     onUnlockAttempt: (Double, Double, String) -> Unit,
     onIntruderCaptured: (android.net.Uri, String?) -> Unit,
     onSaveConfig: (GeoPoint, String, Set<String>, LockType, Float) -> Unit,
@@ -114,8 +116,6 @@ fun VaultScreen(
     onOpenUsageSettings: () -> Unit,
     onOpenOverlaySettings: () -> Unit,
     onOpenProtectedApps: () -> Unit,
-    onOpenAutoStartSettings: () -> Unit = {},
-    onToggleMasterStealth: () -> Unit,
     onAddFiles: (List<android.net.Uri>, FileCategory) -> Unit,
     onToggleAppLock: (String) -> Unit,
     onRemoveVault: (String) -> Unit,
@@ -127,12 +127,17 @@ fun VaultScreen(
     onDeleteFile: (String) -> Unit,
     onRestoreFile: (String) -> Unit,
     onFetchGalleryItems: (FileCategory) -> Unit,
-    onRemoveAppFromVault: (String, String) -> Unit = { _, _ -> },
     onToggleDarkMode: () -> Unit,
     onToggleFingerprint: () -> Unit,
     onSetLanguage: (String) -> Unit,
     onCompleteTour: () -> Unit,
     onToggleScreenshotRestriction: () -> Unit,
+    onStartAction: () -> Unit,
+    onEndAction: () -> Unit,
+    modifier: Modifier = Modifier,
+    onOpenAutoStartSettings: () -> Unit = {},
+    onToggleMasterStealth: () -> Unit = {},
+    onRemoveAppFromVault: (String, String) -> Unit = { _, _ -> },
     onToggleIntruderCapture: (Boolean) -> Unit = {},
     onToggleUninstallShield: (Boolean) -> Unit = {},
     onRestoreAndUninstall: () -> Unit = {},
@@ -145,8 +150,6 @@ fun VaultScreen(
     onSetMonitoringMode: (MonitoringMode) -> Unit = {},
     onFetchWeather: (Double, Double) -> Unit = { _, _ -> },
     onRefreshWeather: () -> Unit = {},
-    onStartAction: () -> Unit = {},
-    onEndAction: () -> Unit = {},
     onRequestGps: (() -> Unit) -> Unit = { it() }
 ) {
     val currentVaults by rememberUpdatedState(state.vaults)
@@ -340,7 +343,7 @@ fun VaultScreen(
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = modifier.fillMaxSize()) {
         AnimatedContent(
             targetState = state.isLocked,
             transitionSpec = {
@@ -603,8 +606,8 @@ fun VaultScreen(
                     if (showOfflineDialog) {
                         AlertDialog(
                             onDismissRequest = { showOfflineDialog = false },
-                            title = { Text(stringResource(R.string.support_links), fontWeight = FontWeight.Black) },
-                            text = { Text("Turn on data to search.", fontWeight = FontWeight.Bold) },
+                            title = { Text(stringResource(R.string.offline_title), fontWeight = FontWeight.Black) },
+                            text = { Text(stringResource(R.string.offline_message), fontWeight = FontWeight.Bold) },
                             confirmButton = {
                                 Button(onClick = {
                                     context.startActivity(Intent(android.provider.Settings.ACTION_DATA_ROAMING_SETTINGS))
@@ -761,6 +764,8 @@ fun VaultScreen(
             } else {
                 VaultContentScreen(
                     state = state,
+                    virtualAppManager = virtualAppManager,
+                    appCloner = appCloner,
                     onLockClick = onLockClick,
                     onOpenUsageSettings = onOpenUsageSettings,
                     onOpenOverlaySettings = onOpenOverlaySettings,
@@ -1299,7 +1304,7 @@ fun DirectionSearchBox(
 
 
 @Composable
-fun MapScaleBar(zoom: Double, latitude: Double, modifier: Modifier = Modifier) {
+fun MapScaleBar(modifier: Modifier = Modifier, zoom: Double, latitude: Double) {
     val density = androidx.compose.ui.platform.LocalDensity.current
     val metersPerPixel = (Math.cos(latitude * Math.PI / 180) * 2 * Math.PI * 6378137) / (256 * Math.pow(2.0, zoom))
     val maxBarWidthPx = with(density) { 100.dp.toPx() }
@@ -1321,13 +1326,13 @@ fun MapScaleBar(zoom: Double, latitude: Double, modifier: Modifier = Modifier) {
 
 @Composable
 fun MapSearchBar(
+    isDark: Boolean,
+    modifier: Modifier = Modifier,
     query: String, 
     onQueryChange: (String) -> Unit, 
     onSearch: (String) -> Unit, 
-    isDark: Boolean,
     mapBearing: Float = 0f,
-    onCompassClick: () -> Unit = {},
-    modifier: Modifier = Modifier
+    onCompassClick: () -> Unit = {}
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = androidx.compose.ui.platform.LocalFocusManager.current

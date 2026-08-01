@@ -457,9 +457,18 @@ fun CyberSetupDialog(apps: List<AppInfo>, accentColor: Color, onDismiss: () -> U
                         ListItem(
                             headlineContent = { Text(app.appName, color = Color.White) },
                             leadingContent = {
-                                app.icon?.let {
-                                    Image(it.toBitmap().asImageBitmap(), contentDescription = null, modifier = Modifier.size(36.dp).clip(CircleShape))
-                                }
+                                val context = LocalContext.current
+                                val painter = coil.compose.rememberAsyncImagePainter(
+                                    model = coil.request.ImageRequest.Builder(context)
+                                        .data(app.packageName)
+                                        .crossfade(true)
+                                        .build()
+                                )
+                                Image(
+                                    painter = painter,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(36.dp).clip(CircleShape)
+                                )
                             },
                             trailingContent = {
                                 Checkbox(

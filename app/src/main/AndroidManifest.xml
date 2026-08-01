@@ -11,10 +11,7 @@
         android:name="android.hardware.camera.front"
         android:required="false" />
 
-    <!--  📁 Storage - Required for File Vault (Scoped Storage used where possible)  -->
-    <uses-permission
-        android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
-        tools:ignore="ScopedStorage" />
+    <!--  📁 Storage - Required for File Vault (Scoped Storage)  -->
     <uses-permission
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
@@ -24,6 +21,7 @@
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VISUAL_USER_SELECTED" />
 
     <!--  🌐 Network - Required for Map Tiles (OpenFreeMap)  -->
     <uses-permission android:name="android.permission.INTERNET" />
@@ -53,6 +51,7 @@
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
     <!--  📦 App Management - Required to Detect Launched Apps  -->
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
     <uses-permission
         android:name="android.permission.QUERY_ALL_PACKAGES"
         tools:ignore="QueryAllPackagesPermission" />
@@ -63,6 +62,7 @@
     <application
         android:name=".MapplockApp"
         android:allowBackup="false"
+        android:largeHeap="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:hasFragileUserData="true"
@@ -72,12 +72,12 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Mapplock"
-        android:directBootAware="true">
+        android:directBootAware="true"
+        android:enableOnBackInvokedCallback="true">
 
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:screenOrientation="portrait"
             android:theme="@style/Theme.AppSplash"
             android:configChanges="locale|layoutDirection|orientation|screenSize">
             <intent-filter>
@@ -112,7 +112,6 @@
             android:name=".LockActivity"
             android:exported="false"
             android:theme="@style/Theme.Mapplock.Lock"
-            android:screenOrientation="portrait"
             android:excludeFromRecents="true"
             android:taskAffinity="com.aitoyz.mapplock.lockstack"
             android:launchMode="singleTask"
@@ -126,19 +125,21 @@
             android:directBootAware="true">
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="App usage monitoring for security and privacy protection" />
+                android:value="AppLockSecurity" />
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_REASON"
-                android:value="This service monitors app launches to provide real-time security overlays for user-selected applications." />
+                android:value="Mapplock provides a critical security layer that monitors and intercepts the launch of user-selected protected applications to prevent unauthorized access. This functionality requires a persistent foreground service to ensure real-time response and session management, essential for device privacy protection." />
         </service>
 
         <receiver
             android:name=".service.BootReceiver"
             android:exported="true"
-            android:directBootAware="true">
+            android:directBootAware="true"
+            tools:ignore="ExportedReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
+                <action android:name="android.intent.action.USER_UNLOCKED" />
                 <action android:name="android.intent.action.USER_PRESENT" />
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
                 <action android:name="android.intent.action.QUICKBOOT_POWERON" />
@@ -157,7 +158,8 @@
             android:description="@string/uninstall_protection_desc"
             android:permission="android.permission.BIND_DEVICE_ADMIN"
             android:exported="true"
-            android:directBootAware="true">
+            android:directBootAware="true"
+            tools:ignore="ExportedReceiver">
             <meta-data
                 android:name="android.app.device_admin"
                 android:resource="@xml/device_admin" />
@@ -209,6 +211,22 @@
             android:exported="false" />
 
         <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:node="merge">
+            <meta-data
+                android:name="com.aitoyz.mapplock.startup.SecurityInitializer"
+                android:value="androidx.startup" />
+            <meta-data
+                android:name="com.aitoyz.mapplock.startup.AnalyticsInitializer"
+                android:value="androidx.startup" />
+            <meta-data
+                android:name="com.aitoyz.mapplock.startup.MapInitializer"
+                android:value="androidx.startup" />
+        </provider>
+
+        <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
             android:exported="false"
@@ -225,7 +243,10 @@
             tools:node="merge">
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="Watchdog mechanism to ensure app security services remain active" />
+                android:value="AppLockWatchdog" />
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_REASON"
+                android:value="Ensures the security monitoring service remains active and resilient against system-level background task termination, maintaining consistent privacy enforcement." />
         </service>
     </application>
 </manifest>

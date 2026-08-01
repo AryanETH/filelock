@@ -1,0 +1,351 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+<string name="app_name">Mapplock</string>
+<string name="accessibility_description">Mapplock 使用此服务来检测何时启动了锁定应用程序，从而能够显示安全的锁定屏幕叠加层并保护您的隐私。</string>
+
+<!-- 简化术语 -->
+<string name="vault">安全区</string>
+<string name="vault_plural">安全区</string>
+<string name="hidden_files">私密文件</string>
+<string name="hide_app">隐藏应用</string>
+<string name="wrong_unlock_alert">入侵者警报</string>
+<string name="wrong_unlock">解锁错误</string>
+<string name="global_lock">锁定全部</string>
+<string name="stealth_entry">秘密入口</string>
+
+<!-- 语言屏幕 -->
+<string name="select_language">选择语言</string>
+<string name="english">英语</string>
+<string name="hindi">印地语</string>
+<string name="close_btn">关闭</string>
+<string name="selected_text">已选择</string>
+<string name="language">语言</string>
+<string name="search_languages">搜索语言&#8230;</string>
+
+<!-- 权限屏幕 -->
+<string name="security_clearance">权限指南</string>
+<string name="security_clearance_desc">仅在需要时请求权限</string>
+<string name="privacy_note">我们不会收集、存储或共享您的任何个人信息</string>
+<string name="ads_note">此操作可能包含广告</string>
+
+<string name="permission_usage_access">应用监控</string>
+<string name="permission_usage_access_desc">用于查看您何时打开锁定的应用。</string>
+<string name="permission_overlay_access">在其他应用上显示</string>
+<string name="permission_overlay_access_desc">用于在其他应用上方显示锁定屏幕。</string>
+<string name="permission_camera_access">摄像头</string>
+<string name="permission_camera_access_desc">用于拍摄任何试图闯入者的照片。</string>
+<string name="permission_location_access">位置</string>
+<string name="permission_location_access_desc">用于在您靠近安全区时锁定/解锁应用。</string>
+<string name="permission_storage_access">存储</string>
+<string name="permission_storage_access_desc">用于隐藏和保存您的照片及视频。</string>
+<string name="permission_background_activity">后台运行</string>
+<string name="permission_background_activity_desc">为了您的安全，保持应用全天候工作。</string>
+<string name="system_ready">一切就绪！</string>
+<string name="authorize">允许</string>
+<string name="usage_access">使用情况访问</string>
+<string name="usage_access_desc">允许 Mapplock 检测受保护的应用何时开启。</string>
+<string name="overlay_access">在其他应用上显示</string>
+<string name="overlay_access_desc">允许锁定屏幕出现在受保护的应用上方。</string>
+<string name="location_access">位置</string>
+<string name="location_access_desc">基于地图的锁定区和位置功能所需。</string>
+<string name="background_activity">忽略电池优化</string>
+<string name="background_activity_desc">允许锁定服务可靠运行而不被系统杀掉。</string>
+<string name="full_storage_access">管理所有文件</string>
+<string name="full_storage_access_desc">保护和管理保险库中的文件所需。</string>
+<string name="background_popups">后台弹出窗口</string>
+<string name="background_popups_desc">点击此处 → 特殊应用访问权限 → 后台显示弹出窗口 → 允许</string>
+
+<!-- 新手引导 -->
+<string name="onboarding_1_title">伪装成地图</string>
+<string name="onboarding_1_desc">地图将作为锁定层，您所有的文件都将隐藏在位置下方</string>
+<string name="onboarding_2_title">完全离线</string>
+<string name="onboarding_2_desc">您的数据不会存储在服务器上，Mapplock 完全离线且本地化</string>
+<string name="onboarding_3_title">印度制造</string>
+<string name="onboarding_3_desc">我们的整个应用均由印度自豪出品，在博帕尔打造 🌊</string>
+<string name="onboarding_4_title">如何使用</string>
+<string name="onboarding_4_desc">遵循这些简单步骤来保护您的设备。</string>
+<string name="onboarding_4_step1">长按地图</string>
+<string name="onboarding_4_step2">设置您的 PIN 或图案</string>
+<string name="onboarding_4_step3">锁定应用或隐藏文件</string>
+<string name="onboarding_4_step4">双击同一位置以重新访问控制面板</string>
+<string name="onboarding_4_step5">注意：为您的锁定点选择随机位置，以便他人难以猜到。</string>
+<string name="onboarding_disclaimer_title">地图数据免责声明</string>
+<string name="onboarding_disclaimer_desc">地图数据和边界按原样提供。我们不控制地理表示。</string>
+<string name="onboarding_accept_prefix">我理解并接受 </string>
+<string name="onboarding_terms">服务条款</string>
+<string name="onboarding_and"> 和 </string>
+<string name="onboarding_privacy">隐私政策</string>
+<string name="initialize_system">开始</string>
+<string name="next">继续</string>
+
+<!-- 地图屏幕 -->
+<string name="verify_pin">输入 PIN</string>
+<string name="verify_pattern">绘制图案</string>
+<string name="cancel">取消</string>
+<string name="setup_lock">设置锁定</string>
+<string name="select_apps">选择应用</string>
+<string name="save_lock">保存</string>
+<string name="back">返回</string>
+<string name="search_places">搜索地点&#8230;</string>
+
+<!-- 控制面板 -->
+<string name="app_lock_title">锁定应用</string>
+<string name="app_lock_subtitle">锁定您的应用</string>
+<string name="history_title">已锁定应用</string>
+<string name="history_subtitle">管理您所有的锁定应用</string>
+<string name="categories">类别</string>
+<string name="photos">照片</string>
+<string name="videos">视频</string>
+<string name="audio">音频</string>
+<string name="documents">文档</string>
+<string name="wrong_unlocks">入侵者</string>
+<string name="recycle_bin">回收站</string>
+    <plurals name="items_count">
+        <item quantity="other">%1$d 个项目</item>
+    </plurals>
+
+<!-- 媒体查看屏幕 -->
+<string name="save_to_gallery">保存到相册</string>
+<string name="open_in">在其他应用中打开</string>
+<string name="restore">恢复</string>
+<string name="delete">删除</string>
+<string name="restore_file_title">恢复文件？</string>
+<string name="restore_file_message">将此文件移回手机相册。</string>
+<string name="delete_file_title">删除文件？</string>
+<string name="delete_file_message">这将永久删除该文件。</string>
+<string name="preview_unavailable">无法预览：</string>
+<string name="use_open_in_hint">使用“在其他应用中打开”来查看。</string>
+<string name="open_with">打开方式&#8230;</string>
+<string name="restore_confirm">恢复</string>
+<string name="delete_confirm">删除</string>
+<string name="no_preview">无法预览 %1$s</string>
+<string name="open_in_hint">使用“在其他应用中打开”来查看。</string>
+
+<!-- 设置 -->
+<string name="system_permissions">权限</string>
+<string name="permission_app_detection">应用检测</string>
+<string name="permission_app_detection_desc">用于查看受保护的应用何时开启。</string>
+<string name="permission_lock_window">锁定窗口</string>
+<string name="permission_lock_window_desc">用于显示锁定屏幕。</string>
+<string name="permission_camera">摄像头</string>
+<string name="permission_camera_desc">用于抓拍任何试图开启您应用的人。</string>
+<string name="permission_storage">存储</string>
+<string name="permission_storage_desc">用于保存您的隐藏文件。</string>
+<string name="advanced_security">安全</string>
+<string name="uninstall_protection">卸载保护</string>
+<string name="uninstall_protection_desc">防止他人删除此应用。</string>
+<string name="lock_options">锁定设置</string>
+<string name="global_lock_title">锁定全部</string>
+<string name="global_lock_desc">一次性锁定所有选定的应用。</string>
+<string name="dark_mode">深色模式</string>
+<string name="dark_mode_desc">切换明亮和深色主题。</string>
+<string name="monitoring_mode">安全等级</string>
+<string name="monitoring_mode_desc">锁定检测强度</string>
+<string name="monitoring_mode_moderate">中等（标准）</string>
+<string name="monitoring_mode_hard">困难（高强度保护）</string>
+<string name="monitoring_mode_auto">自动（推荐）</string>
+<string name="monitoring_mode_usage">使用情况统计（标准）</string>
+<string name="monitoring_mode_shizuku">Shizuku（高性能）</string>
+<string name="monitoring_mode_accessibility">无障碍（备用）</string>
+
+<!-- 引导 -->
+<string name="tour_skip">跳过</string>
+<string name="tour_next">下一步</string>
+<string name="tour_welcome">欢迎！您的隐私现在隐藏在地图上。</string>
+<string name="tour_step1">长按地图以设置您的秘密进入点。</string>
+<string name="tour_step2">双击您的秘密点以查看您的隐藏文件。</string>
+<string name="tour_step3">使用这些按钮定位或更改地图样式。</string>
+<string name="tour_step4">记住您的秘密点！它是您的钥匙。</string>
+<string name="zoom_in_hint">放大地图以设置安全区。</string>
+<string name="access_granted_desc">欢迎回来！准许访问。</string>
+<string name="zone_restricted_desc">访问拒绝。您在安全区之外。</string>
+<string name="system_initialization_desc">长按地图以创建安全区。</string>
+<string name="lock_type_bio">指纹</string>
+<string name="biometric_required">请使用您的指纹。</string>
+<string name="map_location_hint">使用地图点解锁。</string>
+<string name="package_visibility">选择要锁定的应用</string>
+<string name="tap_map_to_unlock">点击下方打开地图。</string>
+<string name="open_map_interface">打开地图</string>
+<string name="screenshot_restriction">禁用截屏</string>
+<string name="screenshot_restriction_desc">防止他人截屏</string>
+<string name="fingerprint_unlock">指纹</string>
+<string name="fingerprint_unlock_desc">使用指纹快速访问。</string>
+<string name="offline_title">您处于离线状态</string>
+<string name="offline_message">打开数据网络</string>
+<string name="support_links">帮助与法律</string>
+<string name="tutorial">教程（观看视频）</string>
+<string name="feedback">发送反馈</string>
+<string name="terms_of_use">使用条款</string>
+<string name="faq">常见问题 / 帮助</string>
+<string name="privacy_policy">隐私政策</string>
+<string name="share_mapplock">分享 Mapplock</string>
+
+<!-- VaultContentScreen -->
+<string name="settings">设置</string>
+<string name="lock">锁定</string>
+<string name="add">添加</string>
+<string name="sort">排序</string>
+<string name="hide">隐藏</string>
+<string name="vault_empty">这里还没有应用。</string>
+<string name="vault_empty_hint">点击 + 添加一些文件。</string>
+<string name="app_lock_desc">隐藏的应用仅在您处于安全区时开启。</string>
+<string name="hide_app_dialog_title">隐藏应用</string>
+<string name="cloning_in_progress">正在将应用移至安全区&#8230;</string>
+<string name="hide_app_dialog_body">这将隐藏应用且只能从这里开启。继续？</string>
+<string name="proceed">继续</string>
+<string name="clone_success">应用隐藏成功！</string>
+<string name="clone_failed">失败。请重试。</string>
+<string name="clear_all_hidden_apps">显示所有应用</string>
+<string name="active_vaults">活动区域</string>
+    <plurals name="apps_locked">
+        <item quantity="other">%1$d 个应用已锁定</item>
+    </plurals>
+    <string name="vault_established">安全区已创建</string>
+    <plurals name="apps_hidden">
+        <item quantity="other">%1$d 个应用已隐藏：</item>
+    </plurals>
+<string name="close">关闭</string>
+<string name="fix">修复</string>
+<string name="get_started">开始使用</string>
+<string name="grant">允许</string>
+<string name="vault_id_label">区域 %1$s</string>
+
+<!-- MapSelectionScreen -->
+<string name="access_granted">准许访问</string>
+<string name="zone_restricted">访问拒绝</string>
+<string name="system_initialization">正在设置&#8230;</string>
+<string name="vault_encryption">正在加密&#8230;</string>
+<string name="lock_type_pin">PIN</string>
+<string name="lock_type_pattern">图案</string>
+<string name="lock_type_map">地图</string>
+<string name="abort">停止</string>
+<string name="initialize">启动</string>
+<string name="bypass_security">跳过</string>
+<string name="use_fingerprint">使用指纹</string>
+<string name="location_locked">位置已锁定</string>
+<string name="enter_pin">输入 PIN</string>
+<string name="draw_pattern">绘制图案</string>
+<string name="tap_coordinates">点击地图</string>
+<string name="verify_identity">验证您的身份</string>
+<string name="outside_radius">您离安全区太远了</string>
+<string name="biometric_unavailable">指纹不可用</string>
+<string name="fingerprint">指纹</string>
+<string name="tap_target_coordinates">点击您的秘密地图点</string>
+<string name="location_required_title">需要位置权限</string>
+<string name="location_required_message">要启用地图安全和区域锁定，我们需要您的位置权限。\n\n<b>注意：</b> 您的数据完全离线，保留在您的设备上。</string>
+<string name="location_allow_btn">允许权限</string>
+<string name="location_access_title">位置访问</string>
+<string name="location_access_message">我们需要您的位置来启用基于区域的保险库安全。您的数据保留在您的设备上。</string>
+<string name="grant_location_access">授予位置权限</string>
+
+<!-- DashboardTour -->
+<string name="tour_dash_welcome_title">欢迎来到 Mapplock</string>
+<string name="tour_dash_welcome_desc">您的隐私在我们这里很安全。让我们带您四处看看。</string>
+<string name="tour_dash_hide_apps_title">锁定应用</string>
+<string name="tour_dash_hide_apps_desc">点击这里锁定任何应用。它们将在您解锁前受到保护。</string>
+<string name="tour_dash_history_title">锁定历史</string>
+<string name="tour_dash_history_desc">管理您所有的安全位置及其中的应用。</string>
+<string name="tour_dash_categories_title">您的秘密保险库</string>
+<string name="tour_dash_categories_desc">您隐藏的照片、视频和文件将安全地保存在这里。</string>
+<string name="tour_dash_fab_title">创建新文件夹</string>
+<string name="tour_dash_fab_desc">点击 + 按钮创建自定义文件夹</string>
+<string name="tour_dash_settings_title">设置</string>
+<string name="tour_dash_settings_desc">从这里更改您的锁定、语言等。</string>
+    <string name="custom_lock_background">自定义锁定背景</string>
+    <string name="custom_lock_background_desc">设置您的个人背景</string>
+    <string name="intruder_capture">入侵者抓拍</string>
+    <string name="intruder_capture_desc">抓拍任何试图闯入者的自拍</string>
+    <string name="create_new_folder">创建新文件夹</string>
+    <string name="create_new_folder_desc">文件夹可以包含任何文件类型（图像、视频、PDF 等）。</string>
+    <string name="folder_name">文件夹名称</string>
+    <string name="appearance">外观</string>
+    <string name="preview_and_hide">隐藏 (%1$d)</string>
+    <string name="bg_active_desc">背景已启用 • 点击进行管理</string>
+    <string name="change">更改</string>
+    <string name="remove_btn">移除</string>
+    <string name="notification_perm_title">通知</string>
+    <string name="notification_perm_desc">用于前台服务通知和重要安全警报。</string>
+    <string name="usage_perm_title">使用情况访问</string>
+    <string name="usage_perm_desc">Mapplock 需要知道应用何时启动以显示锁定屏幕。</string>
+    <string name="overlay_perm_title">叠加层权限</string>
+    <string name="overlay_perm_desc">Mapplock 需要在受保护的应用上方绘制锁定屏幕。</string>
+    <string name="background_popups_perm_title">后台弹出窗口</string>
+    <string name="background_popups_perm_desc">允许 Mapplock 从后台立即启动安全屏幕。</string>
+    <string name="battery_perm_title">禁用电池优化</string>
+    <string name="battery_perm_desc">防止系统停止 Mapplock 的保护服务。</string>
+    <string name="grant_permission">授予权限</string>
+    <string name="security_monitoring_note">安全功能需要有效的系统监控。</string>
+    <string name="search_apps">搜索应用&#8230;</string>
+    <string name="recommended">推荐</string>
+    <string name="all_apps">所有应用</string>
+    <string name="locked_apps_header">已锁定应用</string>
+    <string name="no_apps_in_zone">尚无已锁定的应用</string>
+    <string name="unlock_all">解锁全部</string>
+    <string name="user_locked_stats">超过 %1$d%% 的用户已将其锁定</string>
+    <string name="bulk_action_title">类别操作</string>
+    <string name="bulk_action_desc">选择如何处理此类别中的所有项目。</string>
+    <string name="recover_all">全部恢复</string>
+    <string name="delete_all">全部删除</string>
+    <string name="delete_folder_confirm">删除文件夹及其所有文件？</string>
+    <string name="recover_folder">删除前恢复所有文件</string>
+    <string name="delete_permanently">永久删除</string>
+    <string name="connect_dots_to_verify">连接圆点进行验证</string>
+    <string name="aqi_label">空气质量</string>
+    <string name="temp_label">温度</string>
+    <string name="humidity_label">湿度</string>
+    <string name="importing_files">正在导入文件</string>
+    <string name="deleting_files">正在删除文件</string>
+    <string name="restoring_files">正在恢复文件</string>
+    <string name="hold_on_message">请稍候，您的手机正在努力处理中</string>
+    <string name="completed_percent">%1$d%% 已完成</string>
+
+    <!-- Diagnostics -->
+    <string name="system_status">系统健康</string>
+    <string name="protection_guide_title">保持全天候活跃</string>
+    <string name="protection_guide_desc">为了稳定地锁定您的应用，Mapplock 需要在后台保持活跃。请按照以下步骤操作，使其不可撼动。</string>
+    <string name="step_battery_title">无限制电池使用</string>
+    <string name="step_battery_desc">防止 Android 为省电而杀掉 Mapplock。设置为“无限制”。</string>
+    <string name="step_autostart_title">自启动</string>
+    <string name="step_autostart_desc">允许 Mapplock 在您的手机开机时自动启动。</string>
+    <string name="step_recents_title">在最近应用中锁定</string>
+    <string name="step_recents_desc">在“最近应用”列表中手动锁定 Mapplock，防止意外关闭。</string>
+    <string name="oem_guide_xiaomi">点击此处 → 电池和性能 → 应用电池管家 → Mapplock → 无限制。并开启“自启动”。</string>
+    <string name="oem_guide_oppo">点击此处 → 应用管理 → Mapplock → 允许自启动和允许后台活动。</string>
+    <string name="oem_guide_vivo">点击此处 → 电池 → 后台高耗电 → 启用 Mapplock。</string>
+    <string name="oem_guide_samsung">点击此处 → 电池 → 后台使用限制 → 从不休眠的应用 → 添加 Mapplock。</string>
+    <string name="oem_guide_generic">点击此处 → 电池 → 无限制 / 不优化。</string>
+    <string name="lock_recents_instruction">1. 向上滑动查看最近应用\n2. 长按或向下滑动 Mapplock\n3. 点击“锁定”图标</string>
+    <string name="indestructible_mode_active">坚不可摧模式已激活</string>
+    <string name="indestructible_mode_inactive">系统健康警告</string>
+    <string name="fix_now">立即修复</string>
+    <string name="status_active">活跃</string>
+    <string name="status_inactive">非活跃</string>
+    <string name="accessibility_service">无障碍服务</string>
+    <string name="overlay_permission">叠加层权限</string>
+    <string name="usage_stats">使用情况统计</string>
+    <string name="locker_service">锁定引擎</string>
+    <string name="bg_protection">后台保护（推荐）</string>
+    <string name="bg_protection_desc">防止 Mapplock 被系统杀掉并保持应用锁定活跃。这可能会显示制造商特定的屏幕，要求您允许应用在后台运行。您可以稍后在设置中更改此项。</string>
+    <string name="lock_in_recents_guide">如何保持 Mapplock 始终活跃：\n1. 打开最近应用\n2. 长按 Mapplock 或向下滑动\n3. 点击“锁定”图标</string>
+
+    <string-array name="faq_questions">
+        <item>什么是 Mapplock，它与其他应用锁有什么不同？</item>
+        <item>Mapplock 如何保护我的数据免受“Q 日”攻击？</item>
+        <item>“Map-Gate”功能如何工作？</item>
+        <item>我的私密照片和视频存储在 Mapplock 的服务器上吗？</item>
+        <item>如果我忘记了 PIN 或图案怎么办？</item>
+        <item>如果我离线或没有互联网，地图功能还能用吗？</item>
+        <item>什么是“入侵者抓拍”，我在哪里可以看到照片？</item>
+        <item>什么是“文件丢失保护”，为什么我应该启用它？</item>
+    </string-array>
+    <string-array name="faq_answers">
+        <item>Mapplock 是由 Aitoyz 开发的新一代安全应用，利用位置智能来保护您的隐私。与仅依赖 PIN 的标准锁定器不同，Mapplock 引入了“Map-Gate”技术，允许您定义地理安全区域。它为照片、视频和文件提供专业级保险库，并结合先进的入侵者检测和隐形伪装。它专为希望手机安全能根据环境自动适应的用户打造。</item>
+        <item>Mapplock 采用量子韧性架构构建。大多数云端锁定器容易受到“先采集，后解密”攻击，即数据今天被盗，以后被量子计算机破解。Mapplock 通过使用仅限本地的 AES-256 对称加密和零知识架构来防止这种情况。由于您的数据永远不会离开您的设备，因此无法被采集。即使是像 Grover 这样的量子算法，我们的 256 位加密在数十亿年内仍然无法在计算上被破解。</item>
+        <item>Map-Gate 功能允许您将特定的 GPS 坐标设置为“安全区”，例如您的家或办公室。当您在安全区的指定半径内时，您的受保护应用可以更方便地访问或保持完全解锁。然而，一旦您移动到该半径之外，Mapplock 会自动触发高强度安全锁定。这确保了如果您的手机丢失、被盗或在公共场所被访问，您的敏感数据对他人来说仍然完全无法访问。</item>
+        <item>不，Aitoyz 运行在“隐私第一”模式下，这意味着 Mapplock 不会在我们的服务器上存储您的任何个人文件。您移动到保险库的所有照片、视频和文档都在您设备的内部存储中本地加密。我们没有任何远程访问权限来查看您的私密内容，也无法查看或共享您的文件。这种方法确保了您对数据拥有完全控制权，即使您的互联网连接受到威胁，它也能保持安全。</item>
+        <item>如果您忘记了主安全码，可以使用初始设置期间建立的辅助验证方法。如果您在设置菜单中启用了这些选项，这包括生物识别身份验证，如指纹或面部解锁。此外，您还可以使用“秘密地图点”作为恢复方法来重置您的凭据。我们强烈建议设置多种恢复选项，以避免永久锁定，因为出于安全原因，我们无法远程恢复您的 PIN。</item>
+        <item>是的，Mapplock 旨在即使在没有活跃数据或 Wi-Fi 连接的情况下也能保持完整功能。一旦您授予所需的位置权限，应用就会主动为您的当前区域下载并缓存 GPS 地图数据。这种离线地图引擎允许安全界面即时加载，并准确检测您基于位置的“安全区”。这确保了您的 Map-Gate 安全性保持活跃和可靠，无论您的信号强度或漫游状态如何。</item>
+        <item>入侵者抓拍是一项自动安全功能，可秘密拍摄任何试图闯入您保险库的人的自拍。如果输入的 PIN 或图案错误次数超过允许范围，应用会静默触发前置摄像头拍摄用户的照片。这些照片存储在您保险库内专用的“入侵者”类别中，并附有尝试的时间戳。您可以随时查看这些日志，确切了解谁在未经允许的情况下试图访问您的私人应用。</item>
+        <item>文件丢失保护是一项关键保护措施，利用设备管理员权限防止意外或未经授权卸载 Mapplock。由于您的文件已加密并存储在应用的受保护目录中，标准卸载会导致您所有隐藏数据的永久丢失。通过启用此功能，系统在从设备中移除应用前需要额外的验证步骤。这确保了您的重要文档和记忆永远不会因错误或他人而删除。</item>
+    </string-array>
+</resources>

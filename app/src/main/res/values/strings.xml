@@ -100,7 +100,11 @@
 <string name="documents">Documents</string>
 <string name="wrong_unlocks">Intruders</string>
 <string name="recycle_bin">Recycle Bin</string>
-<string name="items_count">%1$d items</string>
+    <plurals name="items_count">
+        <item quantity="one">%1$d item</item>
+        <item quantity="many">%1$d items</item>
+        <item quantity="other">%1$d items</item>
+    </plurals>
 
 <!--  Media Viewer Screen  -->
 <string name="save_to_gallery">Save to Gallery</string>
@@ -137,8 +141,10 @@
 <string name="global_lock_desc">Lock all your selected apps at once.</string>
 <string name="dark_mode">Dark Mode</string>
 <string name="dark_mode_desc">Switch light and dark theme.</string>
-<string name="monitoring_mode">Monitoring Backend</string>
-<string name="monitoring_mode_desc">Detection method for app locking</string>
+<string name="monitoring_mode">Security Level</string>
+<string name="monitoring_mode_desc">Locking detection strength</string>
+<string name="monitoring_mode_moderate">Moderate (Standard)</string>
+<string name="monitoring_mode_hard">Hard (High Protection)</string>
 <string name="monitoring_mode_auto">Automatic (Recommended)</string>
 <string name="monitoring_mode_usage">Usage Stats (Standard)</string>
 <string name="monitoring_mode_shizuku">Shizuku (High Performance)</string>
@@ -166,6 +172,8 @@
 <string name="screenshot_restriction_desc">Stop others from taking screenshots</string>
 <string name="fingerprint_unlock">Fingerprint</string>
 <string name="fingerprint_unlock_desc">Use fingerprint for quick access.</string>
+<string name="offline_title">You are offline</string>
+<string name="offline_message">turn on the data</string>
 <string name="support_links">HELP &amp; LEGAL</string>
 <string name="tutorial">Tutorial (Watch Video)</string>
 <string name="feedback">Send Feedback</string>
@@ -191,9 +199,17 @@
 <string name="clone_failed">Failed. Please try again.</string>
 <string name="clear_all_hidden_apps">Unhide all apps</string>
 <string name="active_vaults">Active Zones</string>
-<string name="apps_locked">%1$d apps locked</string>
-<string name="vault_established">Safe Zone Created</string>
-<string name="apps_hidden">%1$d apps hidden:</string>
+    <plurals name="apps_locked">
+        <item quantity="one">%1$d app locked</item>
+        <item quantity="many">%1$d apps locked</item>
+        <item quantity="other">%1$d apps locked</item>
+    </plurals>
+    <string name="vault_established">Safe Zone Created</string>
+    <plurals name="apps_hidden">
+        <item quantity="one">%1$d app hidden:</item>
+        <item quantity="many">%1$d apps hidden:</item>
+        <item quantity="other">%1$d apps hidden:</item>
+    </plurals>
 <string name="close">Close</string>
 <string name="fix">Fix</string>
 <string name="get_started">Get Started</string>

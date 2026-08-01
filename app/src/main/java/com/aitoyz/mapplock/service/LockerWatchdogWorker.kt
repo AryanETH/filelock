@@ -67,11 +67,20 @@ class LockerWatchdogWorker(context: Context, params: WorkerParameters) : Worker(
             manager.createNotificationChannel(channel)
         }
 
+        val intent = Intent(applicationContext, com.aitoyz.mapplock.MainActivity::class.java)
+        val pendingIntent = android.app.PendingIntent.getActivity(
+            applicationContext, 
+            0, 
+            intent, 
+            android.app.PendingIntent.FLAG_IMMUTABLE
+        )
+
         val notification = NotificationCompat.Builder(applicationContext, channelId)
             .setContentTitle("Security Guard")
             .setContentText("Ensuring protection is active...")
             .setSmallIcon(R.mipmap.ic_launcher)
             .setPriority(NotificationCompat.PRIORITY_MIN)
+            .setContentIntent(pendingIntent)
             .build()
 
         return ForegroundInfo(NOTIFICATION_ID, notification)

@@ -1,0 +1,354 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+<string name="app_name">Mapplock</string>
+<string name="accessibility_description">Ginagamit ng Mapplock ang serbisyong ito upang malaman kung ang isang naka-lock na application ay inilunsad, na nagbibigay-daan dito na magpakita ng isang secure na lock screen overlay at protektahan ang iyong privacy.</string>
+
+<!--  Simplified Jargon  -->
+<string name="vault">Safe Zone</string>
+<string name="vault_plural">Safe Zones</string>
+<string name="hidden_files">Mga Lihim na File</string>
+<string name="hide_app">Itago ang App</string>
+<string name="wrong_unlock_alert">Babala ng Nanghihimasok</string>
+<string name="wrong_unlock">Maling Pag-unlock</string>
+<string name="global_lock">I-lock Lahat</string>
+<string name="stealth_entry">Lihim na Pagpasok</string>
+
+<!--  Language Screen  -->
+<string name="select_language">Pumili ng Wika</string>
+<string name="english">English</string>
+<string name="hindi">Hindi</string>
+<string name="close_btn">Isara</string>
+<string name="selected_text">Napili</string>
+<string name="language">Wika</string>
+<string name="search_languages">Maghanap ng mga wika&#8230;</string>
+
+<!--  Permission Screen  -->
+<string name="security_clearance">Gabay sa Pahintulot</string>
+<string name="security_clearance_desc">Hinihiling lamang ang mga pahintulot kapag kinakailangan</string>
+<string name="privacy_note">Hindi kami nangongolekta, nag-iimbak, o nagbabahagi ng anuman sa iyong personal na impormasyon</string>
+<string name="ads_note">Ang aksyong ito ay maaaring maglaman ng mga ad</string>
+
+<string name="permission_usage_access">Pagsubaybay sa App</string>
+<string name="permission_usage_access_desc">Upang makita kung kailan mo binuksan ang isang naka-lock na app.</string>
+<string name="permission_overlay_access">Ipakita sa Itaas ng Ibang Apps</string>
+<string name="permission_overlay_access_desc">Upang ipakita ang lock screen sa itaas ng ibang mga application.</string>
+<string name="permission_camera_access">Camera</string>
+<string name="permission_camera_access_desc">Upang kumuha ng larawan ng sinumang sumusubok na pumasok.</string>
+<string name="permission_location_access">Lokasyon</string>
+<string name="permission_location_access_desc">Upang i-lock/i-unlock ang mga app kapag malapit ka sa iyong safe zone.</string>
+<string name="permission_storage_access">Storage</string>
+<string name="permission_storage_access_desc">Upang itago at i-save ang iyong mga larawan at video.</string>
+<string name="permission_background_activity">Patakbuhin sa Background</string>
+<string name="permission_background_activity_desc">Upang panatilihing gumagana ang app 24/7 para sa iyong kaligtasan.</string>
+<string name="system_ready">Handa na ang Lahat!</string>
+<string name="authorize">Payagan</string>
+<string name="usage_access">Usage Access</string>
+<string name="usage_access_desc">Pinapayagan ang Mapplock na makita kapag ang mga protektadong app ay binuksan.</string>
+<string name="overlay_access">Ipakita sa Itaas ng Ibang Apps</string>
+<string name="overlay_access_desc">Pinapayagan ang lock screen na lumitaw sa itaas ng mga protektadong app.</string>
+<string name="location_access">Lokasyon</string>
+<string name="location_access_desc">Kinakailangan para sa mga zone ng lock na nakabase sa mapa at mga tampok ng lokasyon.</string>
+<string name="background_activity">Balewalain ang Battery Optimization</string>
+<string name="background_activity_desc">Pinapayagan ang serbisyo ng lock na tumakbo nang maaasahan nang hindi pinapatay ng system.</string>
+<string name="full_storage_access">Pamahalaan ang Lahat ng File</string>
+<string name="full_storage_access_desc">Kinakailangan upang protektahan at pamahalaan ang mga file sa vault.</string>
+<string name="background_popups">Mga Popup sa Background</string>
+<string name="background_popups_desc">I-tap dito → Special app access → Display pop-ups habang nasa background → Payagan</string>
+
+<!--  Onboarding  -->
+<string name="onboarding_1_title">Ibalatkayo bilang Lock</string>
+<string name="onboarding_1_desc">Ang mapa ay magsisilbing lock layer at ang lahat ng iyong mga file ay itatago sa ilalim ng lokasyon</string>
+<string name="onboarding_2_title">Ganap na Offline</string>
+<string name="onboarding_2_desc">Wala sa iyong data ang nakaimbak sa mga server, ang mapplock ay ganap na offline at lokal</string>
+<string name="onboarding_3_title">Gawang India</string>
+<string name="onboarding_3_desc">Ang aming buong app ay buong pagmamalaking Indian at Binuo sa Bhopal 🌊</string>
+<string name="onboarding_4_title">Paano gamitin</string>
+<string name="onboarding_4_desc">Sundin ang mga simpleng hakbang na ito upang i-secure ang iyong device.</string>
+<string name="onboarding_4_step1">Pindutin nang matagal ang mapa</string>
+<string name="onboarding_4_step2">Itakda ang iyong PIN o pattern</string>
+<string name="onboarding_4_step3">I-lock ang iyong mga app o itago ang mga file</string>
+<string name="onboarding_4_step4">I-double tap sa parehong lokasyon upang muling bisitahin ang dashboard</string>
+<string name="onboarding_4_step5">TANDAAN: Pumili ng random na lokasyon para sa iyong mga lock spot upang hindi madaling mahulaan ng iba.</string>
+<string name="onboarding_disclaimer_title">Disclaimer sa Data ng Mapa</string>
+<string name="onboarding_disclaimer_desc">Ang data ng mapa at mga hangganan ay ibinibigay kung ano sila. Hindi namin kinokontrol ang mga heograpikal na representasyon.</string>
+<string name="onboarding_accept_prefix">Naiintindihan ko at tinatanggap ang </string>
+<string name="onboarding_terms">Mga Tuntunin ng Serbisyo</string>
+<string name="onboarding_and"> at </string>
+<string name="onboarding_privacy">Patakaran sa Privacy</string>
+<string name="initialize_system">Magsimula</string>
+<string name="next">Magpatuloy</string>
+
+<!--  Map Screen  -->
+<string name="verify_pin">ILAGAY ANG PIN</string>
+<string name="verify_pattern">IGUHIT ANG PATTERN</string>
+<string name="cancel">KANSELAHIN</string>
+<string name="setup_lock">I-SET ANG LOCK</string>
+<string name="select_apps">PUMILI NG APPS</string>
+<string name="save_lock">I-SAVE</string>
+<string name="back">BUMALIK</string>
+<string name="search_places">Maghanap ng lugar&#8230;</string>
+
+<!--  Dashboard  -->
+<string name="app_lock_title">I-lock ang Apps</string>
+<string name="app_lock_subtitle">I-lock ang iyong mga app</string>
+<string name="history_title">Mga Naka-lock na App</string>
+<string name="history_subtitle">Pamahalaan ang lahat ng iyong naka-lock na app</string>
+<string name="categories">MGA KATEGORYA</string>
+<string name="photos">Mga Larawan</string>
+<string name="videos">Mga Video</string>
+<string name="audio">Audio</string>
+<string name="documents">Mga Dokumento</string>
+<string name="wrong_unlocks">Mga Nanghihimasok</string>
+<string name="recycle_bin">Recycle Bin</string>
+    <plurals name="items_count">
+        <item quantity="one">%1$d item</item>
+        <item quantity="other">%1$d na mga item</item>
+    </plurals>
+
+<!--  Media Viewer Screen  -->
+<string name="save_to_gallery">I-save sa Gallery</string>
+<string name="open_in">Buksan Sa</string>
+<string name="restore">Ibalik</string>
+<string name="delete">I-delete</string>
+<string name="restore_file_title">Ibalik ang File?</string>
+<string name="restore_file_message">Ilipat ang file na ito pabalik sa gallery ng iyong telepono.</string>
+<string name="delete_file_title">I-delete ang File?</string>
+<string name="delete_file_message">Ito ay permanenteng magbubura sa file.</string>
+<string name="preview_unavailable">Hindi magamit ang preview:</string>
+<string name="use_open_in_hint">Gamitin ang \'Buksan Sa\' upang tingnan.</string>
+<string name="open_with">Buksan gamit ang&#8230;</string>
+<string name="restore_confirm">IBALIK</string>
+<string name="delete_confirm">I-DELETE</string>
+<string name="no_preview">Walang preview para sa %1$s</string>
+<string name="open_in_hint">Gamitin ang \'Buksan Sa\' upang tingnan gamit ang ibang app.</string>
+
+<!--  Settings  -->
+<string name="system_permissions">MGA PAHINTULOT</string>
+<string name="permission_app_detection">Pagtukoy sa App</string>
+<string name="permission_app_detection_desc">Upang makita kung kailan mo binuksan ang mga naka-lock na app.</string>
+<string name="permission_lock_window">Window ng Lock</string>
+<string name="permission_lock_window_desc">Upang ipakita ang lock screen.</string>
+<string name="permission_camera">Camera</string>
+<string name="permission_camera_desc">Upang mahuli ang sinumang sumusubok na buksan ang iyong mga app.</string>
+<string name="permission_storage">Storage</string>
+<string name="permission_storage_desc">Upang i-save ang iyong mga lihim na file.</string>
+<string name="advanced_security">SEGURIDAD</string>
+<string name="uninstall_protection">Proteksyon sa Pag-uninstall</string>
+<string name="uninstall_protection_desc">Pigilan ang iba na i-delete ang app na ito.</string>
+<string name="lock_options">MGA SETTING NG LOCK</string>
+<string name="global_lock_title">I-lock Lahat</string>
+<string name="global_lock_desc">I-lock ang lahat ng iyong napiling app nang sabay-sabay.</string>
+<string name="dark_mode">Dark Mode</string>
+<string name="dark_mode_desc">Magpalipat-lipat sa light at dark theme.</string>
+<string name="monitoring_mode">Antas ng Seguridad</string>
+<string name="monitoring_mode_desc">Lakas ng pagtukoy sa pag-lock</string>
+<string name="monitoring_mode_moderate">Moderate (Standard)</string>
+<string name="monitoring_mode_hard">Hard (Mataas na Proteksyon)</string>
+<string name="monitoring_mode_auto">Awtomatiko (Inirerekomenda)</string>
+<string name="monitoring_mode_usage">Usage Stats (Standard)</string>
+<string name="monitoring_mode_shizuku">Shizuku (Mataas na Performance)</string>
+<string name="monitoring_mode_accessibility">Accessibility (Fallback)</string>
+
+<!--  Tour  -->
+<string name="tour_skip">Laktawan</string>
+<string name="tour_next">Susunod</string>
+<string name="tour_welcome">Maligayang pagdating! Ang iyong privacy ay nakatago na ngayon sa mapa.</string>
+<string name="tour_step1">Pindutin nang matagal ang mapa upang itakda ang iyong lihim na entry point.</string>
+<string name="tour_step2">I-double tap ang iyong lihim na punto upang makita ang iyong mga nakatagong file.</string>
+<string name="tour_step3">Gamitin ang mga button na ito para mahanap ang iyong sarili o baguhin ang istilo ng mapa.</string>
+<string name="tour_step4">Tandaan ang iyong lihim na punto! Ito ang iyong susi.</string>
+<string name="zoom_in_hint">Mag-zoom in pa para magtakda ng safe zone.</string>
+<string name="access_granted_desc">Welcome back! Pinayagan ang access.</string>
+<string name="zone_restricted_desc">Access Denied. Ikaw ay nasa labas ng safe zone.</string>
+<string name="system_initialization_desc">Pindutin nang matagal ang mapa upang gumawa ng safe zone.</string>
+<string name="lock_type_bio">Fingerprint</string>
+<string name="biometric_required">Mangyaring gamitin ang iyong fingerprint.</string>
+<string name="map_location_hint">Gamitin ang punto sa mapa para mag-unlock.</string>
+<string name="package_visibility">Pumili ng mga app na i-lock</string>
+<string name="tap_map_to_unlock">I-tap sa ibaba para buksan ang mapa.</string>
+<string name="open_map_interface">Buksan ang Mapa</string>
+<string name="screenshot_restriction">Walang Screenshots</string>
+<string name="screenshot_restriction_desc">Pigilan ang iba sa pagkuha ng mga screenshot</string>
+<string name="fingerprint_unlock">Fingerprint</string>
+<string name="fingerprint_unlock_desc">Gamitin ang fingerprint para sa mabilis na access.</string>
+<string name="offline_title">Ikaw ay offline</string>
+<string name="offline_message">buksan ang data</string>
+<string name="support_links">TULONG at LEGAL</string>
+<string name="tutorial">Tutorial (Panoorin ang Video)</string>
+<string name="feedback">Magpadala ng Feedback</string>
+<string name="terms_of_use">Mga Tuntunin sa Paggamit</string>
+<string name="faq">FAQ / Tulong</string>
+<string name="privacy_policy">Patakaran sa Privacy</string>
+<string name="share_mapplock">Ibahagi ang mapplock</string>
+
+<!--  VaultContentScreen  -->
+<string name="settings">Mga Setting</string>
+<string name="lock">I-lock</string>
+<string name="add">Idagdag</string>
+<string name="sort">Ayusin</string>
+<string name="hide">Itago</string>
+<string name="vault_empty">Wala pang mga app dito.</string>
+<string name="vault_empty_hint">I-tap ang + para magdagdag ng ilang mga file.</string>
+<string name="app_lock_desc">Ang mga nakatagong app ay magbubukas lamang kapag ikaw ay nasa iyong safe zone.</string>
+<string name="hide_app_dialog_title">Itago ang App</string>
+<string name="cloning_in_progress">Inililipat ang app sa safe zone&#8230;</string>
+<string name="hide_app_dialog_body">Itatago nito ang app at magbubukas lamang ito mula rito. Magpatuloy?</string>
+<string name="proceed">Magpatuloy</string>
+<string name="clone_success">Matagumpay na naitago ang app!</string>
+<string name="clone_failed">Nabigo. Mangyaring subukan muli.</string>
+<string name="clear_all_hidden_apps">Ipakita ang lahat ng app</string>
+<string name="active_vaults">Mga Aktibong Zone</string>
+    <plurals name="apps_locked">
+        <item quantity="one">%1$d app ang naka-lock</item>
+        <item quantity="other">%1$d na mga app ang naka-lock</item>
+    </plurals>
+    <string name="vault_established">Nagawa na ang Safe Zone</string>
+    <plurals name="apps_hidden">
+        <item quantity="one">%1$d app ang nakatago:</item>
+        <item quantity="other">%1$d na mga app ang nakatago:</item>
+    </plurals>
+<string name="close">Isara</string>
+<string name="fix">Ayusin</string>
+<string name="get_started">Magsimula</string>
+<string name="grant">Payagan</string>
+<string name="vault_id_label">Zone %1$s</string>
+
+<!--  MapSelectionScreen  -->
+<string name="access_granted">Pinayagan ang Access</string>
+<string name="zone_restricted">Access Denied</string>
+<string name="system_initialization">Inaayos ang Setup&#8230;</string>
+<string name="vault_encryption">Ine-encrypt&#8230;</string>
+<string name="lock_type_pin">PIN</string>
+<string name="lock_type_pattern">Pattern</string>
+<string name="lock_type_map">Mapa</string>
+<string name="abort">Itigil</string>
+<string name="initialize">Simulan</string>
+<string name="bypass_security">Laktawan</string>
+<string name="use_fingerprint">Gamitin ang Fingerprint</string>
+<string name="location_locked">Naka-lock ang Lokasyon</string>
+<string name="enter_pin">Ilagay ang PIN</string>
+<string name="draw_pattern">Iguhit ang Pattern</string>
+<string name="tap_coordinates">I-tap ang Mapa</string>
+<string name="verify_identity">I-verify na Ikaw Ito</string>
+<string name="outside_radius">Masyado kang malayo sa safe zone</string>
+<string name="biometric_unavailable">Hindi available ang fingerprint</string>
+<string name="fingerprint">Fingerprint</string>
+<string name="tap_target_coordinates">I-tap ang iyong lihim na punto sa mapa</string>
+<string name="location_required_title">Kailangan ng Pahintulot sa Lokasyon</string>
+<string name="location_required_message">Upang paganahin ang Seguridad sa Mapa at pag-lock na nakabase sa rehiyon, kailangan namin ang iyong pahintulot sa lokasyon. \n\n<b>Paunawa:</b> Ang iyong data ay 100% offline at nananatili sa iyong device.</string>
+<string name="location_allow_btn">PAYAGAN ANG PAHINTULOT</string>
+<string name="location_access_title">ACCESS SA LOKASYON</string>
+<string name="location_access_message">Kailangan namin ang iyong lokasyon upang paganahin ang seguridad ng vault na nakabase sa lokasyon. Ang iyong data ay nananatili sa iyong device.</string>
+<string name="grant_location_access">MAGBIGAY NG ACCESS SA LOKASYON</string>
+
+<!-- DashboardTour -->
+<string name="tour_dash_welcome_title">Maligayang pagdating sa Mapplock</string>
+<string name="tour_dash_welcome_desc">Ligtas ang iyong privacy sa amin. Tumingin muna tayo sa paligid.</string>
+<string name="tour_dash_hide_apps_title">I-lock ang Apps</string>
+<string name="tour_dash_hide_apps_desc">I-tap dito para i-lock ang anumang app. Mapoprotektahan sila hanggang sa i-unlock mo sila.</string>
+<string name="tour_dash_history_title">Kasaysayan ng Lock</string>
+<string name="tour_dash_history_desc">Pamahalaan ang lahat ng iyong ligtas na lokasyon at ang mga app sa loob nito.</string>
+<string name="tour_dash_categories_title">Ang Iyong Lihim na Vault</string>
+<string name="tour_dash_categories_desc">Ang mga larawan, video at file na itatago mo ay mase-save dito nang ligtas.</string>
+<string name="tour_dash_fab_title">Gumawa ng Bagong Folder</string>
+<string name="tour_dash_fab_desc">I-tap ang + button para gumawa ng mga custom folder</string>
+<string name="tour_dash_settings_title">Mga Setting</string>
+<string name="tour_dash_settings_desc">Baguhin ang iyong lock, wika at higit pa mula rito.</string>
+    <string name="custom_lock_background">Custom Lock Background</string>
+    <string name="custom_lock_background_desc">Itakda ang iyong personal na background</string>
+    <string name="intruder_capture">Intruder Capture</string>
+    <string name="intruder_capture_desc">Kumuha ng selfie ng sinumang sumusubok na pumasok</string>
+    <string name="create_new_folder">Gumawa ng Bagong Folder</string>
+    <string name="create_new_folder_desc">Ang mga folder ay maaaring maglaman ng anumang uri ng file (Mga Larawan, Video, PDF, atbp).</string>
+    <string name="folder_name">Pangalan ng Folder</string>
+    <string name="appearance">Hitsura</string>
+    <string name="preview_and_hide">ITAGO (%1$d)</string>
+    <string name="bg_active_desc">Aktibo ang Larawan • I-tap para pamahalaan</string>
+    <string name="change">BAGUHIN</string>
+    <string name="remove_btn">ALISIN</string>
+    <string name="notification_perm_title">Mga Notification</string>
+    <string name="notification_perm_desc">Ginagamit para sa mga notification ng serbisyo sa foreground at mahahalagang babala sa seguridad.</string>
+    <string name="usage_perm_title">Usage Access</string>
+    <string name="usage_perm_desc">Kailangang malaman ng Mapplock kung kailan inilunsad ang isang app upang ipakita ang lock screen.</string>
+    <string name="overlay_perm_title">Pahintulot sa Overlay</string>
+    <string name="overlay_perm_desc">Kailangang iguhit ng Mapplock ang lock screen sa itaas ng mga protektadong application.</string>
+    <string name="background_popups_perm_title">Mga Popup sa Background</string>
+    <string name="background_popups_perm_desc">Pinapayagan ang Mapplock na agad na ilunsad ang screen ng seguridad mula sa background.</string>
+    <string name="battery_perm_title">I-disable ang Battery Optimization</string>
+    <string name="battery_perm_desc">Pinipigilan ang system na patayin ang serbisyo ng proteksyon ng Mapplock.</string>
+    <string name="grant_permission">MAGBIGAY NG PAHINTULOT</string>
+    <string name="security_monitoring_note">Ang seguridad ay nangangailangan ng aktibong pagsubaybay sa system.</string>
+    <string name="search_apps">Maghanap ng mga app&#8230;</string>
+    <string name="recommended">INIREREKOMENDA</string>
+    <string name="all_apps">LAHAT NG APPS</string>
+    <string name="locked_apps_header">MGA NAKA-LOCK NA APP</string>
+    <string name="no_apps_in_zone">Wala pang mga naka-lock na app</string>
+    <string name="unlock_all">I-UNLOCK LAHAT</string>
+    <string name="user_locked_stats">HIGIT SA %1$d%% NG MGA USER ANG NAKA-LOCK NITO</string>
+    <string name="bulk_action_title">Mga Aksyon sa Kategorya</string>
+    <string name="bulk_action_desc">Piliin kung ano ang gagawin sa lahat ng item sa kategoryang ito.</string>
+    <string name="recover_all">I-RECOVER LAHAT</string>
+    <string name="delete_all">I-DELETE LAHAT</string>
+    <string name="delete_folder_confirm">I-delete ang folder at lahat ng file nito?</string>
+    <string name="recover_folder">I-recover ang lahat ng file bago i-delete</string>
+    <string name="delete_permanently">I-delete nang Permanenteng</string>
+    <string name="connect_dots_to_verify">I-CONNECT ANG MGA DOT PARA MAG-VERIFY</string>
+    <string name="aqi_label">AQI</string>
+    <string name="temp_label">Temp</string>
+    <string name="humidity_label">Humidity</string>
+    <string name="importing_files">Nag-iimport ng mga File</string>
+    <string name="deleting_files">Nagbubura ng mga File</string>
+    <string name="restoring_files">Ibinabalik ang mga File</string>
+    <string name="hold_on_message">Sandali lang, pinagsisikapan ng iyong telepono na matapos ito</string>
+    <string name="completed_percent">%1$d%% Nakumpleto</string>
+
+    <!-- Diagnostics -->
+    <string name="system_status">KALUSUGAN NG SYSTEM</string>
+    <string name="protection_guide_title">Manatiling Aktibo 24/7</string>
+    <string name="protection_guide_desc">Upang mapanatiling naka-lock ang iyong mga app nang maaasahan, kailangang manatiling aktibo ang Mapplock sa background. Sundin ang mga hakbang na ito upang gawin itong indestructible.</string>
+    <string name="step_battery_title">Unrestricted na Baterya</string>
+    <string name="step_battery_desc">Pinipigilan ang Android na patayin ang Mapplock upang makatipid ng baterya. I-set sa \'Unrestricted\'.</string>
+    <string name="step_autostart_title">Auto-Start</string>
+    <string name="step_autostart_desc">Pinapayagan ang Mapplock na magsimula nang awtomatiko kapag nag-boot ang iyong telepono.</string>
+    <string name="step_recents_title">I-lock sa Recents</string>
+    <string name="step_recents_desc">I-lock nang manu-mano ang Mapplock sa iyong listahan ng \'Recent Apps\' upang maiwasan ang hindi sinasadyang pagsasara.</string>
+    <string name="oem_guide_xiaomi">I-tap dito → Battery &amp; performance → App battery saver → Mapplock → No restrictions. I-enable din ang \'Autostart\'.</string>
+    <string name="oem_guide_oppo">I-tap dito → App Management → Mapplock → Allow Auto Start &amp; Allow Background Activity.</string>
+    <string name="oem_guide_vivo">I-tap dito → Battery → High Background Power Consumption → I-enable ang Mapplock.</string>
+    <string name="oem_guide_samsung">I-tap dito → Battery → Background usage limits → Never sleeping apps → Idagdag ang Mapplock.</string>
+    <string name="oem_guide_generic">I-tap dito → Battery → Unrestricted / No Optimization.</string>
+    <string name="lock_recents_instruction">1. Mag-swipe pataas para makita ang Recent Apps\n2. Pindutin nang matagal o mag-swipe pababa sa Mapplock\n3. I-tap ang \'Lock\' icon</string>
+    <string name="indestructible_mode_active">AKTIBO ANG INDESTRUCTIBLE MODE</string>
+    <string name="indestructible_mode_inactive">BABALA SA KALUSUGAN NG SYSTEM</string>
+    <string name="fix_now">AYUSIN NA</string>
+    <string name="status_active">AKTIBO</string>
+    <string name="status_inactive">HINDI AKTIBO</string>
+    <string name="accessibility_service">Serbisyo ng Accessibility</string>
+    <string name="overlay_permission">Pahintulot sa Overlay</string>
+    <string name="usage_stats">Usage Stats</string>
+    <string name="locker_service">Locker Engine</string>
+    <string name="bg_protection">Proteksyon sa Background (Inirerekomenda)</string>
+    <string name="bg_protection_desc">Pinipigilan ang Mapplock na itigil ng system at pinapanatiling aktibo ang pag-lock ng app. Maaaring magpakita ito ng screen na partikular sa manufacturer na humihiling sa iyong payagan ang app na tumakbo sa background. Maaari mo itong baguhin sa ibang pagkakataon sa Settings.</string>
+    <string name="lock_in_recents_guide">Paano panatilihing laging aktibo ang Mapplock:\n1. Buksan ang Recent Apps\n2. Pindutin nang matagal ang Mapplock o mag-swipe pababa\n3. I-tap ang \'Lock\' icon</string>
+
+    <string-array name="faq_questions">
+        <item>Ano ang Mapplock at paano ito naiiba sa ibang app lockers?</item>
+        <item>Paano pinoprotektahan ng Mapplock ang aking data laban sa \'Q-Day\'?</item>
+        <item>Paano gumagana ang tampok na \"Map-Gate\"?</item>
+        <item>Nakaimbak ba ang aking mga pribadong larawan at video sa mga server ng Mapplock?</item>
+        <item>Ano ang mangyayari kung makalimutan ko ang aking PIN o Pattern?</item>
+        <item>Gagana ba ang mga tampok ng mapa kung ako ay offline o walang internet?</item>
+        <item>Ano ang \"Intruder Capture\" at saan ko makikita ang mga larawan?</item>
+        <item>Ano ang \"File Loss Protection\" at bakit ko ito dapat i-enable?</item>
+    </string-array>
+    <string-array name="faq_answers">
+        <item>Ang Mapplock ay isang susunod na henerasyong application ng seguridad na binuo ng Aitoyz na gumagamit ng katalinuhan na nakabase sa lokasyon upang protektahan ang iyong privacy. Hindi tulad ng mga karaniwang locker na umaasa lamang sa mga PIN, ipinapakilala ng Mapplock ang teknolohiyanya na \"Map-Gate\", na nagbibigay-daan sa iyong magtakda ng mga ligtas na heograpikal na zone. Nagbibigay ito ng propesyonal na vault para sa mga larawan, video, at file, na sinamahan ng advanced na intruder detection at mga stealth disguise. Ito ay partikular na binuo para sa mga user na nais ang seguridad ng kanilang telepono na awtomatikong umangkop sa kanilang kapaligiran.</item>
+        <item>Ang Mapplock ay binuo gamit ang isang Quantum-Resilient na arkitektura. Karamihan sa mga cloud-based na locker ay madaling ma-atake ng \'Harvest Now, Decrypt Later\', kung saan ang data ay ninanakaw ngayon upang ma-crack ng mga susunod na quantum computer. Pinipigilan ito ng Mapplock sa pamamagitan ng paggamit ng local-only AES-256 symmetric encryption at isang zero-knowledge na arkitektura. Dahil hindi kailanman umaalis ang iyong data sa iyong device, hindi ito maaaring ma-harvest. Kahit na may mga quantum algorithm gaya ng sa Grover, ang aming 256-bit na encryption ay mananatiling hindi mababali sa loob ng bilyun-bilyong taon.</item>
+        <item>Ang tampok na Map-Gate ay nagbibigay-daan sa iyong magtakda ng mga partikular na GPS coordinate bilang \"Safe Zones,\" gaya ng iyong bahay o opisina. Habang ikaw ay nasa loob ng itinakdang radius ng isang safe zone, ang iyong mga protektadong app ay maaaring ma-access nang mas maginhawa o manatiling ganap na naka-unlock. Gayunpaman, sa sandaling lumabas ka sa radius na ito, awtomatikong magti-trigger ang Mapplock ng isang high-security lockdown. Tinitiyak nito na kung ang iyong telepono ay mawala, manakaw, o ma-access sa isang pampublikong lugar, ang iyong sensitibong data ay mananatiling ganap na hindi maa-access ng iba.</item>
+        <item>Hindi, gumagana ang Aitoyz sa isang modelong \"Privacy-First\", na nangangahulugang hindi nag-iimbak ang Mapplock ng anuman sa iyong mga personal na file sa aming mga server. Ang lahat ng mga larawan, video, at dokumento na inililipat mo sa vault ay naka-encrypt nang lokal sa internal storage ng iyong device. Wala kaming anumang remote access sa iyong pribadong nilalaman, at hindi namin makikita o maibabahagi ang iyong mga file. Tinitiyak ng diskarte na ito na mayroon kang kabuuang kontrol sa iyong data at mananatili itong secure kahit na makompromiso ang iyong koneksyon sa internet.</item>
+        <item>Kung makalimutan mo ang iyong pangunahing security code, maaari mong gamitin ang mga sekondaryang paraan ng pag-verify na itinakda sa simula ng setup. Kasama rito ang biometric authentication, gaya ng fingerprint o face unlock, kung na-enable mo ang mga opsyong iyon sa settings menu. Bukod pa rito, maaari mong gamitin ang iyong \"Secret Map Point\" bilang paraan ng pag-recover upang i-reset ang iyong mga kredensyal. Masidhi naming inirerekomenda ang pag-set up ng maraming opsyon sa pag-recover upang maiwasan ang permanenteng pagkaka-lockout, dahil hindi namin ma-recover ang iyong PIN nang remote para sa mga kadahilanant pangseguridad.</item>
+        <item>Oo, ang Mapplock ay idinisenyo upang manatiling ganap na gumagana kahit na walang aktibong data o Wi-Fi na koneksyon. Aktibong nida-download at nica-cache ng app ang GPS map data para sa iyong kasalukuyang rehiyon sa sandaling ibigay mo ang mga kinakailangang pahintulot sa lokasyon. Ang offline map engine na ito ay nagbibigay-daan sa interface ng seguridad na mag-load agad at tumpak na matukoy ang iyong mga \"Safe Zone\" na nakabase sa lokasyon. Tinitiyak nito na ang iyong seguridad sa Map-Gate ay mananatiling aktibo at maaasahan, anuman ang lakas ng iyong signal o roaming status.</item>
+        <item>Ang Intruder Capture ay isang awtomatikong feature ng seguridad na kumuha ng isang lihim na selfie ng sinumang sumusubok na pumasok sa iyong vault. Kung ang isang maling PIN o Pattern ay inilagay nang higit pa sa pinapayagang bilang ng beses, tahimik na magti-trigger ang app sa front camera upang kumuha ng larawan ng user. Ang mga larawang ito ay nakaimbak sa loob ng isang dedikadong kategorya ng \"Intruders\" sa loob ng iyong vault, na kumpleto sa timestamp ng pagtatangka. Maaari mong suriin ang mga log na ito anumang oras upang makita kung sino talaga ang sumubok na i-access ang iyong mga pribadong app nang walang pahintulot.</item>
+        <item>Ang File Loss Protection ay isang kritikal na pananggalang na gumagamit ng Device Administrator rights upang maiwasan ang hindi sinasadya o hindi awtorisadong pag-uninstall ng Mapplock. Dahil ang iyong mga file ay naka-encrypt at nakaimbak sa loob ng protektadong direktoryo ng app, ang isang karaniwang pag-uninstall ay magreresulta sa permanenteng pagkawala ng lahat ng iyong mga nakatagong data. Sa pamamagitan ng pag-enable sa tampok na ito, nangangailangan ang system ng karagdagang hakbang sa pag-verify bago maalis ang app mula sa device. Tinitiyak nito na ang iyong mahahalagalang dokumento at alaala ay hindi kailanman mabubura dahil sa pagkakamali o ng ibang tao.</item>
+    </string-array>
+</resources>

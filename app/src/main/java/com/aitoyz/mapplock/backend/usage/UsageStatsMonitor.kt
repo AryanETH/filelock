@@ -30,27 +30,20 @@ class UsageStatsMonitor(
     private var lastEmittedPackage: String? = null
 
     override fun start() {
-        LockerLogger.i(LockerLogger.Event.STATE_TRANSITION, "[REWRITE] UsageStatsMonitor starting (150ms polling)")
+        LockerLogger.i(LockerLogger.Event.STATE_TRANSITION, "[REWRITE] UsageStatsMonitor starting (250ms polling)")
         lastEventTimestamp = System.currentTimeMillis() - 1000
         lastEmittedPackage = null
         pollingJob?.cancel()
         pollingJob = scope.launch(Dispatchers.Default) {
             LockerLogger.i(LockerLogger.Event.STATE_TRANSITION, "[REWRITE] Polling loop active")
-            var lastHeartbeat = 0L
             
             while (isActive) {
                 try {
                     pollEvents()
-                    
-                    val now = System.currentTimeMillis()
-                    if (now - lastHeartbeat > 10_000) {
-                        LockerLogger.v(LockerLogger.Event.STATE_TRANSITION, "[REWRITE] Heartbeat: Monitor is alive")
-                        lastHeartbeat = now
-                    }
                 } catch (e: Throwable) {
                     LockerLogger.e(LockerLogger.Event.ERROR, "[REWRITE] Polling CRASHED", e)
                 }
-                delay(150)
+                delay(250)
             }
         }
     }
@@ -62,13 +55,27 @@ class UsageStatsMonitor(
     private suspend fun pollEvents() {
         // LockerLogger.v(LockerLogger.Event.STATE_TRANSITION, "[REWRITE] Polling...")
         val endTime = System.currentTimeMillis()
-        val startTime = lastEventTimestamp
+        var startTime = lastEventTimestamp
         
+        // Safety: If last poll was more than 5 seconds ago (e.g. system suspended process), 
+        // resync to current time to avoid processing a backlog and lagging.
+        if (endTime - startTime > 5_000) {
+            startTime = endTime - 1000
+            lastEventTimestamp = startTime
+            LockerLogger.w(LockerLogger.Event.STATE_TRANSITION, "[REWRITE] Monitor gap detected, resyncing clock")
+        }
+
         if (endTime <= startTime) return
 
-        val events = usageStatsManager.queryEvents(startTime, endTime) ?: return
+        val events = usageStatsManager.queryEvents(startTime, endTime) ?: run {
+            lastEventTimestamp = endTime
+            return
+        }
         
-        if (!events.hasNextEvent()) return
+        if (!events.hasNextEvent()) {
+            lastEventTimestamp = endTime
+            return
+        }
 
         val event = UsageEvents.Event()
         var latestProcessedTime = startTime

@@ -4,7 +4,6 @@ import android.accessibilityservice.AccessibilityService
 import android.view.accessibility.AccessibilityEvent
 import com.aitoyz.mapplock.core.*
 import com.aitoyz.mapplock.model.ForegroundEvent
-import com.aitoyz.mapplock.repository.LockedAppsRepository
 import com.aitoyz.mapplock.security.LockerLogger
 import kotlinx.coroutines.cancel
 
@@ -24,9 +23,6 @@ class AppLockAccessibilityService : AccessibilityService() {
     }
 
     private val serviceScope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.Main.immediate)
-    private var engine: AppLockEngine? = null
-    private var lockedApps: LockedAppsRepository? = null
-    private val directDetector = DirectDetector()
 
     override fun onServiceConnected() {
         super.onServiceConnected()
@@ -38,45 +34,37 @@ class AppLockAccessibilityService : AccessibilityService() {
         BackendCoordinator.setActiveBackend(BackendCoordinator.BackendType.ACCESSIBILITY)
         BackendCoordinator.resetRestartAttempts("AccessibilityRecovery")
         
-        val repository = LockedAppsRepository(this)
-        lockedApps = repository
-        val decisionEngine = LockDecisionEngine(packageName, repository)
-        val launcher = LockLauncher(this)
-        val systemAppFilter = SystemAppFilter(this)
-        
-        engine = AppLockEngine(
-            scope = serviceScope,
-            detector = directDetector,
-            decisionEngine = decisionEngine,
-            launcher = launcher,
-            systemAppFilter = systemAppFilter
-        )
-        
-        engine?.start()
+        // Fetch centralized CoreEngine
+        com.aitoyz.mapplock.core.CoreEngine.getInstance(this)
     }
 
     override fun onStartCommand(intent: android.content.Intent?, flags: Int, startId: Int): Int {
         if (intent?.getBooleanExtra("refresh_locked_apps", false) == true) {
             LockerLogger.i(LockerLogger.Event.STATE_TRANSITION, "[SYNC] Refresh intent received (Accessibility)")
-            lockedApps?.refreshCache()
+            com.aitoyz.mapplock.core.CoreEngine.getInstance(this).refreshLockedApps()
         }
         return super.onStartCommand(intent, flags, startId)
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
-        if (event == null) return
+        if (event == null || event.packageName == null) return
 
         try {
-            when (event.eventType) {
-                AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED -> {
-                    val packageName = event.packageName?.toString() ?: return
-                    lastForegroundPackage = packageName
-                    
-                    // Route to engine via direct detector
-                    directDetector.onPackageChanged(packageName, ForegroundEvent.Source.ACCESSIBILITY)
-                }
-                else -> { /* Ignore other event types */ }
+            // HIGH-PERFORMANCE FILTERING: 
+            // Only process state changes (Activity switches). Ignore content changes, clicks, scrolls.
+            if (event.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
+                return
             }
+
+            val packageName = event.packageName.toString()
+            if (packageName == lastForegroundPackage) return
+            
+            lastForegroundPackage = packageName
+            
+            // Route to centralized CoreEngine
+            com.aitoyz.mapplock.core.CoreEngine.getInstance(this).onForegroundEvent(
+                ForegroundEvent(packageName, source = ForegroundEvent.Source.ACCESSIBILITY)
+            )
         } catch (e: Throwable) {
             LockerLogger.e(LockerLogger.Event.ERROR, "[REWRITE] Accessibility Processing FAILED", e)
         }
@@ -89,7 +77,6 @@ class AppLockAccessibilityService : AccessibilityService() {
     override fun onUnbind(intent: android.content.Intent?): Boolean {
         LockerLogger.w(LockerLogger.Event.ACCESSIBILITY_EVENT, "Accessibility Service Unbound")
         BackendCoordinator.setActiveBackend(BackendCoordinator.BackendType.NONE)
-        engine?.stop()
         serviceScope.cancel()
         attemptFallbackStart()
         return super.onUnbind(intent)
@@ -98,7 +85,6 @@ class AppLockAccessibilityService : AccessibilityService() {
     override fun onDestroy() {
         LockerLogger.w(LockerLogger.Event.ACCESSIBILITY_EVENT, "Accessibility Service Destroyed")
         BackendCoordinator.setActiveBackend(BackendCoordinator.BackendType.NONE)
-        engine?.stop()
         serviceScope.cancel()
         attemptFallbackStart()
         instance = null
@@ -106,7 +92,7 @@ class AppLockAccessibilityService : AccessibilityService() {
     }
 
     fun notifyLockDismissed() {
-        engine?.getLauncher()?.notifyFinished()
+        com.aitoyz.mapplock.core.CoreEngine.getInstance(this).getLauncher().notifyFinished()
     }
 
     private fun attemptFallbackStart() {

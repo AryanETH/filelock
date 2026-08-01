@@ -30,11 +30,15 @@ object LockerLogger {
     }
 
     fun d(event: Event, message: String) {
-        Log.d(TAG, "[${event.name}] $message")
+        if (com.aitoyz.mapplock.BuildConfig.DEBUG) {
+            Log.d(TAG, "[${event.name}] $message")
+        }
     }
 
     fun v(event: Event, message: String) {
-        Log.v(TAG, "[${event.name}] $message")
+        if (com.aitoyz.mapplock.BuildConfig.DEBUG) {
+            Log.v(TAG, "[${event.name}] $message")
+        }
     }
 
     fun i(event: Event, message: String) {
@@ -53,6 +57,9 @@ object LockerLogger {
     }
 
     private fun logToFile(event: Event, message: String) {
+        // PRODUCTION GUARD: Never perform expensive file I/O for logs in release builds.
+        if (!com.aitoyz.mapplock.BuildConfig.DEBUG) return
+
         val importantEvents = setOf(
             Event.LOCK_DETECTED,
             Event.LOCK_SKIPPED,

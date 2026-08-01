@@ -7,11 +7,31 @@ import java.io.InputStreamReader
 
 object SecurityUtils {
 
+    @Volatile
+    private var isRootedCache: Boolean? = null
+
     /**
      * Professional-grade root detection check.
+     * Results are cached for the lifetime of the process to avoid repeated main-thread disk I/O.
      */
     fun isDeviceRooted(): Boolean {
-        return checkRootMethod1() || checkRootMethod2() || checkRootMethod3()
+        isRootedCache?.let { return it }
+        
+        // This may still be called on main thread first time, but caching prevents repeated hits.
+        // For strict compliance, we should trigger a background check during app startup.
+        val result = checkRootMethod1() || checkRootMethod2() || checkRootMethod3()
+        isRootedCache = result
+        return result
+    }
+
+    /**
+     * Triggers the root detection check on a background thread.
+     */
+    fun preload() {
+        if (isRootedCache != null) return
+        kotlin.concurrent.thread {
+            isDeviceRooted()
+        }
     }
 
     private fun checkRootMethod1(): Boolean {

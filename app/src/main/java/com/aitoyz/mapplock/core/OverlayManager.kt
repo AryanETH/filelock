@@ -24,7 +24,17 @@ object OverlayManager {
         val appContext = context.applicationContext
         try {
             if (windowManager == null) {
-                windowManager = appContext.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+                windowManager = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    val displayManager = appContext.getSystemService(Context.DISPLAY_SERVICE) as android.hardware.display.DisplayManager
+                    val display = displayManager.getDisplay(android.view.Display.DEFAULT_DISPLAY)
+                    val windowContext = appContext.createWindowContext(display, WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY, null)
+                    windowContext.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+                } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    val windowContext = appContext.createWindowContext(WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY, null)
+                    windowContext.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+                } else {
+                    appContext.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+                }
             }
 
             overlayView = View(appContext).apply {
@@ -42,7 +52,8 @@ object OverlayManager {
                 flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
                         WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
                         WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
-                        WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+                        WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS or
+                        WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS
                 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                     layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
@@ -67,6 +78,8 @@ object OverlayManager {
         try {
             windowManager?.removeView(overlayView)
             overlayView = null
+            // Clear WindowManager reference to prevent leaking the Window object
+            windowManager = null 
             isShowing = false
             LockerLogger.v(LockerLogger.Event.OVERLAY_REMOVED, "[OVERLAY] Black cover removed")
         } catch (e: Exception) {

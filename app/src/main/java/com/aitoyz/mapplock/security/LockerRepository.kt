@@ -21,6 +21,7 @@ class LockerRepository private constructor(context: Context) {
 
     enum class LockerState {
         IDLE,                   // No locked app in foreground
+        LOCKING,                // Transitioning to lock (overlay showing)
         LOCK_ACTIVITY_VISIBLE,  // PIN/Pattern activity has confirmed it is drawn
         AUTHENTICATED           // User has provided correct credentials
     }
@@ -61,8 +62,17 @@ class LockerRepository private constructor(context: Context) {
         stateMutex.withLock {
             val currentState = _state.value
             
-            // ALLOW sideways transitions for different packages, or if resetting to IDLE
-            if (currentState.ordinal > newState.ordinal && newState != LockerState.IDLE) {
+            // SECURITY: IDLE always wins. If we are resetting, bypass ordinal checks.
+            if (newState == LockerState.IDLE) {
+                LockerLogger.d(LockerLogger.Event.STATE_TRANSITION, 
+                    "State Reset: $currentState -> IDLE")
+                _state.value = LockerState.IDLE
+                return@withLock
+            }
+            
+            // Allow backward transitions if we are restarting the LOCKING process
+            if (currentState.ordinal > newState.ordinal && 
+                newState != LockerState.LOCKING) {
                 LockerLogger.d(LockerLogger.Event.STATE_TRANSITION, 
                     "Transition Ignored (Backward): $currentState -> $newState")
                 return@withLock
@@ -77,10 +87,24 @@ class LockerRepository private constructor(context: Context) {
         }
     }
 
-    fun resetState() {
+    /**
+     * Non-suspending version of updateState for use from non-coroutine contexts.
+     */
+    fun updateStateAsync(newState: LockerState, packageName: String? = null) {
+        repositoryScope.launch {
+            updateState(newState, packageName)
+        }
+    }
+
+    /**
+     * Forcibly resets the engine to IDLE, bypassing all transition guards.
+     * Essential for security-critical resets on Launcher/Recents detection.
+     */
+    fun forceReset() {
         repositoryScope.launch {
             stateMutex.withLock {
-                LockerLogger.d(LockerLogger.Event.STATE_TRANSITION, "Forcing state reset to IDLE")
+                val current = _state.value
+                LockerLogger.i(LockerLogger.Event.STATE_TRANSITION, "[SECURITY] Force resetting state from $current to IDLE")
                 _state.value = LockerState.IDLE
             }
         }

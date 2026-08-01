@@ -1,0 +1,354 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+<string name="app_name">Mapplock</string>
+<string name="accessibility_description">Mapplock এই পরিষেবাটি ব্যবহার করে যখন কোনও লক করা অ্যাপ্লিকেশন চালু করা হয় তা সনাক্ত করতে, যা একটি সুরক্ষিত লক স্ক্রিন ওভারলে প্রদর্শন করতে এবং আপনার গোপনীয়তা রক্ষা করতে সহায়তা করে।</string>
+
+<!-- সহজ পরিভাষা -->
+<string name="vault">সুরক্ষিত অঞ্চল</string>
+<string name="vault_plural">সুরক্ষিত অঞ্চল</string>
+<string name="hidden_files">গোপন ফাইল</string>
+<string name="hide_app">অ্যাপ লুকান</string>
+<string name="wrong_unlock_alert">অনুপ্রবেশকারীর সতর্কতা</string>
+<string name="wrong_unlock">ভুল আনলক</string>
+<string name="global_lock">সব লক করুন</string>
+<string name="stealth_entry">গোপন প্রবেশ</string>
+
+<!-- ভাষা স্ক্রিন -->
+<string name="select_language">ভাষা নির্বাচন করুন</string>
+<string name="english">ইংরেজি</string>
+<string name="hindi">হিন্দি</string>
+<string name="close_btn">বন্ধ করুন</string>
+<string name="selected_text">নির্বাচিত</string>
+<string name="language">ভাষা</string>
+<string name="search_languages">ভাষা খুঁজুন&#8230;</string>
+
+<!-- অনুমতি স্ক্রিন -->
+<string name="security_clearance">অনুমতি নির্দেশিকা</string>
+<string name="security_clearance_desc">শুধুমাত্র প্রয়োজন হলেই অনুমতি চাওয়া হয়</string>
+<string name="privacy_note">আমরা আপনার কোনো ব্যক্তিগত তথ্য সংগ্রহ, সংরক্ষণ বা শেয়ার করি না</string>
+<string name="ads_note">এই ক্রিয়ায় বিজ্ঞাপন থাকতে পারে</string>
+
+<string name="permission_usage_access">অ্যাপ পর্যবেক্ষণ</string>
+<string name="permission_usage_access_desc">আপনি যখন একটি লক করা অ্যাপ খোলেন তখন দেখার জন্য।</string>
+<string name="permission_overlay_access">অন্যান্য অ্যাপের উপরে দেখান</string>
+<string name="permission_overlay_access_desc">অন্যান্য অ্যাপের উপরে লক স্ক্রিন দেখানোর জন্য।</string>
+<string name="permission_camera_access">ক্যামেরা</string>
+<string name="permission_camera_access_desc">যে কেউ অনধিকার প্রবেশের চেষ্টা করলে তার ছবি তোলার জন্য।</string>
+<string name="permission_location_access">অবস্থান</string>
+<string name="permission_location_access_desc">আপনি যখন আপনার সুরক্ষিত অঞ্চলের কাছাকাছি থাকেন তখন অ্যাপগুলি লক/আনলক করার জন্য।</string>
+<string name="permission_storage_access">স্টোরেজ</string>
+<string name="permission_storage_access_desc">আপনার ছবি এবং ভিডিও লুকানো এবং সংরক্ষণ করার জন্য।</string>
+<string name="permission_background_activity">ব্যাকগ্রাউন্ডে চালান</string>
+<string name="permission_background_activity_desc">আপনার নিরাপত্তার জন্য অ্যাপটিকে ২৪/৭ সচল রাখার জন্য।</string>
+<string name="system_ready">সব তৈরি!</string>
+<string name="authorize">অনুমতি দিন</string>
+<string name="usage_access">ব্যবহারের অ্যাক্সেস</string>
+<string name="usage_access_desc">সুরক্ষিত অ্যাপগুলি যখন খোলা হয় তখন Mapplock-কে তা সনাক্ত করতে অনুমতি দেয়।</string>
+<string name="overlay_access">অন্যান্য অ্যাপের উপরে দেখান</string>
+<string name="overlay_access_desc">সুরক্ষিত অ্যাপের উপরে লক স্ক্রিনটি উপস্থিত হতে দেয়।</string>
+<string name="location_access">অবস্থান</string>
+<string name="location_access_desc">ম্যাপ-ভিত্তিক লক জোন এবং অবস্থান বৈশিষ্ট্যের জন্য প্রয়োজনীয়।</string>
+<string name="background_activity">ব্যাটারি অপ্টিমাইজেশান উপেক্ষা করুন</string>
+<string name="background_activity_desc">লক পরিষেবাটিকে সিস্টেম দ্বারা বন্ধ না করে নির্ভরযোগ্যভাবে চলতে দেয়।</string>
+<string name="full_storage_access">সব ফাইল পরিচালনা করুন</string>
+<string name="full_storage_access_desc">ভল্টে ফাইলগুলি সুরক্ষিত এবং পরিচালনা করার জন্য প্রয়োজনীয়।</string>
+<string name="background_popups">ব্যাকগ্রাউন্ড পপ-আপ</string>
+<string name="background_popups_desc">এখানে ট্যাপ করুন → বিশেষ অ্যাপ অ্যাক্সেস → ব্যাকগ্রাউন্ডে থাকাকালীন পপ-আপ প্রদর্শন করুন → অনুমতি দিন</string>
+
+<!-- অনবোর্ডিং -->
+<string name="onboarding_1_title">ম্যাপ হিসেবে ছদ্মবেশ</string>
+<string name="onboarding_1_desc">ম্যাপ একটি লক লেয়ার হিসেবে কাজ করবে, আপনার সব ফাইল লোকেশনের নিচে লুকানো থাকবে</string>
+<string name="onboarding_2_title">সম্পূর্ণ অফলাইন</string>
+<string name="onboarding_2_desc">আপনার কোনো ডেটা সার্ভারে সংরক্ষণ করা হয় না, Mapplock সম্পূর্ণ অফলাইন এবং স্থানীয়</string>
+<string name="onboarding_3_title">মেড ইন ইন্ডিয়া</string>
+<string name="onboarding_3_desc">আমাদের পুরো অ্যাপটি গর্বিতভাবে ভারতীয় এবং ভোপালে তৈরি 🌊</string>
+<string name="onboarding_4_title">কিভাবে ব্যবহার করবেন</string>
+<string name="onboarding_4_desc">আপনার ডিভাইস সুরক্ষিত করতে এই সহজ পদক্ষেপগুলি অনুসরণ করুন।</string>
+<string name="onboarding_4_step1">ম্যাপে দীর্ঘক্ষণ প্রেস করুন</string>
+<string name="onboarding_4_step2">আপনার PIN বা প্যাটার্ন সেট করুন</string>
+<string name="onboarding_4_step3">আপনার অ্যাপ লক করুন বা ফাইল লুকান</string>
+<string name="onboarding_4_step4">ড্যাশবোর্ডে ফিরে যেতে একই লোকেশনে দুবার ট্যাপ করুন</string>
+<string name="onboarding_4_step5">দ্রষ্টব্য: আপনার লক স্পটগুলির জন্য একটি এলোমেলো লোকেশন বেছে নিন যাতে অন্যরা সহজেই অনুমান করতে না পারে।</string>
+<string name="onboarding_disclaimer_title">ম্যাপ ডেটা দাবি পরিত্যাগ</string>
+<string name="onboarding_disclaimer_desc">ম্যাপ ডেটা এবং সীমানা যেমন আছে তেমনই প্রদান করা হয়। আমরা ভৌগোলিক উপস্থাপনা নিয়ন্ত্রণ করি না।</string>
+<string name="onboarding_accept_prefix">আমি বুঝতে পেরেছি এবং গ্রহণ করছি </string>
+<string name="onboarding_terms">পরি পরিষেবার শর্তাবলী</string>
+<string name="onboarding_and"> এবং </string>
+<string name="onboarding_privacy">গোপনীয়তা নীতি</string>
+<string name="initialize_system">শুরু করুন</string>
+<string name="next">চালিয়ে যান</string>
+
+<!-- ম্যাপ স্ক্রিন -->
+<string name="verify_pin">PIN লিখুন</string>
+<string name="verify_pattern">প্যাটার্ন আঁকুন</string>
+<string name="cancel">বাতিল</string>
+<string name="setup_lock">লক সেট করুন</string>
+<string name="select_apps">অ্যাপ চয়ন করুন</string>
+<string name="save_lock">সংরক্ষণ করুন</string>
+<string name="back">পিছনে</string>
+<string name="search_places">স্থান খুঁজুন&#8230;</string>
+
+<!-- ড্যাশবোর্ড -->
+<string name="app_lock_title">অ্যাপ লক করুন</string>
+<string name="app_lock_subtitle">আপনার অ্যাপগুলি লক করুন</string>
+<string name="history_title">লক করা অ্যাপ</string>
+<string name="history_subtitle">আপনার সমস্ত লক করা অ্যাপ পরিচালনা করুন</string>
+<string name="categories">বিভাগসমূহ</string>
+<string name="photos">ছবি</string>
+<string name="videos">ভিডিও</string>
+<string name="audio">অডিও</string>
+<string name="documents">নথি</string>
+<string name="wrong_unlocks">অনুপ্রবেশকারী</string>
+<string name="recycle_bin">রিসাইকেল বিন</string>
+    <plurals name="items_count">
+        <item quantity="one">%1$dটি আইটেম</item>
+        <item quantity="other">%1$dটি আইটেম</item>
+    </plurals>
+
+<!-- মিডিয়া ভিউয়ার স্ক্রিন -->
+<string name="save_to_gallery">গ্যালারিতে সংরক্ষণ করুন</string>
+<string name="open_in">এতে খুলুন</string>
+<string name="restore">পুনরুদ্ধার করুন</string>
+<string name="delete">মুছে ফেলুন</string>
+<string name="restore_file_title">ফাইল পুনরুদ্ধার করবেন?</string>
+<string name="restore_file_message">এই ফাইলটি আপনার ফোনের গ্যালারিতে ফেরত নিয়ে যান।</string>
+<string name="delete_file_title">ফাইলটি কি মুছে ফেলবেন?</string>
+<string name="delete_file_message">এটি ফাইলটিকে চিরতরে মুছে ফেলবে।</string>
+<string name="preview_unavailable">প্রিভিউ উপলব্ধ নেই:</string>
+<string name="use_open_in_hint">দেখার জন্য \'এতে খুলুন\' ব্যবহার করুন।</string>
+<string name="open_with">এটির সাথে খুলুন&#8230;</string>
+<string name="restore_confirm">পুনরুদ্ধার করুন</string>
+<string name="delete_confirm">মুছে ফেলুন</string>
+<string name="no_preview">%1$s-এর জন্য কোনো প্রিভিউ নেই</string>
+<string name="open_in_hint">অন্য কোনো অ্যাপ দিয়ে দেখতে \'এতে খুলুন\' ব্যবহার করুন।</string>
+
+<!-- সেটিংস -->
+<string name="system_permissions">অনুমতিসমূহ</string>
+<string name="permission_app_detection">অ্যাপ সনাক্তকরণ</string>
+<string name="permission_app_detection_desc">আপনি যখন সুরক্ষিত অ্যাপগুলি খোলেন তখন দেখার জন্য।</string>
+<string name="permission_lock_window">লক উইন্ডো</string>
+<string name="permission_lock_window_desc">লক স্ক্রিন দেখানোর জন্য।</string>
+<string name="permission_camera">ক্যামেরা</string>
+<string name="permission_camera_desc">কেউ আপনার অ্যাপ খোলার চেষ্টা করলে তাকে ধরার জন্য।</string>
+<string name="permission_storage">স্টোরেজ</string>
+<string name="permission_storage_desc">আপনার লুকানো ফাইলগুলি সংরক্ষণ করার জন্য।</string>
+<string name="advanced_security">নিরাপত্তা</string>
+<string name="uninstall_protection">আনইনস্টল সুরক্ষা</string>
+<string name="uninstall_protection_desc">অন্যদের এই অ্যাপটি মুছে ফেলা থেকে বিরত রাখুন।</string>
+<string name="lock_options">লক সেটিংস</string>
+<string name="global_lock_title">সব লক করুন</string>
+<string name="global_lock_desc">আপনার নির্বাচিত সমস্ত অ্যাপ একবারে লক করুন।</string>
+<string name="dark_mode">ডার্ক মোড</string>
+<string name="dark_mode_desc">লাইট এবং ডার্ক থিম পরিবর্তন করুন।</string>
+<string name="monitoring_mode">নিরাপত্তার স্তর</string>
+<string name="monitoring_mode_desc">লকিং সনাক্তকরণের ক্ষমতা</string>
+<string name="monitoring_mode_moderate">মাঝারি (সাধারণ)</string>
+<string name="monitoring_mode_hard">কঠিন (উচ্চ সুরক্ষা)</string>
+<string name="monitoring_mode_auto">স্বয়ংক্রিয় (প্রস্তাবিত)</string>
+<string name="monitoring_mode_usage">ব্যবহারের পরিসংখ্যান (সাধারণ)</string>
+<string name="monitoring_mode_shizuku">Shizuku (উচ্চ ক্ষমতা)</string>
+<string name="monitoring_mode_accessibility">অ্যাক্সেসিবিলিটি (বিকল্প)</string>
+
+<!-- ট্যুর -->
+<string name="tour_skip">এড়িয়ে যান</string>
+<string name="tour_next">পরবর্তী</string>
+<string name="tour_welcome">স্বাগতম! আপনার গোপনীয়তা এখন ম্যাপে লুকানো আছে।</string>
+<string name="tour_step1">আপনার গোপন এন্ট্রি পয়েন্ট সেট করতে ম্যাপে দীর্ঘক্ষণ প্রেস করুন।</string>
+<string name="tour_step2">আপনার লুকানো ফাইলগুলি দেখতে আপনার গোপন পয়েন্টে দুবার ট্যাপ করুন।</string>
+<string name="tour_step3">নিজেকে খুঁজে পেতে বা ম্যাপের স্টাইল পরিবর্তন করতে এই বোতামগুলি ব্যবহার করুন।</string>
+<string name="tour_step4">আপনার গোপন পয়েন্ট মনে রাখুন! এটিই আপনার চাবি।</string>
+<string name="zoom_in_hint">সুরক্ষিত অঞ্চল সেট করতে আরও জুম করুন।</string>
+<string name="access_granted_desc">স্বাগতম! অ্যাক্সেসের অনুমতি দেওয়া হয়েছে।</string>
+<string name="zone_restricted_desc">অ্যাক্সেস প্রত্যাখ্যান করা হয়েছে। আপনি সুরক্ষিত অঞ্চলের বাইরে আছেন।</string>
+<string name="system_initialization_desc">সুরক্ষিত অঞ্চল তৈরি করতে ম্যাপে দীর্ঘক্ষণ প্রেস করুন।</string>
+<string name="lock_type_bio">ফিঙ্গারপ্রিন্ট</string>
+<string name="biometric_required">দয়া করে আপনার ফিঙ্গারপ্রিন্ট ব্যবহার করুন।</string>
+<string name="map_location_hint">আনলক করতে ম্যাপ পয়েন্ট ব্যবহার করুন।</string>
+<string name="package_visibility">লক করার জন্য অ্যাপ চয়ন করুন</string>
+<string name="tap_map_to_unlock">ম্যাপ খুলতে নিচে ট্যাপ করুন।</string>
+<string name="open_map_interface">ম্যাপ খুলুন</string>
+<string name="screenshot_restriction">স্ক্রিনশট নিষিদ্ধ</string>
+<string name="screenshot_restriction_desc">অন্যদের স্ক্রিনশট নেওয়া থেকে বিরত রাখুন</string>
+<string name="fingerprint_unlock">ফিঙ্গারপ্রিন্ট</string>
+<string name="fingerprint_unlock_desc">দ্রুত অ্যাক্সেসের জন্য ফিঙ্গারপ্রিন্ট ব্যবহার করুন।</string>
+<string name="offline_title">আপনি অফলাইনে আছেন</string>
+<string name="offline_message">ডেটা চালু করুন</string>
+<string name="support_links">সাহায্য এবং আইনি</string>
+<string name="tutorial">টিউটোরিয়াল (ভিডিও দেখুন)</string>
+<string name="feedback">মতামত পাঠান</string>
+<string name="terms_of_use">ব্যবহারের শর্তাবলী</string>
+<string name="faq">FAQ / সাহায্য</string>
+<string name="privacy_policy">গোপনীয়তা নীতি</string>
+<string name="share_mapplock">Mapplock শেয়ার করুন</string>
+
+<!-- VaultContentScreen -->
+<string name="settings">সেটিংস</string>
+<string name="lock">লক</string>
+<string name="add">যোগ করুন</string>
+<string name="sort">সাজান</string>
+<string name="hide">লুকান</string>
+<string name="vault_empty">এখানে এখনও কোনো অ্যাপ নেই।</string>
+<string name="vault_empty_hint">কিছু ফাইল যোগ করতে + ট্যাপ করুন।</string>
+<string name="app_lock_desc">লুকানো অ্যাপগুলি কেবল তখনই খুলবে যখন আপনি আপনার সুরক্ষিত অঞ্চলে থাকবেন।</string>
+<string name="hide_app_dialog_title">অ্যাপ লুকান</string>
+<string name="cloning_in_progress">অ্যাপটি সুরক্ষিত অঞ্চলে সরানো হচ্ছে&#8230;</string>
+<string name="hide_app_dialog_body">এটি অ্যাপটিকে লুকিয়ে রাখবে এবং এটি কেবল এখান থেকেই খুলবে। এগিয়ে যাবেন কি?</string>
+<string name="proceed">এগিয়ে যান</string>
+<string name="clone_success">অ্যাপ সফলভাবে লুকানো হয়েছে!</string>
+<string name="clone_failed">ব্যর্থ হয়েছে। আবার চেষ্টা করুন।</string>
+<string name="clear_all_hidden_apps">সমস্ত অ্যাপ আনহাইড করুন</string>
+<string name="active_vaults">সক্রিয় জোনসমূহ</string>
+    <plurals name="apps_locked">
+        <item quantity="one">%1$dটি অ্যাপ লক করা হয়েছে</item>
+        <item quantity="other">%1$dটি অ্যাপ লক করা হয়েছে</item>
+    </plurals>
+    <string name="vault_established">সুরক্ষিত অঞ্চল তৈরি হয়েছে</string>
+    <plurals name="apps_hidden">
+        <item quantity="one">%1$dটি অ্যাপ লুকানো হয়েছে:</item>
+        <item quantity="other">%1$dটি অ্যাপ লুকানো হয়েছে:</item>
+    </plurals>
+<string name="close">বন্ধ করুন</string>
+<string name="fix">ঠিক করুন</string>
+<string name="get_started">শুরু করুন</string>
+<string name="grant">অনুমতি দিন</string>
+<string name="vault_id_label">জোন %1$s</string>
+
+<!-- MapSelectionScreen -->
+<string name="access_granted">অ্যাক্সেসের অনুমতি দেওয়া হয়েছে</string>
+<string name="zone_restricted">অ্যাক্সেস প্রত্যাখ্যান করা হয়েছে</string>
+<string name="system_initialization">সেটআপ হচ্ছে&#8230;</string>
+<string name="vault_encryption">এনক্রিপ্ট করা হচ্ছে&#8230;</string>
+<string name="lock_type_pin">PIN</string>
+<string name="lock_type_pattern">প্যাটার্ন</string>
+<string name="lock_type_map">ম্যাপ</string>
+<string name="abort">থামান</string>
+<string name="initialize">শুরু করুন</string>
+<string name="bypass_security">এড়িয়ে যান</string>
+<string name="use_fingerprint">ফিঙ্গারপ্রিন্ট ব্যবহার করুন</string>
+<string name="location_locked">লোকেশন লক করা হয়েছে</string>
+<string name="enter_pin">PIN লিখুন</string>
+<string name="draw_pattern">প্যাটার্ন আঁকুন</string>
+<string name="tap_coordinates">ম্যাপে ট্যাপ করুন</string>
+<string name="verify_identity">আপনার পরিচয় যাচাই করুন</string>
+<string name="outside_radius">আপনি সুরক্ষিত অঞ্চল থেকে অনেক দূরে আছেন</string>
+<string name="biometric_unavailable">ফিঙ্গারপ্রিন্ট উপলব্ধ নেই</string>
+<string name="fingerprint">ফিঙ্গারপ্রিন্ট</string>
+<string name="tap_target_coordinates">আপনার গোপন ম্যাপ পয়েন্টে ট্যাপ করুন</string>
+<string name="location_required_title">লোকেশন অনুমতি প্রয়োজন</string>
+<string name="location_required_message">ম্যাপ সুরক্ষা এবং অঞ্চল-ভিত্তিক লকিং সক্ষম করতে, আমাদের আপনার লোকেশন অনুমতি প্রয়োজন। \n\n<b>দ্রষ্টব্য:</b> আপনার ডেটা ১০০% অফলাইন এবং আপনার ডিভাইসেই থাকে।</string>
+<string name="location_allow_btn">অনুমতি দিন</string>
+<string name="location_access_title">লোকেশন অ্যাক্সেস</string>
+<string name="location_access_message">অঞ্চল-ভিত্তিক ভল্ট সুরক্ষা সক্ষম করতে আমাদের আপনার লোকেশন প্রয়োজন। আপনার ডেটা আপনার ডিভাইসেই থাকে।</string>
+<string name="grant_location_access">লোকেশন অ্যাক্সেস দিন</string>
+
+<!-- DashboardTour -->
+<string name="tour_dash_welcome_title">Mapplock-এ স্বাগতম</string>
+<string name="tour_dash_welcome_desc">আপনার গোপনীয়তা আমাদের কাছে নিরাপদ। চলুন এক নজরে দেখে নিই।</string>
+<string name="tour_dash_hide_apps_title">অ্যাপ লক করুন</string>
+<string name="tour_dash_hide_apps_desc">যেকোনো অ্যাপ লক করতে এখানে ট্যাপ করুন। আনলক না করা পর্যন্ত সেগুলি সুরক্ষিত থাকবে।</string>
+<string name="tour_dash_history_title">লক ইতিহাস</string>
+<string name="tour_dash_history_desc">আপনার সমস্ত নিরাপদ লোকেশন এবং সেগুলির ভিতরের অ্যাপগুলি পরিচালনা করুন।</string>
+<string name="tour_dash_categories_title">আপনার গোপন ভল্ট</string>
+<string name="tour_dash_categories_desc">আপনার লুকানো ছবি, ভিডিও এবং ফাইলগুলি এখানে নিরাপদে সংরক্ষিত হবে।</string>
+<string name="tour_dash_fab_title">নতুন ফোল্ডার তৈরি করুন</string>
+<string name="tour_dash_fab_desc">কাস্টম ফোল্ডার তৈরি করতে + বোতামে ট্যাপ করুন</string>
+<string name="tour_dash_settings_title">সেটিংস</string>
+<string name="tour_dash_settings_desc">এখান থেকে আপনার লক, ভাষা এবং আরও অনেক কিছু পরিবর্তন করুন।</string>
+    <string name="custom_lock_background">কাস্টম লক ব্যাকগ্রাউন্ড</string>
+    <string name="custom_lock_background_desc">আপনার ব্যক্তিগত ব্যাকগ্রাউন্ড সেট করুন</string>
+    <string name="intruder_capture">অনুপ্রবেশকারীর ছবি</string>
+    <string name="intruder_capture_desc">অনধিকার প্রবেশের চেষ্টা করলে তার একটি সেলফি তুলুন</string>
+    <string name="create_new_folder">নতুন ফোল্ডার তৈরি করুন</string>
+    <string name="create_new_folder_desc">ফোল্ডারে যেকোনো ধরনের ফাইল (ছবি, ভিডিও, PDF ইত্যাদি) থাকতে পারে।</string>
+    <string name="folder_name">ফোল্ডারের নাম</string>
+    <string name="appearance">চেহারা</string>
+    <string name="preview_and_hide">লুকান (%1$d)</string>
+    <string name="bg_active_desc">ছবি সক্রিয় • পরিচালনা করতে ট্যাপ করুন</string>
+    <string name="change">পরিবর্তন</string>
+    <string name="remove_btn">মুছে ফেলুন</string>
+    <string name="notification_perm_title">নোটিফিকেশন</string>
+    <string name="notification_perm_desc">পরিষেবা নোটিফিকেশন এবং গুরুত্বপূর্ণ নিরাপত্তা সতর্কতার জন্য ব্যবহৃত হয়।</string>
+    <string name="usage_perm_title">ব্যবহারের অ্যাক্সেস</string>
+    <string name="usage_perm_desc">লক স্ক্রিন দেখানোর জন্য কোনো অ্যাপ কখন চালু হয় তা Mapplock-কে জানতে হবে।</string>
+    <string name="overlay_perm_title">ওভারলে অনুমতি</string>
+    <string name="overlay_perm_desc">Mapplock-কে সুরক্ষিত অ্যাপ্লিকেশনগুলির উপরে লক স্ক্রিনটি আঁকতে হবে।</string>
+    <string name="background_popups_perm_title">ব্যাকগ্রাউন্ড পপ-আপ</string>
+    <string name="background_popups_perm_desc">Mapplock-কে ব্যাকগ্রাউন্ড থেকে তাত্ক্ষণিকভাবে নিরাপত্তা স্ক্রিনটি চালু করতে দেয়।</string>
+    <string name="battery_perm_title">ব্যাটারি অপ্টিমাইজেশান বন্ধ করুন</string>
+    <string name="battery_perm_desc">সিস্টেমকে Mapplock-এর সুরক্ষা পরিষেবা বন্ধ করা থেকে বিরত রাখে।</string>
+    <string name="grant_permission">অনুমতি দিন</string>
+    <string name="security_monitoring_note">নিরাপত্তার জন্য সক্রিয় সিস্টেম পর্যবেক্ষণের প্রয়োজন।</string>
+    <string name="search_apps">অ্যাপ খুঁজুন&#8230;</string>
+    <string name="recommended">প্রস্তাবিত</string>
+    <string name="all_apps">সমস্ত অ্যাপ</string>
+    <string name="locked_apps_header">লক করা অ্যাপ</string>
+    <string name="no_apps_in_zone">এখনও কোনো অ্যাপ লক করা হয়নি</string>
+    <string name="unlock_all">সব আনলক করুন</string>
+    <string name="user_locked_stats">%1$d%%-এর বেশি ব্যবহারকারী এটি লক করেছেন</string>
+    <string name="bulk_action_title">বিভাগীয় ক্রিয়াকলাপ</string>
+    <string name="bulk_action_desc">এই বিভাগের সমস্ত আইটেমের সাথে কী করবেন তা চয়ন করুন।</string>
+    <string name="recover_all">সব পুনরুদ্ধার করুন</string>
+    <string name="delete_all">সব মুছে ফেলুন</string>
+    <string name="delete_folder_confirm">ফোল্ডার এবং এর সমস্ত ফাইল কি মুছে ফেলবেন?</string>
+    <string name="recover_folder">মুছে ফেলার আগে সমস্ত ফাইল পুনরুদ্ধার করুন</string>
+    <string name="delete_permanently">স্থায়ীভাবে মুছে ফেলুন</string>
+    <string name="connect_dots_to_verify">যাচাই করতে ডটগুলি সংযুক্ত করুন</string>
+    <string name="aqi_label">বায়ুর গুণমান</string>
+    <string name="temp_label">তাপমাত্রা</string>
+    <string name="humidity_label">আর্দ্রতা</string>
+    <string name="importing_files">ফাইল ইম্পোর্ট করা হচ্ছে</string>
+    <string name="deleting_files">ফাইল মুছে ফেলা হচ্ছে</string>
+    <string name="restoring_files">ফাইল পুনরুদ্ধার করা হচ্ছে</string>
+    <string name="hold_on_message">অপেক্ষা করুন, আপনার ফোন এটি সম্পন্ন করার চেষ্টা করছে</string>
+    <string name="completed_percent">%1$d%% সম্পন্ন হয়েছে</string>
+
+    <!-- Diagnostics -->
+    <string name="system_status">সিস্টেমের স্বাস্থ্য</string>
+    <string name="protection_guide_title">২৪/৭ সক্রিয় থাকুন</string>
+    <string name="protection_guide_desc">আপনার অ্যাপগুলি নির্ভরযোগ্যভাবে লক রাখতে, Mapplock-কে ব্যাকগ্রাউন্ডে সক্রিয় থাকতে হবে। এটিকে অজেয় করতে এই পদক্ষেপগুলি অনুসরণ করুন।</string>
+    <string name="step_battery_title">অবাধ ব্যাটারি</string>
+    <string name="step_battery_desc">ব্যাটারি বাঁচাতে অ্যান্ড্রয়েডকে Mapplock বন্ধ করা থেকে বিরত রাখে। \'অবাধ\' (Unrestricted) সেট করুন।</string>
+    <string name="step_autostart_title">অটো-স্টার্ট</string>
+    <string name="step_autostart_desc">আপনার ফোন বুট হওয়ার সময় Mapplock-কে স্বয়ংক্রিয়ভাবে শুরু হতে দেয়।</string>
+    <string name="step_recents_title">সাম্প্রতিক অ্যাপে লক করুন</string>
+    <string name="step_recents_desc">দুর্ঘটনাবশত বন্ধ হওয়া রোধ করতে আপনার \'সাম্প্রতিক অ্যাপ\' (Recent Apps) তালিকায় Mapplock-কে ম্যানুয়ালি লক করুন।</string>
+    <string name="oem_guide_xiaomi">এখানে ট্যাপ করুন → ব্যাটারি এবং পারফরম্যান্স → অ্যাপ ব্যাটারি সেভার → Mapplock → কোনো সীমাবদ্ধতা নেই। এছাড়াও \'অটো-স্টার্ট\' সক্ষম করুন।</string>
+    <string name="oem_guide_oppo">এখানে ট্যাপ করুন → অ্যাপ পরিচালনা → Mapplock → অটো স্টার্ট এবং ব্যাকগ্রাউন্ড অ্যাক্টিভিটির অনুমতি দিন।</string>
+    <string name="oem_guide_vivo">এখানে ট্যাপ করুন → ব্যাটারি → উচ্চ ব্যাকগ্রাউন্ড পাওয়ার ব্যবহার → Mapplock সক্ষম করুন।</string>
+    <string name="oem_guide_samsung">এখানে ট্যাপ করুন → ব্যাটারি → ব্যাকগ্রাউন্ড ব্যবহারের সীমা → কখনো না ঘুমানো অ্যাপ → Mapplock যোগ করুন।</string>
+    <string name="oem_guide_generic">এখানে ট্যাপ করুন → ব্যাটারি → অবাধ / কোনো অপ্টিমাইজেশান নেই।</string>
+    <string name="lock_recents_instruction">১. সাম্প্রতিক অ্যাপ দেখতে উপরের দিকে সোয়াইপ করুন\n২. Mapplock-এ দীর্ঘক্ষণ প্রেস করুন বা নিচের দিকে সোয়াইপ করুন\n৩. \'লক\' আইকনে ট্যাপ করুন</string>
+    <string name="indestructible_mode_active">অজেয় মোড সক্রিয়</string>
+    <string name="indestructible_mode_inactive">সিস্টেমের স্বাস্থ্য সতর্কতা</string>
+    <string name="fix_now">এখনই ঠিক করুন</string>
+    <string name="status_active">সক্রিয়</string>
+    <string name="status_inactive">নিষ্ক্রিয়</string>
+    <string name="accessibility_service">অ্যাক্সেসিবিলিটি পরিষেবা</string>
+    <string name="overlay_permission">ওভারলে অনুমতি</string>
+    <string name="usage_stats">ব্যবহারের পরিসংখ্যান</string>
+    <string name="locker_service">লকার ইঞ্জিন</string>
+    <string name="bg_protection">ব্যাকগ্রাউন্ড সুরক্ষা (প্রস্তাবিত)</string>
+    <string name="bg_protection_desc">সিস্টেম দ্বারা Mapplock-কে বন্ধ করা থেকে বিরত রাখে।</string>
+    <string name="lock_in_recents_guide">কিভাবে Mapplock সবসময় সক্রিয় রাখবেন:\n১. সাম্প্রতিক অ্যাপ খুলুন\n২. Mapplock দীর্ঘক্ষণ প্রেস করুন বা নিচের দিকে সোয়াইপ করুন\n৩. \'লক\' আইকনে ট্যাপ করুন</string>
+
+    <string-array name="faq_questions">
+<item>Mapplock কী এবং এটি অন্যান্য অ্যাপ লকারের থেকে কীভাবে আলাদা?</item>
+<item>Mapplock কীভাবে \'Q-Day\'-এর বিরুদ্ধে আমার ডেটা রক্ষা করে?</item>
+<item>\"Map-Gate\" বৈশিষ্ট্যটি কীভাবে কাজ করে?</item>
+<item>আমার ব্যক্তিগত ছবি এবং ভিডিও কি Mapplock-এর সার্ভারে সংরক্ষিত হয়?</item>
+<item>আমি আমার PIN বা প্যাটার্ন ভুলে গেলে কী হবে?</item>
+<item>আমি অফলাইনে থাকলে কি ম্যাপের বৈশিষ্ট্যগুলি কাজ করবে?</item>
+<item>\"অনুপ্রবেশকারীর ছবি\" কী এবং আমি ছবিগুলো কোথায় দেখতে পারি?</item>
+<item>\"ফাইল লস প্রোটেকশন\" কী এবং কেন আমি এটি সক্ষম করব?</item>
+    </string-array>
+    <string-array name="faq_answers">
+<item>Mapplock হল Aitoyz দ্বারা তৈরি একটি পরবর্তী প্রজন্মের সুরক্ষা অ্যাপ্লিকেশন যা আপনার গোপনীয়তা রক্ষা করতে অবস্থান-ভিত্তিক বুদ্ধিমত্তা ব্যবহার করে। সাধারণ লকারের মতো নয় যা কেবল PIN-এর উপর নির্ভর করে, Mapplock \"Map-Gate\" প্রযুক্তি নিয়ে এসেছে, যা আপনাকে ভৌগোলিক নিরাপদ অঞ্চল নির্ধারণ করতে দেয়।</item>
+<item>Mapplock একটি কোয়ান্টাম-রেজিলিয়েন্ট আর্কিটেকচার দিয়ে তৈরি। এটি স্থানীয়ভাবে শুধুমাত্র AES-256 এনক্রিপশন এবং জিরো-নলেজ আর্কিটেকচার ব্যবহার করে আক্রমণ প্রতিরোধ করে। আপনার ডেটা কখনোই আপনার ডিভাইস থেকে বের হয় না।</item>
+<item>Map-Gate বৈশিষ্ট্যটি আপনাকে নির্দিষ্ট জিপিএস স্থানাঙ্কগুলিকে \"নিরাপদ অঞ্চল\" হিসেবে সেট করতে দেয়। আপনি যখন সেই অঞ্চলের বাইরে যান, Mapplock স্বয়ংক্রিয়ভাবে একটি উচ্চ-নিরাপত্তা লক ট্রিগার করে।</item>
+<item>না, Aitoyz \"প্রাইভেসি-ফার্স্ট\" মডেলে কাজ করে, যার অর্থ Mapplock আমাদের সার্ভারে আপনার কোনো ব্যক্তিগত ফাইল সংরক্ষণ করে না। সবকিছু আপনার ডিভাইসের ইন্টারনাল স্টোরেজে এনক্রিপ্ট করা থাকে।</item>
+<item>আপনি আপনার কোড ভুলে গেলে বায়োমেট্রিক বা আপনার \"গোপন ম্যাপ পয়েন্ট\" ব্যবহার করে পুনরুদ্ধার করতে পারেন। আমরা একাধিক পুনরুদ্ধারের বিকল্প সেট আপ করার পরামর্শ দিই।</item>
+<item>হ্যাঁ, Mapplock কোনো ইন্টারনেট সংযোগ ছাড়াই কাজ করার জন্য ডিজাইন করা হয়েছে। অ্যাপটি জিপিএস ম্যাপ ডেটা আগে থেকে ডাউনলোড এবং ক্যাশে করে রাখে।</item>
+<item>এটি একটি স্বয়ংক্রিয় বৈশিষ্ট্য যা আপনার ভল্টে ঢোকার চেষ্টা করা যে কারো একটি গোপন সেলফি তোলে। ভুল কোড দিলে সামনের ক্যামেরাটি সাইলেন্টভাবে কাজ করে।</item>
+<item>এটি ডিভাইস অ্যাডমিনিস্ট্রেটর অধিকার ব্যবহার করে ভুলবশত বা অননুমোদিত আনইনস্টলেশন প্রতিরোধ করে। এটি নিশ্চিত করে যে আপনার গুরুত্বপূর্ণ নথি এবং স্মৃতি কখনোই মুছে যাবে না।</item>
+    </string-array>
+</resources>

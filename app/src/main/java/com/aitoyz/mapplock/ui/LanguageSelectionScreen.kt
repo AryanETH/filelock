@@ -1,10 +1,13 @@
 package com.aitoyz.mapplock.ui
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
@@ -47,98 +50,65 @@ fun LanguageSelectionScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(Color.White)
     ) {
-
-        TopAppBar(
-            title = {
-                Text(
-                    stringResource(R.string.select_language),
-                    fontWeight = FontWeight.Bold,
-                    color = CyberBlue
-                )
-            },
-
-            navigationIcon = {
-                IconButton(onClick = onBack) {
-                    Icon(
-                        Icons.Default.Close,
-                        contentDescription = stringResource(R.string.close)
-                    )
-                }
-            },
-
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = Color.Transparent
-            )
+        // "Choose Language" title with minimal top whitespace
+        Text(
+            text = stringResource(R.string.select_language),
+            modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 8.dp),
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Black,
+            color = CyberBlue
         )
 
         OutlinedTextField(
             value = searchQuery,
-
-            onValueChange = {
-                searchQuery = it
-            },
-
+            onValueChange = { searchQuery = it },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-
+                .padding(horizontal = 16.dp, vertical = 8.dp),
             placeholder = {
-                Text(stringResource(R.string.search_languages))
+                Text(stringResource(R.string.search_languages), color = Color.Gray)
             },
-
             leadingIcon = {
                 Icon(
                     Icons.Default.Search,
-                    contentDescription = null
+                    contentDescription = null,
+                    tint = Color.Gray
                 )
             },
-
             trailingIcon = {
                 if (searchQuery.isNotEmpty()) {
-                    IconButton(
-                        onClick = {
-                            searchQuery = ""
-                        }
-                    ) {
+                    IconButton(onClick = { searchQuery = "" }) {
                         Icon(
                             Icons.Default.Close,
-                            contentDescription = stringResource(R.string.close)
+                            contentDescription = stringResource(R.string.close),
+                            tint = Color.Gray
                         )
                     }
                 }
             },
-
-            shape = RoundedCornerShape(12.dp),
-
+            shape = RoundedCornerShape(16.dp),
             singleLine = true,
-
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = CyberBlue,
-                unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                unfocusedBorderColor = Color.LightGray.copy(alpha = 0.5f),
+                cursorColor = CyberBlue
             )
         )
 
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = 16.dp)
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-
             items(filteredLanguages) { language ->
-
                 LanguageItem(
                     language = language,
                     isSelected = language.code == currentLanguageCode,
                     onClick = {
                         onLanguageSelected(language.code)
                     }
-                )
-
-                HorizontalDivider(
-                    modifier = Modifier.padding(horizontal = 16.dp),
-
-                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
                 )
             }
         }
@@ -151,63 +121,78 @@ fun LanguageItem(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable {
-                onClick()
-            }
-            .padding(
-                vertical = 16.dp,
-                horizontal = 24.dp
-            ),
-
-        verticalAlignment = Alignment.CenterVertically
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(16.dp),
+        color = Color.White,
+        border = BorderStroke(
+            width = 1.dp,
+            color = if (isSelected) CyberBlue else Color.LightGray.copy(alpha = 0.4f)
+        ),
+        tonalElevation = if (isSelected) 2.dp else 0.dp
     ) {
-
-        Column(
-            modifier = Modifier.weight(1f)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-
-            Text(
-                text = language.name,
-
-                fontSize = 16.sp,
-
-                fontWeight = if (isSelected) {
-                    FontWeight.Bold
-                } else {
-                    FontWeight.Medium
-                },
-
-                color = if (isSelected) {
-                    CyberBlue
-                } else {
-                    MaterialTheme.colorScheme.onSurface
+            // Square Prefix Icon
+            Surface(
+                modifier = Modifier.size(48.dp),
+                shape = RoundedCornerShape(12.dp),
+                color = if (isSelected) CyberBlue.copy(alpha = 0.1f) else Color.Gray.copy(alpha = 0.05f)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Text(
+                        text = language.prefix,
+                        color = if (isSelected) CyberBlue else Color.Gray,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp
+                    )
                 }
-            )
+            }
 
-            Text(
-                text = language.nativeName,
+            Spacer(modifier = Modifier.width(16.dp))
 
-                fontSize = 14.sp,
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = language.name,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = if (isSelected) CyberBlue else Color.Black
+                )
+                Text(
+                    text = language.nativeName,
+                    fontSize = 14.sp,
+                    color = Color.Gray
+                )
+            }
 
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-
-        if (isSelected) {
-
-            Icon(
-                imageVector = Icons.Default.Check,
-
-                contentDescription = stringResource(R.string.selected_text),
-
-                tint = CyberBlue,
-
-                modifier = Modifier.size(24.dp)
-            )
+            // Radio Button style selection indicator
+            Box(
+                modifier = Modifier
+                    .size(24.dp)
+                    .background(
+                        color = if (isSelected) CyberBlue else Color.Transparent,
+                        shape = CircleShape
+                    )
+                    .border(
+                        width = 1.dp,
+                        color = if (isSelected) CyberBlue else Color.LightGray,
+                        shape = CircleShape
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                if (isSelected) {
+                    Icon(
+                        imageVector = Icons.Default.Check,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            }
         }
     }
 }

@@ -33,6 +33,8 @@ import com.aitoyz.mapplock.security.IntruderManager
 import com.aitoyz.mapplock.security.LockerLogger
 import com.aitoyz.mapplock.model.FileCategory
 import java.util.UUID
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Dispatchers
 
 import androidx.compose.ui.viewinterop.AndroidView
 import org.maplibre.android.geometry.LatLng
@@ -67,6 +69,10 @@ fun AuthUI(
     titleOverride: String? = null,
     autoRequestBiometric: Boolean = false,
     isOverlay: Boolean = false,
+    initialDarkMode: Boolean = false,
+    initialCustomBgPath: String? = null,
+    initialFingerprintEnabled: Boolean = true,
+    initialIntruderEnabled: Boolean = false,
     onAuthenticated: () -> Unit,
     onBiometricRequested: () -> Unit
 ) {
@@ -101,8 +107,7 @@ fun AuthUI(
 
     // Start Intruder Session when this screen is active
     DisposableEffect(lifecycleOwner) {
-        val isIntruderEnabled = prefs.getBoolean("intruder_capture_enabled", false)
-        if (isIntruderEnabled) {
+        if (initialIntruderEnabled) {
             if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
                 IntruderManager.getInstance(context).startSession(lifecycleOwner)
             } else if (!isOverlay) {
@@ -115,20 +120,20 @@ fun AuthUI(
     }
 
     // Reactive vault lookup
-    val allVaultIds = prefs.getStringSet("vault_ids", emptySet()) ?: emptySet()
+    val allVaultIds = remember { prefs.getStringSet("vault_ids", emptySet()) ?: emptySet() }
     
-    val relevantVaultId = allVaultIds.find { id ->
-        val apps = prefs.getStringSet("vault_${id}_apps", emptySet()) ?: emptySet()
-        apps.contains(targetPackage)
-    } ?: if (targetPackage.contains("packageinstaller")) allVaultIds.firstOrNull() else null
+    val relevantVaultId = remember(targetPackage) { 
+        allVaultIds.find { id ->
+            val apps = prefs.getStringSet("vault_${id}_apps", emptySet()) ?: emptySet()
+            apps.contains(targetPackage)
+        } ?: if (targetPackage.contains("packageinstaller")) allVaultIds.firstOrNull() else null
+    }
 
     val captureIntruder = {
         failedAttempts++
         prefs.edit().putInt("temp_failed_attempts", failedAttempts).apply()
         
-        val isIntruderEnabled = prefs.getBoolean("intruder_capture_enabled", false)
-
-        if (failedAttempts >= 1 && isIntruderEnabled) {
+        if (failedAttempts >= 1 && initialIntruderEnabled) {
             haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
             
             IntruderManager.getInstance(context).captureIntruder { uri, thumbPath ->
@@ -147,24 +152,56 @@ fun AuthUI(
         }
     }
     
-    val lockTypeStr = relevantVaultId?.let { prefs.getString("vault_${it}_lock_type", "PIN") } ?: "PIN"
+    val lockTypeStr = remember(relevantVaultId) { relevantVaultId?.let { prefs.getString("vault_${it}_lock_type", "PIN") } ?: "PIN" }
     val lockType = com.aitoyz.mapplock.model.LockType.valueOf(lockTypeStr)
-    val savedSecret = relevantVaultId?.let { prefs.getString("vault_${it}_secret", "") } ?: ""
-    val vaultLat = relevantVaultId?.let { prefs.getFloat("vault_${it}_lat", 0f).toDouble() } ?: 0.0
-    val vaultLon = relevantVaultId?.let { prefs.getFloat("vault_${it}_lon", 0f).toDouble() } ?: 0.0
-    val radius = relevantVaultId?.let { prefs.getFloat("vault_${it}_radius", 0f) } ?: 0f
+    val savedSecret = remember(relevantVaultId) { relevantVaultId?.let { prefs.getString("vault_${it}_secret", "") } ?: "" }
+    val vaultLat = remember(relevantVaultId) { relevantVaultId?.let { prefs.getFloat("vault_${it}_lat", 0f).toDouble() } ?: 0.0 }
+    val vaultLon = remember(relevantVaultId) { relevantVaultId?.let { prefs.getFloat("vault_${it}_lon", 0f).toDouble() } ?: 0.0 }
+    val radius = remember(relevantVaultId) { relevantVaultId?.let { prefs.getFloat("vault_${it}_radius", 0f) } ?: 0f }
 
     val isSatelliteMode = remember { prefs.getBoolean("is_satellite_mode", false) }
-    val isFingerprintEnabled = remember { prefs.getBoolean("fingerprint_enabled", true) }
-    val isDarkMode = remember { prefs.getBoolean("is_dark_mode", false) }
+    var isFingerprintEnabled by remember { mutableStateOf(initialFingerprintEnabled) }
+    val isDarkModeState = remember { mutableStateOf(initialDarkMode) }
     var biometricStatusMessage by remember { mutableStateOf<String?>(null) }
     
+    var customBgPath by remember { mutableStateOf(initialCustomBgPath) }
+    
+    // Observes Real-time Background and Theme changes from Settings
+    DisposableEffect(Unit) {
+        val listener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { p, key ->
+            when (key) {
+                "lock_background_path" -> {
+                    customBgPath = p.getString("lock_background_path", null)
+                }
+                "is_dark_mode" -> {
+                    isDarkModeState.value = p.getBoolean("is_dark_mode", false)
+                }
+                "fingerprint_enabled" -> {
+                    isFingerprintEnabled = p.getBoolean("fingerprint_enabled", true)
+                }
+            }
+        }
+        prefs.registerOnSharedPreferenceChangeListener(listener)
+        onDispose { prefs.unregisterOnSharedPreferenceChangeListener(listener) }
+    }
+    
+    val isDarkMode = isDarkModeState.value
     var isWithinRadius by remember { mutableStateOf(radius <= 0f) }
     var hasAutoRequestedBiometric by remember { mutableStateOf(false) }
     
+    // SECURITY/PERF: Move disk check off the main thread to prevent jank during LockActivity startup
+    var hasCustomBg by remember { mutableStateOf(false) }
+    LaunchedEffect(customBgPath) {
+        if (customBgPath != null) {
+            withContext(Dispatchers.IO) {
+                hasCustomBg = java.io.File(customBgPath!!).exists()
+            }
+        } else {
+            hasCustomBg = false
+        }
+    }
+    
     val backgroundColor = if (isDarkMode) Color(0xFF0A0E14) else Color.White
-    val customBgPath = remember { prefs.getString("lock_background_path", null) }
-    val hasCustomBg = customBgPath != null && File(customBgPath).exists()
     val textPrimary = if (hasCustomBg) Color.White else (if (isDarkMode) Color.White else LightTextPrimary)
     val accentColor = CyberBlue
 
@@ -235,7 +272,12 @@ fun AuthUI(
 
         if (hasCustomBg) {
             AsyncImage(
-                model = File(customBgPath!!),
+                model = coil.request.ImageRequest.Builder(LocalContext.current)
+                    .data(customBgPath)
+                    .crossfade(true)
+                    // Optimization: provide a stable key to avoid disk-based key computation on main thread
+                    .diskCacheKey("bg_$customBgPath")
+                    .build(),
                 contentDescription = null,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop

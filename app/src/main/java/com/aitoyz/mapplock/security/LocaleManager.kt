@@ -9,9 +9,25 @@ object LocaleManager {
     private const val PREF_NAME = "language_settings"
     private const val KEY_LANG = "selected_language"
 
+    @Volatile
+    private var cachedLang: String? = null
+
+    /**
+     * Preloads the language code from disk to an in-memory cache.
+     * Should be called from a background thread during app startup.
+     */
+    fun preload(context: Context) {
+        if (cachedLang != null) return
+        val protectedContext = if (android.os.Build.VERSION.SDK_INT >= 24) context.createDeviceProtectedStorageContext() else context
+        val prefs = protectedContext.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        cachedLang = prefs.getString(KEY_LANG, "en") ?: "en"
+    }
+
     fun applyLanguage(context: Context, langCode: String) {
-        // 1. Save to regular prefs for attachBaseContext
-        val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        cachedLang = langCode
+        // 1. Save to Device Protected storage so it's available during Boot
+        val protectedContext = if (android.os.Build.VERSION.SDK_INT >= 24) context.createDeviceProtectedStorageContext() else context
+        val prefs = protectedContext.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
         prefs.edit().putString(KEY_LANG, langCode).apply()
 
         // 2. Apply via AppCompatDelegate (modern way)
@@ -20,8 +36,13 @@ object LocaleManager {
     }
 
     fun getLanguage(context: Context): String {
-        val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
-        return prefs.getString(KEY_LANG, "en") ?: "en"
+        cachedLang?.let { return it }
+        // Fallback to synchronous read if cache missed
+        val protectedContext = if (android.os.Build.VERSION.SDK_INT >= 24) context.createDeviceProtectedStorageContext() else context
+        val prefs = protectedContext.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        val lang = prefs.getString(KEY_LANG, "en") ?: "en"
+        cachedLang = lang
+        return lang
     }
 
     fun getLocaleContext(context: Context, langCode: String): Context {

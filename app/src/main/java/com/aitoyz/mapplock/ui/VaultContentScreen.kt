@@ -76,6 +76,7 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.IntSize
 import kotlin.math.min
 import kotlin.math.pow
+import androidx.compose.ui.platform.LocalConfiguration
 import com.aitoyz.mapplock.core.VirtualAppManager
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -92,6 +93,9 @@ fun LocalFilePicker(
     var showCategoryMenu by remember { mutableStateOf(false) }
     var selectedFolder by remember { mutableStateOf("All") }
     var showPreviewSheet by remember { mutableStateOf(false) }
+    
+    val config = LocalConfiguration.current
+    val locale = remember(config) { config.locales[0] }
 
     val folders = remember(galleryItems) {
         listOf("All") + galleryItems.map { it.folderName }.distinct()
@@ -102,16 +106,19 @@ fun LocalFilePicker(
         else galleryItems.filter { it.folderName == selectedFolder }
     }
 
-    val groupedItems = remember(filteredItems) {
+    val groupedItems = remember(filteredItems, locale) {
         filteredItems.groupBy { item ->
-            val calendar = Calendar.getInstance()
+            val calendar = Calendar.getInstance(locale)
             calendar.timeInMillis = item.dateAdded * 1000L
-            val now = Calendar.getInstance()
+            val now = Calendar.getInstance(locale)
             
             when {
                 isSameDay(calendar, now) -> "Today"
                 isYesterday(calendar) -> "Yesterday"
-                else -> SimpleDateFormat("MMMM d", Locale.getDefault()).format(calendar.time)
+                else -> {
+                    val sdf = SimpleDateFormat("MMMM d", locale)
+                    sdf.format(calendar.time)
+                }
             }
         }
     }
@@ -337,7 +344,7 @@ fun formatDuration(ms: Long): String {
     val totalSec = ms / 1000
     val min = totalSec / 60
     val sec = totalSec % 60
-    return String.format(Locale.US, "%02d:%02d", min, sec)
+    return String.format(java.util.Locale.US, "%02d:%02d", min, sec)
 }
 
 val ContentScreenSaver = listSaver<ContentScreen, Any>(
@@ -377,6 +384,8 @@ val ContentScreenSaver = listSaver<ContentScreen, Any>(
 @Composable
 fun VaultContentScreen(
     state: VaultState,
+    virtualAppManager: com.aitoyz.mapplock.core.VirtualAppManager,
+    appCloner: com.aitoyz.mapplock.core.AppCloner,
     onLockClick: () -> Unit,
     onOpenUsageSettings: () -> Unit,
     onOpenOverlaySettings: () -> Unit,
@@ -421,8 +430,6 @@ fun VaultContentScreen(
 
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val virtualAppManager = remember { VirtualAppManager(context) }
-    val appCloner = remember { AppCloner(context) }
     
     var currentScreen by rememberSaveable(stateSaver = ContentScreenSaver) { mutableStateOf(ContentScreen.Dashboard) }
 
@@ -479,21 +486,18 @@ fun VaultContentScreen(
         mutableStateOf(FeatureHintManager.shouldShow(context, "dashboard_tour"))
     }
 
-    val mediaPermissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestMultiplePermissions()
-    ) { results ->
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickMultipleVisualMedia()
+    ) { selectedUris ->
         onEndAction()
-        if (results.values.any { it }) {
-            // Directly trigger the file picker if permission is granted
-            val cat = if (currentScreen is ContentScreen.CategoryView) (currentScreen as ContentScreen.CategoryView).category else FileCategory.PHOTO
+        if (selectedUris.isNotEmpty()) {
             val folder = if (currentScreen is ContentScreen.FolderView) (currentScreen as ContentScreen.FolderView).folderName else null
+            val cat = if (currentScreen is ContentScreen.CategoryView) (currentScreen as ContentScreen.CategoryView).category else FileCategory.PHOTO
             
             if (folder != null) {
-                selectedFolderForAdd = folder
-                onFetchGalleryItems(FileCategory.PHOTO)
+                onAddFilesToFolder(selectedUris, folder)
             } else {
-                selectedCategoryForAdd = cat
-                onFetchGalleryItems(cat)
+                onAddFiles(selectedUris, cat)
             }
         }
     }
@@ -614,6 +618,7 @@ fun VaultContentScreen(
                                     currentScreen = when(currentScreen) {
                                         is ContentScreen.WebView -> ContentScreen.Settings
                                         is ContentScreen.FAQ -> ContentScreen.Settings
+                                        is ContentScreen.LanguageSelection -> ContentScreen.Settings
                                         else -> ContentScreen.Dashboard
                                     }
                                 }) {
@@ -652,39 +657,12 @@ fun VaultContentScreen(
                             if (currentScreen == ContentScreen.Dashboard) {
                                 showCreateFolderDialog = true
                             } else {
-                                val cat = if (currentScreen is ContentScreen.CategoryView) (currentScreen as ContentScreen.CategoryView).category else FileCategory.PHOTO
-                                val folder = if (currentScreen is ContentScreen.FolderView) (currentScreen as ContentScreen.FolderView).folderName else null
-                                
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !state.hasFullStoragePermission) {
-                                    onGrantFullStorage()
-                                    return@FloatingActionButton
-                                }
-
-                                val hasPermission = when {
-                                    cat == FileCategory.PHOTO -> androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_MEDIA_IMAGES) == android.content.pm.PackageManager.PERMISSION_GRANTED
-                                    cat == FileCategory.VIDEO -> androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_MEDIA_VIDEO) == android.content.pm.PackageManager.PERMISSION_GRANTED
-                                    cat == FileCategory.AUDIO -> androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_MEDIA_AUDIO) == android.content.pm.PackageManager.PERMISSION_GRANTED
-                                    else -> state.hasFullStoragePermission
-                                }
-
-                                if (hasPermission || state.hasFullStoragePermission) {
-                                    if (folder != null) {
-                                        selectedFolderForAdd = folder
-                                        onFetchGalleryItems(FileCategory.PHOTO) 
-                                    } else {
-                                        selectedCategoryForAdd = cat
-                                        onFetchGalleryItems(cat)
-                                    }
-                                } else {
-                                    val perms = when {
-                                        cat == FileCategory.PHOTO -> arrayOf(android.Manifest.permission.READ_MEDIA_IMAGES)
-                                        cat == FileCategory.VIDEO -> arrayOf(android.Manifest.permission.READ_MEDIA_VIDEO)
-                                        cat == FileCategory.AUDIO -> arrayOf(android.Manifest.permission.READ_MEDIA_AUDIO)
-                                        else -> arrayOf(android.Manifest.permission.READ_MEDIA_IMAGES, android.Manifest.permission.READ_MEDIA_VIDEO)
-                                    }
-                                    onStartAction()
-                                    mediaPermissionLauncher.launch(perms)
-                                }
+                                onStartAction()
+                                photoPickerLauncher.launch(
+                                    androidx.activity.result.PickVisualMediaRequest(
+                                        ActivityResultContracts.PickVisualMedia.ImageAndVideo
+                                    )
+                                )
                             }
                         },
                         modifier = Modifier.captureRect { fabRect = it },
@@ -1558,8 +1536,9 @@ fun CategoryGridItem(
                 lineHeight = 16.sp
             )
             Spacer(Modifier.height(2.dp))
+            val resources = LocalContext.current.resources
             Text(
-                if (isComingSoon) "Coming Soon" else stringResource(R.string.items_count, count), 
+                if (isComingSoon) "Coming Soon" else resources.getQuantityString(R.plurals.items_count, count, count), 
                 color = if (isDark) Color.Gray else LightTextSecondary,
                 fontSize = 12.sp,
                 textAlign = TextAlign.Center,
@@ -1745,10 +1724,10 @@ fun FileCategoryList(
 }
 
 @Composable
-fun FileItem(file: VaultFile, isSelected: Boolean = false, isDark: Boolean, onClick: () -> Unit, onLongClick: () -> Unit = {}) {
+fun FileItem(file: VaultFile, modifier: Modifier = Modifier, isSelected: Boolean = false, isDark: Boolean, onClick: () -> Unit, onLongClick: () -> Unit = {}) {
     val context = LocalContext.current
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .aspectRatio(1f)
             .combinedClickable(
@@ -2137,8 +2116,9 @@ fun CategoryItem(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
+                val resources = LocalContext.current.resources
                 Text(
-                    if (isComingSoon) "Coming Soon" else stringResource(R.string.items_count, count),
+                    if (isComingSoon) "Coming Soon" else resources.getQuantityString(R.plurals.items_count, count, count),
                     color = if (isDark) Color.Gray else LightTextSecondary,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Bold
@@ -2241,10 +2221,8 @@ fun SettingsSection(
 
                         var showMonitoringDialog by remember { mutableStateOf(false) }
                         val monitoringModeText = when (state.monitoringMode) {
-                            MonitoringMode.AUTO -> stringResource(R.string.monitoring_mode_auto)
-                            MonitoringMode.USAGE_STATS -> stringResource(R.string.monitoring_mode_usage)
-                            MonitoringMode.SHIZUKU -> stringResource(R.string.monitoring_mode_shizuku)
-                            MonitoringMode.ACCESSIBILITY -> stringResource(R.string.monitoring_mode_accessibility)
+                            MonitoringMode.ACCESSIBILITY -> stringResource(R.string.monitoring_mode_hard)
+                            else -> stringResource(R.string.monitoring_mode_moderate)
                         }
 
                         SettingsLinkItem(
@@ -2453,9 +2431,9 @@ fun SettingsSection(
 @Composable
 fun FAQScreen(isDark: Boolean) {
     val context = LocalContext.current
-    val faqs = remember {
-        val questions = context.resources.getStringArray(R.array.faq_questions)
-        val answers = context.resources.getStringArray(R.array.faq_answers)
+    val questions = androidx.compose.ui.res.stringArrayResource(R.array.faq_questions)
+    val answers = androidx.compose.ui.res.stringArrayResource(R.array.faq_answers)
+    val faqs = remember(questions, answers) {
         questions.zip(answers)
     }
 
@@ -2513,6 +2491,8 @@ fun WebViewScreen(url: String) {
         modifier = Modifier.fillMaxSize(),
         factory = { context ->
             android.webkit.WebView(context).apply {
+                // Safe: Only used to display app-internal policy/terms from maps.aitoyz.in
+                @android.annotation.SuppressLint("SetJavaScriptEnabled")
                 settings.javaScriptEnabled = true
                 settings.domStorageEnabled = true
                 webViewClient = android.webkit.WebViewClient()
@@ -2751,31 +2731,22 @@ fun BackupManagementDialog(
 
 @Composable
 fun AppMiniIcon(packageName: String) {
-    val context = LocalContext.current
-    val icon = remember(packageName) {
-        try { 
-            context.packageManager.getApplicationIcon(packageName).toBitmap() 
-        } catch (e: android.content.pm.PackageManager.NameNotFoundException) {
-            null
-        } catch (e: Exception) { 
-            null 
-        }
-    }
-    if (icon != null) {
-        Image(
-            bitmap = icon.asImageBitmap(),
-            contentDescription = null,
-            modifier = Modifier.size(40.dp).clip(RoundedCornerShape(8.dp))
-        )
-    } else {
-        Box(modifier = Modifier.size(40.dp).background(Color.DarkGray, RoundedCornerShape(8.dp)))
-    }
+    coil.compose.AsyncImage(
+        model = com.aitoyz.mapplock.security.AppIcon(packageName),
+        contentDescription = null,
+        modifier = Modifier.size(40.dp).clip(RoundedCornerShape(8.dp)),
+        error = coil.compose.rememberAsyncImagePainter(model = android.R.drawable.sym_def_app_icon),
+        placeholder = coil.compose.rememberAsyncImagePainter(model = android.R.drawable.sym_def_app_icon)
+    )
 }
 
 @Composable
 fun OperationProgressOverlay(progress: OperationProgress, isDark: Boolean) {
     val surfaceColor = if (isDark) Color(0xFF1A1A1A) else Color.White
     val contentColor = if (isDark) Color.White else LightTextPrimary
+    
+    val config = LocalConfiguration.current
+    val locale = remember(config) { config.locales[0] }
     
     Box(
         modifier = Modifier
@@ -2795,7 +2766,7 @@ fun OperationProgressOverlay(progress: OperationProgress, isDark: Boolean) {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    progress.title.uppercase(Locale.getDefault()),
+                    progress.title.uppercase(locale),
                     fontWeight = FontWeight.Black,
                     fontSize = 18.sp,
                     color = contentColor,
@@ -2865,7 +2836,7 @@ fun OperationProgressOverlay(progress: OperationProgress, isDark: Boolean) {
                     )
                     if (progress.speedMbps > 0) {
                         Text(
-                            String.format(Locale.getDefault(), "%.1f Mbps", progress.speedMbps),
+                            String.format(locale, "%.1f Mbps", progress.speedMbps),
                             color = CyberBlue,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold
@@ -3216,10 +3187,8 @@ fun MonitoringModeDialog(
         },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                MonitoringModeItem(MonitoringMode.AUTO, stringResource(R.string.monitoring_mode_auto), currentMode == MonitoringMode.AUTO, isDark) { onSelect(MonitoringMode.AUTO) }
-                MonitoringModeItem(MonitoringMode.USAGE_STATS, stringResource(R.string.monitoring_mode_usage), currentMode == MonitoringMode.USAGE_STATS, isDark) { onSelect(MonitoringMode.USAGE_STATS) }
-                MonitoringModeItem(MonitoringMode.SHIZUKU, stringResource(R.string.monitoring_mode_shizuku), currentMode == MonitoringMode.SHIZUKU, isDark) { onSelect(MonitoringMode.SHIZUKU) }
-                MonitoringModeItem(MonitoringMode.ACCESSIBILITY, stringResource(R.string.monitoring_mode_accessibility), currentMode == MonitoringMode.ACCESSIBILITY, isDark) { onSelect(MonitoringMode.ACCESSIBILITY) }
+                MonitoringModeItem(MonitoringMode.USAGE_STATS, stringResource(R.string.monitoring_mode_moderate), currentMode == MonitoringMode.USAGE_STATS, isDark) { onSelect(MonitoringMode.USAGE_STATS) }
+                MonitoringModeItem(MonitoringMode.ACCESSIBILITY, stringResource(R.string.monitoring_mode_hard), currentMode == MonitoringMode.ACCESSIBILITY, isDark) { onSelect(MonitoringMode.ACCESSIBILITY) }
             }
         },
         confirmButton = {
@@ -3316,7 +3285,7 @@ suspend fun saveCroppedImage(
             return@withContext saveImageToInternal(context, uri)
         }
 
-        val croppedBitmap = Bitmap.createBitmap(
+        val croppedBitmap = android.graphics.Bitmap.createBitmap(
             originalBitmap,
             bitmapRect.left,
             bitmapRect.top,

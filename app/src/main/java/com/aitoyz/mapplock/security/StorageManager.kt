@@ -1,8 +1,6 @@
 package com.aitoyz.mapplock.security
 
 import android.content.Context
-import android.os.Build
-import android.os.Environment
 import java.io.File
 
 /**
@@ -10,7 +8,6 @@ import java.io.File
  */
 object StorageManager {
 
-    private const val HIDDEN_FOLDER_NAME = ".system_data"
     private const val VAULT_DIR_NAME = ".vault"
     private const val SANDBOX_DIR_NAME = "sandbox"
     private const val INTRUDER_DIR_NAME = "intruder_files"
@@ -33,18 +30,18 @@ object StorageManager {
      * to avoid being counted towards "User Data" in Settings.
      */
     private fun getPreferredDir(context: Context, subDir: String): File {
-        val root = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && Environment.isExternalStorageManager()) {
-            // Stealth storage: Top-level hidden folder (Not counted as app's User Data)
-            File(Environment.getExternalStorageDirectory(), HIDDEN_FOLDER_NAME)
-        } else {
-            // Fallback: App's private internal storage (Counted as User Data)
-            context.filesDir
-        }
-        
-        val dir = File(root, subDir)
-        if (!dir.exists()) {
-            dir.mkdirs()
-        }
-        return dir
+        // PRODUCTION FIX: Stick to private app storage to avoid high-risk MANAGE_EXTERNAL_STORAGE permission.
+        // This ensures the app is Play Store compliant and respects user privacy.
+        val root = context.filesDir
+        return File(root, subDir)
+    }
+
+    fun ensureDirsExist(context: Context) {
+        val dirs = listOf(
+            getVaultDir(context),
+            getSandboxDir(context),
+            getIntruderDir(context)
+        )
+        dirs.forEach { if (!it.exists()) it.mkdirs() }
     }
 }

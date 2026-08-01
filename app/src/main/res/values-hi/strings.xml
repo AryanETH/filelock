@@ -100,7 +100,10 @@
     <string name="documents">दस्तावेज़</string>
     <string name="wrong_unlocks">घुसपैठिये</string>
     <string name="recycle_bin">रीसायकल बिन</string>
-    <string name="items_count">%1$d आइटम</string>
+        <plurals name="items_count">
+        <item quantity="one">%1$d आइटम</item>
+        <item quantity="other">%1$d आइटम</item>
+    </plurals>
 
     <!--  Media Viewer Screen  -->
     <string name="save_to_gallery">गैलरी में सेव करें</string>
@@ -137,6 +140,14 @@
     <string name="global_lock_desc">सभी चुने हुए ऐप्स को एक साथ लॉक करें।</string>
     <string name="dark_mode">डार्क मोड</string>
     <string name="dark_mode_desc">लाइट और डार्क थीम बदलें।</string>
+    <string name="monitoring_mode">सुरक्षा स्तर</string>
+    <string name="monitoring_mode_desc">लॉकिंग पहचान की शक्ति</string>
+    <string name="monitoring_mode_moderate">मध्यम (सामान्य)</string>
+    <string name="monitoring_mode_hard">कठिन (उच्च सुरक्षा)</string>
+    <string name="monitoring_mode_auto">स्वचालित (अनुशंसित)</string>
+    <string name="monitoring_mode_usage">उपयोग आंकड़े (मानक)</string>
+    <string name="monitoring_mode_shizuku">Shizuku (उच्च प्रदर्शन)</string>
+    <string name="monitoring_mode_accessibility">एक्सेसिबिलिटी (बैकअप)</string>
 
     <!--  Tour  -->
     <string name="tour_skip">छोड़ें</string>
@@ -160,6 +171,8 @@
     <string name="screenshot_restriction_desc">फाइलों का स्क्रीनशॉट लेने से रोकें।</string>
     <string name="fingerprint_unlock">फिंगरप्रिंट</string>
     <string name="fingerprint_unlock_desc">जल्दी एक्सेस के लिए फिंगरप्रिंट का उपयोग करें।</string>
+    <string name="offline_title">आप ऑफलाइन हैं</string>
+    <string name="offline_message">डेटा चालू करें</string>
     <string name="support_links">सहायता और कानूनी</string>
     <string name="tutorial">ट्यूटोरियल (वीडियो देखें)</string>
     <string name="feedback">सुझाव भेजें</string>
@@ -185,9 +198,15 @@
     <string name="clone_failed">विफल रहा। कृपया फिर कोशिश करें।</string>
     <string name="clear_all_hidden_apps">सभी ऐप्स वापस लाएं</string>
     <string name="active_vaults">सक्रिय क्षेत्र</string>
-    <string name="apps_locked">%1$d ऐप्स लॉक हैं</string>
+        <plurals name="apps_locked">
+        <item quantity="one">%1$d ऐप लॉक है</item>
+        <item quantity="other">%1$d ऐप्स लॉक हैं</item>
+    </plurals>
     <string name="vault_established">सुरक्षित क्षेत्र बन गया</string>
-    <string name="apps_hidden">%1$d ऐप्स छिपे हैं:</string>
+    <plurals name="apps_hidden">
+        <item quantity="one">%1$d ऐप छिपा है:</item>
+        <item quantity="other">%1$d ऐप्स छिपे हैं:</item>
+    </plurals>
     <string name="close">बंद करें</string>
     <string name="fix">ठीक करें</string>
     <string name="get_started">शुरू करें</string>

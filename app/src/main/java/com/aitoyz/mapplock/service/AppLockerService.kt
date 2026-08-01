@@ -13,10 +13,10 @@ import androidx.core.app.NotificationCompat
 import com.aitoyz.mapplock.R
 import com.aitoyz.mapplock.backend.usage.UsageStatsMonitor
 import com.aitoyz.mapplock.core.*
-import com.aitoyz.mapplock.repository.LockedAppsRepository
 import com.aitoyz.mapplock.security.LockerLogger
 import kotlinx.coroutines.*
-import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 
 /**
  * Foreground service that owns the AppLockEngine and manages the lifecycle.
@@ -32,8 +32,6 @@ class AppLockerService : Service() {
     }
     
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
-    private var engine: AppLockEngine? = null
-    private var lockedApps: LockedAppsRepository? = null
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -55,39 +53,36 @@ class AppLockerService : Service() {
 
         serviceScope.launch(Dispatchers.Default) {
             try {
-                LockerLogger.i(LockerLogger.Event.STATE_TRANSITION, "[REWRITE] Async init starting")
+                LockerLogger.i(LockerLogger.Event.STATE_TRANSITION, "[SERVICE] UsageStats backend active")
                 
-                val repository = LockedAppsRepository(this@AppLockerService)
-                lockedApps = repository
-                // Use UsageStatsMonitor directly as this is the fallback service
-                val detector = UsageStatsMonitor(this@AppLockerService, serviceScope)
-                val decisionEngine = LockDecisionEngine(packageName, repository)
-                val launcher = LockLauncher(this@AppLockerService)
-                val systemFilter = SystemAppFilter(this@AppLockerService)
-                
-                // Periodic cache refresh for system apps
-                serviceScope.launch(Dispatchers.Default) {
-                    while (isActive) {
-                        delay(60.seconds)
-                        systemFilter.refreshCaches()
-                    }
+                // Pre-warm repositories on background thread to avoid jank on first lock
+                launch(Dispatchers.IO) {
+                    com.aitoyz.mapplock.security.LockerRepository.getInstance(this@AppLockerService)
+                    com.aitoyz.mapplock.security.IntruderManager.getInstance(this@AppLockerService)
                 }
-                
-                engine = AppLockEngine(
-                    scope = serviceScope,
-                    detector = detector,
-                    decisionEngine = decisionEngine,
-                    launcher = launcher,
-                    systemAppFilter = systemFilter
-                )
 
+                // Use the centralized CoreEngine brain
+                val coreEngine = com.aitoyz.mapplock.core.CoreEngine.getInstance(this@AppLockerService)
+                
+                // Simplified detector loop - just feeds events to CoreEngine
+                val detector = UsageStatsMonitor(this@AppLockerService, serviceScope)
+                
+                detector.events.onEach { event ->
+                    coreEngine.onForegroundEvent(event)
+                }.launchIn(serviceScope)
+
+                detector.start()
+                
                 withContext(Dispatchers.Main) {
                     registerReceiver(screenReceiver, IntentFilter(Intent.ACTION_SCREEN_OFF))
-                    engine?.start()
-                    LockerLogger.i(LockerLogger.Event.STATE_TRANSITION, "[REWRITE] Engine active")
+                }
+                
+                // Initial check
+                detector.currentForeground()?.let { pkg ->
+                    coreEngine.onForegroundEvent(com.aitoyz.mapplock.model.ForegroundEvent(pkg, source = com.aitoyz.mapplock.model.ForegroundEvent.Source.SYSTEM))
                 }
             } catch (e: Exception) {
-                LockerLogger.e(LockerLogger.Event.ERROR, "[REWRITE] Init failed", e)
+                LockerLogger.e(LockerLogger.Event.ERROR, "[SERVICE] UsageStats Init failed", e)
             }
         }
     }
@@ -101,11 +96,20 @@ class AppLockerService : Service() {
                 getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
             }
 
+            val intent = Intent(this, com.aitoyz.mapplock.MainActivity::class.java)
+            val pendingIntent = android.app.PendingIntent.getActivity(
+                this, 
+                0, 
+                intent, 
+                android.app.PendingIntent.FLAG_IMMUTABLE
+            )
+
             val notification = NotificationCompat.Builder(this, channelId)
                 .setContentTitle(getString(R.string.app_name))
                 .setContentText("Security monitoring is active")
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setPriority(NotificationCompat.PRIORITY_LOW)
+                .setContentIntent(pendingIntent)
                 .build()
 
             val type = determineForegroundServiceType()
@@ -141,18 +145,21 @@ class AppLockerService : Service() {
         
         if (intent?.getBooleanExtra("refresh_locked_apps", false) == true) {
             LockerLogger.i(LockerLogger.Event.STATE_TRANSITION, "[SYNC] Refresh intent received")
-            lockedApps?.refreshCache()
+            com.aitoyz.mapplock.core.CoreEngine.getInstance(this).refreshLockedApps()
         }
         return START_STICKY
     }
 
     fun notifyLockDismissed() {
-        engine?.getLauncher()?.notifyFinished()
+        com.aitoyz.mapplock.core.CoreEngine.getInstance(this).getLauncher().notifyFinished()
+    }
+    
+    fun notifyLockStarted(activity: com.aitoyz.mapplock.LockActivity) {
+        com.aitoyz.mapplock.core.CoreEngine.getInstance(this).getLauncher().registerActivity(activity)
     }
 
     override fun onDestroy() {
         LockerLogger.w(LockerLogger.Event.SERVICE_RESTARTED, "AppLockerService Destroyed - Relying on Watchdog for recovery")
-        engine?.stop()
         unregisterReceiver(screenReceiver)
         serviceScope.cancel()
         instance = null
